@@ -209,30 +209,39 @@ namespace Hearthline.Sim
             int from = ctx.State.Day;
             for (int i = 0; i < days; i++)
             {
+                Season ended = new GameDate(ctx.State.Day).Season;
                 ctx.State.Day++;
                 foreach (Character c in ctx.State.Characters.ToArray())
                 {
                     MarkSystem.Tick(ctx, c);
                     LifeSystem.DailyTick(ctx, c);
                 }
+                TripSystem.DailyTick(ctx);
+                var today = new GameDate(ctx.State.Day);
+                if (today.DayOfSeason != 1) continue;
+                // The season turns with the calendar, wherever the head happens to be.
+                LifeSystem.RunInterlude(ctx);
+                TripSystem.SeasonTick(ctx);
+                HomeSystem.RunSeason(ctx);
+                WorldSystem.RunSeason(ctx);
+                ctx.Emit(new SeasonPassed { Day = ctx.State.Day, Ended = ended, Began = today.Season });
             }
             ctx.Emit(new DateAdvanced { Day = ctx.State.Day, FromDay = from, ToDay = ctx.State.Day });
         }
     }
 
-    /// <summary>Advances to the first day of the next season. The interlude simulation will hang off this later.</summary>
+    /// <summary>
+    /// The player chooses to stay home until the season turns. Only possible at home; on a trip, days pass
+    /// with <see cref="AdvanceDays"/> and the season turns when the calendar gets there.
+    /// </summary>
     public sealed class PassSeason : Command
     {
         internal override string Apply(SimContext ctx)
         {
             if (ctx.State.ActiveEvent != null) return "finish the event in progress first";
+            if (ctx.State.Trip != null) return "come home first; a season is passed at the homestead";
             var now = new GameDate(ctx.State.Day);
-            GameDate next = now.NextSeasonStart;
-            AdvanceDays.Run(ctx, next.TotalDays - now.TotalDays);
-            LifeSystem.RunInterlude(ctx);
-            HomeSystem.RunSeason(ctx);
-            WorldSystem.RunSeason(ctx);
-            ctx.Emit(new SeasonPassed { Day = ctx.State.Day, Ended = now.Season, Began = next.Season });
+            AdvanceDays.Run(ctx, now.NextSeasonStart.TotalDays - now.TotalDays);
             return null;
         }
     }

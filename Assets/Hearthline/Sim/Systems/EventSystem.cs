@@ -64,7 +64,9 @@ namespace Hearthline.Sim
             var party = new List<Character>();
             Character head = ctx.State.Household.HeadId.HasValue ? ctx.FindCharacter(ctx.State.Household.HeadId.Value) : null;
             if (head != null) party.Add(head);
-            foreach (int id in where.PartyIds)
+            // On a trip the party is whoever set out, unless presentation says otherwise.
+            List<int> ids = where.PartyIds.Count == 0 && ctx.State.Trip != null ? ctx.State.Trip.PartyIds : where.PartyIds;
+            foreach (int id in ids)
             {
                 Character c = ctx.FindCharacter(id);
                 if (c != null && c.Alive && !party.Contains(c) && LifeSystem.InHousehold(ctx, c)) party.Add(c);
@@ -185,6 +187,7 @@ namespace Hearthline.Sim
             if (st.Budget < rules.Threshold || !ctx.Rng.Chance(rules.FireChance)) return;
 
             bool hurt = Party(ctx, where).Exists(c => c.Health < LifeRules.MaxHealth);
+            bool loaded = TripSystem.Overloaded(ctx);
             var ids = new List<string>(ctx.Content.Events.Keys);
             ids.Sort(StringComparer.Ordinal);
             var eligible = new List<EventDef>();
@@ -194,7 +197,8 @@ namespace Hearthline.Sim
                 EventDef def = ctx.Content.Events[id];
                 if (!WhenHolds(ctx, def, where)) continue;
                 eligible.Add(def);
-                weights.Add(def.Weight * (hurt && def.Tags.Contains(StorytellerRules.DangerTag) ? rules.DangerWeightWhenHurt : 1));
+                bool danger = def.Tags.Contains(StorytellerRules.DangerTag);
+                weights.Add(def.Weight * (hurt && danger ? rules.DangerWeightWhenHurt : 1) * (loaded && danger ? ctx.Trips.DangerWeightWhenOverloaded : 1));
             }
             // Casting can still fail (nobody with the needed trait); try the others before giving up.
             while (eligible.Count > 0)
@@ -241,7 +245,7 @@ namespace Hearthline.Sim
             if (r == null) return null;
             Character who = Who(ctx, active, r.Who);
             if (who == null || !who.Alive) return "nobody to do it";
-            IDictionary<string, int> inv = ctx.State.Household.Inventory;
+            IDictionary<string, int> inv = TripSystem.CurrentInventory(ctx.State);
             if (r.ItemAny.Count > 0 && !r.ItemAny.Exists(i => inv.TryGetValue(i, out int n) && n > 0))
                 return "needs " + string.Join(" or ", r.ItemAny);
             if (r.TraitAny.Count > 0 && !r.TraitAny.Exists(who.Traits.Contains)) return "needs " + string.Join(" or ", r.TraitAny);
@@ -422,9 +426,13 @@ namespace Hearthline.Sim
             return next;
         }
 
-        public static void ChangeItem(SimContext ctx, string itemId, int delta)
+        /// <summary>
+        /// Adds or removes items where the head is: the pack on a trip, the stores at home.
+        /// Things that happen at the homestead itself pass <paramref name="inStores"/>.
+        /// </summary>
+        public static void ChangeItem(SimContext ctx, string itemId, int delta, bool inStores = false)
         {
-            IDictionary<string, int> inv = ctx.State.Household.Inventory;
+            IDictionary<string, int> inv = inStores ? ctx.State.Household.Inventory : TripSystem.CurrentInventory(ctx.State);
             inv.TryGetValue(itemId, out int old);
             int count = Math.Max(0, old + delta);
             if (count == old) return;

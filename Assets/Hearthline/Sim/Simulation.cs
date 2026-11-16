@@ -45,6 +45,7 @@ namespace Hearthline.Sim
         public StorytellerRules Storyteller { get; } = new StorytellerRules();
         public WorldRules World { get; } = new WorldRules();
         public HomeRules Home { get; } = new HomeRules();
+        public TripRules Trips { get; } = new TripRules();
         private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
@@ -61,7 +62,7 @@ namespace Hearthline.Sim
         }
 
         private SimContext NewContext() =>
-            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, AgeMarks = _ageMarks };
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, Trips = Trips, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -126,8 +127,19 @@ namespace Hearthline.Sim
         public int ReputationWith(string factionId) =>
             State.Household.Reputation.TryGetValue(factionId, out int value) ? value : 0;
 
+        /// <summary>How many the household has in its stores at home.</summary>
         public int ItemCount(string itemId) =>
             State.Household.Inventory.TryGetValue(itemId, out int count) ? count : 0;
+
+        /// <summary>How many the party is carrying. Zero when nobody is away.</summary>
+        public int PackCount(string itemId) =>
+            State.Trip != null && State.Trip.Pack.TryGetValue(itemId, out int count) ? count : 0;
+
+        public bool OnTrip => State.Trip != null;
+        public double PackWeight => State.Trip == null ? 0 : TripSystem.Weight(Content, State.Trip.Pack);
+        /// <summary>What the current party can carry. Over this, travel is slower and draws trouble.</summary>
+        public double CarryCapacity => State.Trip == null ? 0 : TripSystem.Capacity(NewContext(), State.Trip.PartyIds);
+        public bool Overloaded => TripSystem.Overloaded(NewContext());
 
         /// <summary>The named settlement, or the home settlement when id is null.</summary>
         public SettlementState FindSettlement(string id = null) => WorldSystem.Resolve(State, Content, id);

@@ -23,6 +23,9 @@ namespace Hearthline.Sim
     public sealed class ServiceClosed : DomainEvent { public string SettlementId; public string ServiceId; }
     public sealed class ResidentSucceeded : DomainEvent { public string SettlementId; public string Role; public int PreviousId; public int NewId; }
     public sealed class GrudgeChanged : DomainEvent { public string FactionId; public bool Held; public string Reason; }
+    public sealed class TripStarted : DomainEvent { public System.Collections.Generic.List<int> PartyIds; }
+    public sealed class TripEnded : DomainEvent { public int DaysAway; public bool PackLost; }
+    public sealed class ItemsSpoiled : DomainEvent { public string ItemId; public int Count; public bool InPack; }
     public sealed class StructureChanged : DomainEvent { public string StructureId; public int OldTier; public int NewTier; }
     public sealed class JobAssigned : DomainEvent { public int CharacterId; public string JobId; }
     public sealed class MoraleChanged : DomainEvent { public int OldValue; public int NewValue; }

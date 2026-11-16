@@ -71,6 +71,10 @@ namespace Hearthline.Game
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("+1 day")) Run(sim, new AdvanceDays { Days = 1 });
             if (GUILayout.Button("Skip season")) Run(sim, new PassSeason());
+            if (GUILayout.Button(sim.OnTrip ? "Return home" : "Set out"))
+            {
+                if (sim.OnTrip) Run(sim, new ReturnHome()); else Run(sim, new SetOut());
+            }
             if (GUILayout.Button("Save")) { host.Save(); _status = "Saved."; }
             if (GUILayout.Button("Load")) _status = host.Load() ? "Loaded." : "Load failed; see console.";
             if (GUILayout.Button("New game")) { host.NewGame(); _status = "New game."; }
@@ -205,6 +209,12 @@ namespace Hearthline.Game
             }
 
             _scroll = GUILayout.BeginScrollView(_scroll);
+            if (sim.OnTrip)
+            {
+                GUILayout.Label("Pack: " + sim.PackWeight.ToString("0.#") + " / " + sim.CarryCapacity.ToString("0.#") + (sim.Overloaded ? "  OVERLOADED" : ""));
+                foreach (KeyValuePair<string, int> kv in sim.State.Trip.Pack) GUILayout.Label("  " + kv.Value + " × " + kv.Key);
+                GUILayout.Label("Stores at home:");
+            }
             foreach (KeyValuePair<string, int> kv in sim.State.Household.Inventory) GUILayout.Label(kv.Value + " × " + kv.Key);
             foreach (KeyValuePair<string, int> kv in sim.State.Household.Reputation) GUILayout.Label("Reputation with " + kv.Key + ": " + kv.Value);
             if (sim.State.Flags.Count > 0) GUILayout.Label("Flags: " + string.Join(", ", sim.State.Flags));

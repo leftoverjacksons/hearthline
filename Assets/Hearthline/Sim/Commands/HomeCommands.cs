@@ -12,6 +12,7 @@ namespace Hearthline.Sim
         internal override string Apply(SimContext ctx)
         {
             if (StructureId == null || !ctx.Content.Structures.TryGetValue(StructureId, out StructureDef def)) return "no structure '" + StructureId + "'";
+            if (ctx.State.Trip != null) return "the head is away; building waits until they are home";
             int tier = HomeSystem.TierOf(ctx.State, def.Id);
             if (tier >= def.Tiers.Count) return def.Name + " cannot be improved further";
             StructureTier next = def.Tiers[tier];
@@ -65,6 +66,8 @@ namespace Hearthline.Sim
 
         internal override string Apply(SimContext ctx)
         {
+            Character patient = ctx.FindCharacter(CharacterId);
+            if (patient != null && TripSystem.InParty(ctx.State, patient)) return patient.GivenName + " is away from the homestead";
             int tier = Math.Min(TreatmentRules.MaxTier, HomeSystem.Stat(ctx, HomeStat.Treatment));
             if (tier < TreatmentRules.MinTier) return "the homestead has nowhere to treat a wound";
             double best = 0;
@@ -86,7 +89,7 @@ namespace Hearthline.Sim
         {
             string error = TradeCheck(ctx, ItemId, Count, SettlementId, out ItemDef item, out SettlementState town);
             if (error != null) return error;
-            ctx.State.Household.Inventory.TryGetValue(item.Id, out int have);
+            TripSystem.CurrentInventory(ctx.State).TryGetValue(item.Id, out int have);
             if (have < Count) return "the household only has " + have + " of " + item.Id;
             int coins = item.Value * Count;
             EventSystem.ChangeItem(ctx, item.Id, -Count);
@@ -120,7 +123,7 @@ namespace Hearthline.Sim
             string error = SellItems.TradeCheck(ctx, ItemId, Count, SettlementId, out ItemDef item, out SettlementState town);
             if (error != null) return error;
             int cost = item.Value * ctx.Home.BuyMarkup * Count;
-            ctx.State.Household.Inventory.TryGetValue(HomeRules.Currency, out int coins);
+            TripSystem.CurrentInventory(ctx.State).TryGetValue(HomeRules.Currency, out int coins);
             if (coins < cost) return "that costs " + cost + " coin (the household has " + coins + ")";
             EventSystem.ChangeItem(ctx, HomeRules.Currency, -cost);
             EventSystem.ChangeItem(ctx, item.Id, Count);

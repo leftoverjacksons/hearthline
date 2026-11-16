@@ -131,6 +131,16 @@ namespace Hearthline.Sim
         public string SettlementId;
     }
 
+    /// <summary>The head and companions are away from the homestead. Null on <see cref="SimState.Trip"/> means everyone is home.</summary>
+    public sealed class Trip
+    {
+        public int StartDay;
+        /// <summary>The head first, then companions.</summary>
+        public List<int> PartyIds = new List<int>();
+        /// <summary>What the party carries. Loot found on the road lands here, and is lost if nobody comes back.</summary>
+        public SortedDictionary<string, int> Pack = new SortedDictionary<string, int>();
+    }
+
     public sealed class StorytellerState
     {
         /// <summary>Builds up while nothing happens; an event spends it.</summary>
@@ -161,6 +171,7 @@ namespace Hearthline.Sim
         public List<string> Flags = new List<string>();
         public List<SettlementState> Settlements = new List<SettlementState>();
         public ActiveEvent ActiveEvent;
+        public Trip Trip;
         public StorytellerState Storyteller = new StorytellerState();
     }
 }

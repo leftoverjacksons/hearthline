@@ -183,6 +183,7 @@ namespace Hearthline.Sim
             ctx.Emit(new CharacterDied { Day = state.Day, CharacterId = c.Id, Cause = cause, WasHeadOfHousehold = wasHead });
             ctx.Chronicle(c, ChronicleKind.Died, c.GivenName + " " + c.Surname + " died at " + AgeOf(ctx, c) + ": " + cause + ".");
             WorldSystem.ReplaceResident(ctx, c);
+            TripSystem.OnDeath(ctx, c, wasHead);
             if (!wasHead) return;
 
             state.Household.HeadId = null;

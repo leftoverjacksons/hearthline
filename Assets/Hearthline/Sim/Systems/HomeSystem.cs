@@ -54,7 +54,7 @@ namespace Hearthline.Sim
             state.Household.Structures.TryGetValue(structureId, out int tier) ? tier : 0;
 
         private static bool CanWork(SimContext ctx, Character c) =>
-            c.Alive && !c.Downed && c.JobId != null && LifeSystem.InHousehold(ctx, c)
+            c.Alive && !c.Downed && c.JobId != null && LifeSystem.InHousehold(ctx, c) && !TripSystem.InParty(ctx.State, c)
             && c.Id != ctx.State.Household.HeadId && LifeSystem.AgeOf(ctx, c) >= ctx.Home.MinWorkAge;
 
         /// <summary>Why this person cannot do this job right now, or null.</summary>
@@ -112,7 +112,7 @@ namespace Hearthline.Sim
                     int count = (int)Math.Round(ctx.Rng.NextInt(entry.CountMin, entry.CountMax + 1) * multiplier);
                     if (count <= 0) continue;
                     line.Items[entry.ItemId] = count;
-                    EventSystem.ChangeItem(ctx, entry.ItemId, count);
+                    EventSystem.ChangeItem(ctx, entry.ItemId, count, inStores: true);
                 }
                 // Skills grow by use. The override holds the trained value; marks and traits still apply on top.
                 double trained = c.BaseStats.TryGetValue(job.Skill, out double own) ? own
@@ -121,7 +121,9 @@ namespace Hearthline.Sim
             }
 
             // Food. Everyone but the head eats from the stores.
-            int mouths = members.Count - (house.HeadId.HasValue ? 1 : 0);
+            // The head, and anyone travelling with them, eat on the road.
+            int mouths = 0;
+            foreach (Character c in members) if (c.Id != house.HeadId && !TripSystem.InParty(ctx.State, c)) mouths++;
             int needed = Math.Max(0, mouths) * rules.FoodPerMemberPerSeason;
             var foods = new List<string>();
             foreach (ItemDef item in ctx.Content.Items.Values) if (item.Tags.Contains(HomeRules.FoodTag)) foods.Add(item.Id);
@@ -131,7 +133,7 @@ namespace Hearthline.Sim
                 if (needed <= 0) break;
                 house.Inventory.TryGetValue(food, out int have);
                 int eaten = Math.Min(have, needed);
-                if (eaten > 0) EventSystem.ChangeItem(ctx, food, -eaten);
+                if (eaten > 0) EventSystem.ChangeItem(ctx, food, -eaten, inStores: true);
                 needed -= eaten;
             }
             int hungry = (needed + rules.FoodPerMemberPerSeason - 1) / rules.FoodPerMemberPerSeason;
@@ -175,7 +177,7 @@ namespace Hearthline.Sim
                 if (items.Count > 0)
                 {
                     stolen = items[ctx.Rng.NextInt(0, items.Count)];
-                    EventSystem.ChangeItem(ctx, stolen, -house.Inventory[stolen]);
+                    EventSystem.ChangeItem(ctx, stolen, -house.Inventory[stolen], inStores: true);
                 }
             }
             ctx.Chronicle(c, ChronicleKind.Left, c.GivenName + " " + c.Surname + " left the household" + (stolen != null ? ", and took the " + stolen + " along." : "."));

@@ -49,7 +49,7 @@ namespace Hearthline.Sim
         {
             if (ItemId == null || !ctx.Content.Items.ContainsKey(ItemId)) return "no item '" + ItemId + "'";
             if (Count == 0) return "count must not be zero";
-            ctx.State.Household.Inventory.TryGetValue(ItemId, out int have);
+            TripSystem.CurrentInventory(ctx.State).TryGetValue(ItemId, out int have);
             if (have + Count < 0) return "the household only has " + have + " of " + ItemId;
             EventSystem.ChangeItem(ctx, ItemId, Count);
             return null;
