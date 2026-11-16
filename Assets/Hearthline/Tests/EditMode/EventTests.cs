@@ -212,7 +212,8 @@ namespace Hearthline.Tests
                     Simulation sim = TestSupport.NewSim(seed);
                     TestSupport.Ok(sim.Execute(new AddHouseholdMember { GivenName = "Levi", AgeYears = 30 }));
                     if (seed % 2 == 0)
-                        foreach (string item in TestSupport.Content.Items.Keys) sim.Execute(new GiveItem { ItemId = item, Count = 5 });
+                        foreach (ItemDef item in TestSupport.Content.Items.Values)
+                            if (item.Equip == null) sim.Execute(new GiveItem { ItemId = item.Id, Count = 5 });
                     TestSupport.Ok(sim.Execute(new StartEvent { EventId = eventId, Context = Creek }));
 
                     int steps = 0;
@@ -259,7 +260,7 @@ namespace Hearthline.Tests
             var seen = new HashSet<string>();
             for (ulong seed = 1; seed <= 20; seed++) seen.UnionWith(Run(seed, Road, 60));
             seen.Remove("");
-            Assert.That(seen, Is.EquivalentTo(new[] { "peddler_on_the_road", "continuity_patrol", "child_on_the_road", "road_work_party" }));
+            Assert.That(seen, Is.EquivalentTo(new[] { "peddler_on_the_road", "continuity_patrol", "child_on_the_road", "road_work_party", "rifle_in_the_wreck" }));
         }
 
         [Test]

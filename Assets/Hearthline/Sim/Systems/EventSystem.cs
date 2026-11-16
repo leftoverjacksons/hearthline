@@ -347,6 +347,15 @@ namespace Hearthline.Sim
                     foreach (SettlementValue v in (SettlementValue[])Enum.GetValues(typeof(SettlementValue)))
                         if (o.Settlement.TryGetValue(v, out int push)) WorldSystem.Influence(ctx, town, v, push);
             }
+            if (o.GearGiven != null && ctx.Content.Items.TryGetValue(o.GearGiven.DefId, out ItemDef gearDef) && gearDef.Equip != null)
+            {
+                Character to = Who(ctx, active, o.GearGiven.To);
+                if (to != null && to.Alive)
+                {
+                    GearItem made = GearSystem.Create(ctx, gearDef, to, "First carried by");
+                    if (o.GearGiven.Note != null) GearSystem.Note(ctx, made, Render(ctx, active, o.GearGiven.Note));
+                }
+            }
             if (o.Morale != 0) HomeSystem.ChangeMorale(ctx, o.Morale);
             if (o.Damage != null) HomeSystem.Damage(ctx, o.Damage);
             if (o.Memory != null)

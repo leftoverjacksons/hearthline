@@ -80,4 +80,4 @@ A change is done when:
 
 Keep the dev console and cheat panel working. At minimum: spawn event by id, add or remove mark, skip season, set age, kill head of household, give item.
 
-The cheat panel is `Assets/Hearthline/Game/CheatPanel.cs` (F1), with tabs for marks, events and items, the household and homestead (structures, jobs, morale), and the world (settlements, townsfolk, grudges). When a system lands, add its cheats there.
+The cheat panel is `Assets/Hearthline/Game/CheatPanel.cs` (F1), with tabs for marks and gear, events and items, the household and homestead (structures, jobs, morale), and the world (settlements, townsfolk, grudges). When a system lands, add its cheats there.

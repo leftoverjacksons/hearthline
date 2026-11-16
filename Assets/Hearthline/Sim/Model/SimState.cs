@@ -56,6 +56,8 @@ namespace Hearthline.Sim
         public string Role;
         /// <summary>Work this household member does at home. Null for none.</summary>
         public string JobId;
+        /// <summary>Unique items this person carries. The dead keep theirs until someone takes them up.</summary>
+        public List<GearItem> Gear = new List<GearItem>();
         /// <summary>Notable dealings with the family, oldest first. Passed on to whoever takes over their work.</summary>
         public List<Memory> Memories = new List<Memory>();
         /// <summary>Latent heritable marks this person carries without showing. They can surface in a child.</summary>
@@ -71,6 +73,22 @@ namespace Hearthline.Sim
         public bool Downed;
         /// <summary>What this person thinks of others, by character id. -100..100.</summary>
         public SortedDictionary<int, int> Opinions = new SortedDictionary<int, int>();
+    }
+
+    public sealed class LedgerEntry { public int Day; public string Text; }
+
+    /// <summary>One particular rifle, coat or knife. It keeps its history whoever holds it.</summary>
+    public sealed class GearItem
+    {
+        public int Id;
+        public string DefId;
+        /// <summary>Engraved name, once it has earned one.</summary>
+        public string Name;
+        public bool Equipped;
+        public int? FirstOwnerId;
+        /// <summary>Held by a blood descendant of its first owner. Its heirloom effects apply.</summary>
+        public bool Heirloom;
+        public List<LedgerEntry> Ledger = new List<LedgerEntry>();
     }
 
     public sealed class Memory { public int Day; public string Text; }
@@ -111,6 +129,8 @@ namespace Hearthline.Sim
         /// <summary>Standing with each faction, -100..100. It belongs to the surname, so heirs inherit it.</summary>
         public SortedDictionary<string, int> Reputation = new SortedDictionary<string, int>();
         public List<Grudge> Grudges = new List<Grudge>();
+        /// <summary>Unique items nobody is carrying.</summary>
+        public List<GearItem> GearStore = new List<GearItem>();
         /// <summary>Structure id -> tier built. 0 is not built.</summary>
         public SortedDictionary<string, int> Structures = new SortedDictionary<string, int>();
         /// <summary>How the house is holding together, 0..100.</summary>
@@ -164,6 +184,7 @@ namespace Hearthline.Sim
         public RngState Rng;
         public int NextCharacterId = 1;
         public int NextMarkId = 1;
+        public int NextGearId = 1;
         public Household Household = new Household();
         public List<Character> Characters = new List<Character>();
         public List<ChronicleEntry> Chronicle = new List<ChronicleEntry>();

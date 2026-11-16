@@ -17,7 +17,7 @@ namespace Hearthline.Sim.Content
             foreach (string id in ids) ValidateTrait(db, db.Traits[id], errors);
         }
 
-        private static bool EffectTargetKnown(ContentDatabase db, MarkEffect effect)
+        internal static bool EffectTargetKnown(ContentDatabase db, MarkEffect effect)
         {
             return effect.Kind == EffectKind.Stat ? db.Vocab.Stats.ContainsKey(effect.Target)
                 : effect.Kind == EffectKind.Reaction ? db.Vocab.ReactionTags.Contains(effect.Target)

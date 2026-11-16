@@ -48,6 +48,7 @@ namespace Hearthline.Sim
         internal override string Apply(SimContext ctx)
         {
             if (ItemId == null || !ctx.Content.Items.ContainsKey(ItemId)) return "no item '" + ItemId + "'";
+            if (ctx.Content.Items[ItemId].Equip != null) return ItemId + " is gear; each one is its own thing (use GiveGear)";
             if (Count == 0) return "count must not be zero";
             TripSystem.CurrentInventory(ctx.State).TryGetValue(ItemId, out int have);
             if (have + Count < 0) return "the household only has " + have + " of " + ItemId;

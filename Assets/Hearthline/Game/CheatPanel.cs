@@ -31,7 +31,7 @@ namespace Hearthline.Game
         private int _regionIndex = (int)BodyRegion.Face;
         private bool _atHome;
         private string _cause = "the boar", _place = "Miller's Ford", _age = "50", _areaTags = "road", _newName = "Levi", _status = "";
-        private string[] _defIds = new string[0], _eventIds = new string[0], _itemIds = new string[0], _jobIds = new string[0], _structureIds = new string[0];
+        private string[] _defIds = new string[0], _eventIds = new string[0], _itemIds = new string[0], _jobIds = new string[0], _structureIds = new string[0], _gearIds = new string[0];
 
         private void Start()
         {
@@ -132,6 +132,15 @@ namespace Hearthline.Game
             _damageIndex = GUILayout.SelectionGrid(_damageIndex, DamageNames, 5);
             if (GUILayout.Button("Hit " + region + " with " + DamageNames[_damageIndex]))
                 Run(sim, new InflictHit { CharacterId = head.Id, Region = region, Damage = (DamageType)_damageIndex, Severity = severity, Origin = origin });
+
+            // Gear: unique items the head carries. Click a kind to be given one; click one carried to wear it or take it off.
+            GUILayout.BeginHorizontal();
+            foreach (string itemId in _gearIds)
+                if (GUILayout.Button("+" + itemId)) Run(sim, new GiveGear { DefId = itemId, CharacterId = head.Id });
+            GUILayout.EndHorizontal();
+            foreach (GearView gear in sim.GearOf(head))
+                if (GUILayout.Button((gear.Equipped ? "[worn] " : "[carried] ") + gear.Name + " · " + gear.Slot + (gear.Heirloom ? " · heirloom" : "") + " · " + gear.Ledger.Count + " ledger lines"))
+                    Run(sim, new EquipGear { GearId = gear.GearId, Equipped = !gear.Equipped });
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Marks (" + head.Marks.Count + ")   Infirmary tier", GUILayout.Width(200));
@@ -337,7 +346,13 @@ namespace Hearthline.Game
         {
             if (_defIds.Length != content.Marks.Count) _defIds = SortedKeys(content.Marks.Keys);
             if (_eventIds.Length != content.Events.Count) _eventIds = SortedKeys(content.Events.Keys);
-            if (_itemIds.Length != content.Items.Count) _itemIds = SortedKeys(content.Items.Keys);
+            if (_itemIds.Length + _gearIds.Length != content.Items.Count)
+            {
+                var goods = new List<string>(); var gear = new List<string>();
+                foreach (ItemDef item in content.Items.Values) (item.Equip == null ? goods : gear).Add(item.Id);
+                _itemIds = SortedKeys(goods);
+                _gearIds = SortedKeys(gear);
+            }
             if (_jobIds.Length != content.Jobs.Count) _jobIds = SortedKeys(content.Jobs.Keys);
             if (_structureIds.Length != content.Structures.Count) _structureIds = SortedKeys(content.Structures.Keys);
         }

@@ -1,0 +1,23 @@
+id: rifle_in_the_wreck
+tags: [encounter, salvage]
+weight: 5
+cooldown_days: 300
+when:
+  area_tags_any: [ruin, road]
+  flags_none: [took_the_wreck_rifle]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "A truck on its side in the kudzu, older than anyone living. Behind the seat, wrapped in oilcloth that has mostly held, a lever rifle."
+    choices:
+      - label: Take the rifle
+        outcome:
+          gear: { def: lever_rifle, to: hero, note: "Found in a wrecked truck by {hero.full_name}." }
+          flag_set: [took_the_wreck_rifle]
+          chronicle: "{hero.name} found a rifle in an old wreck."
+      - label: Take the oilcloth and the brass, leave the gun
+        outcome:
+          item: { cartridges: 3 }
+      - label: Leave it for whoever wrapped it
+        outcome:
+          flag_set: [left_the_wreck_rifle]

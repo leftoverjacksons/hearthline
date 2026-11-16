@@ -10,7 +10,20 @@ namespace Hearthline.Sim.Content
         /// <summary>What the store pays for one, in coin. 0 means nobody trades in it.</summary>
         public int Value;
         public readonly List<string> Tags = new List<string>();
+        /// <summary>Null for ordinary stackable goods.</summary>
+        public EquipDef Equip;
         public string SourceFile;
+    }
+
+    /// <summary>Makes an item gear: a unique thing that is worn or wielded, not a count in the stores.</summary>
+    public sealed class EquipDef
+    {
+        public EquipSlot Slot;
+        /// <summary>Asset key for the bridge.</summary>
+        public string Visual;
+        public readonly List<MarkEffect> Effects = new List<MarkEffect>();
+        /// <summary>Extra effects in the hands of a blood descendant of the first owner.</summary>
+        public readonly List<MarkEffect> HeirloomEffects = new List<MarkEffect>();
     }
 
     public sealed class LootEntry { public string ItemId; public int CountMin = 1; public int CountMax = 1; public double Weight = 1; }
@@ -85,6 +98,8 @@ namespace Hearthline.Sim.Content
 
     public sealed class TraitOutcome { public string Target; public string Add; public string Remove; }
 
+    public sealed class GearOutcome { public string DefId; public string To; public string Note; }
+
     public sealed class GrudgeOutcome { public string FactionId; public string Reason; }
 
     public sealed class MemoryOutcome { public string Target; public string Text; }
@@ -117,6 +132,8 @@ namespace Hearthline.Sim.Content
         public string SettleGrudge;
         /// <summary>Something a cast member will remember about the family.</summary>
         public MemoryOutcome Memory;
+        /// <summary>A unique item given to a cast member.</summary>
+        public GearOutcome GearGiven;
         /// <summary>Change in household morale.</summary>
         public int Morale;
         /// <summary>Structure that loses a tier.</summary>
@@ -141,6 +158,7 @@ namespace Hearthline.Sim.Content
             if (Settlement.Count > 0) kinds.Add("settlement");
             if (Grudge != null || SettleGrudge != null) kinds.Add("grudge");
             if (Memory != null) kinds.Add("memory");
+            if (GearGiven != null) kinds.Add("gear");
             if (Morale != 0) kinds.Add("morale");
             if (Damage != null) kinds.Add("damage");
             if (Goto != null) kinds.Add("goto");
@@ -149,7 +167,7 @@ namespace Hearthline.Sim.Content
         }
 
         public static readonly string[] AllKinds =
-            { "relationship", "reputation", "item", "mark", "hit", "trait", "loot_table", "flag", "recruit", "ambush", "chronicle", "settlement", "grudge", "memory", "morale", "damage", "goto", "chance" };
+            { "relationship", "reputation", "item", "mark", "hit", "trait", "loot_table", "flag", "recruit", "ambush", "chronicle", "settlement", "grudge", "memory", "morale", "damage", "gear", "goto", "chance" };
     }
 
     public sealed class EventChoice { public string Label; public ChoiceRequires Requires; public EventOutcome Outcome = new EventOutcome(); }

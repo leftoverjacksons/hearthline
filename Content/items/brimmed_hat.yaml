@@ -1,0 +1,11 @@
+id: brimmed_hat
+name: Brimmed hat
+weight: 0.3
+tags: [gear]
+equip:
+  slot: head
+  visual: hat_brimmed
+  effects:
+    - { stat: perception, mul: 1.03 }
+  heirloom_effects:      # only for a blood descendant of whoever first carried it
+    - { stat: persuasion, add: 1 }

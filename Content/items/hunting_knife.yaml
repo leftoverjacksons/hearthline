@@ -1,0 +1,11 @@
+id: hunting_knife
+name: Hunting knife
+weight: 0.4
+tags: [gear]
+equip:
+  slot: knife
+  visual: knife_hunting
+  effects:
+    - { stat: tracking, add: 1 }
+  heirloom_effects:      # only for a blood descendant of whoever first carried it
+    - { stat: stealth, add: 1 }

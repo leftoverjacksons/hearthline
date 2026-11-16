@@ -14,6 +14,12 @@ namespace Hearthline.Sim
                 if (trait == null) continue;
                 foreach (MarkEffect effect in trait.Effects) yield return effect;
             }
+            foreach (GearItem gear in character.Gear)
+            {
+                if (!gear.Equipped || !content.Items.TryGetValue(gear.DefId, out ItemDef item) || item.Equip == null) continue;
+                foreach (MarkEffect effect in item.Equip.Effects) yield return effect;
+                if (gear.Heirloom) foreach (MarkEffect effect in item.Equip.HeirloomEffects) yield return effect;
+            }
             foreach (Mark mark in character.Marks)
             {
                 MarkStageDef stage = content.FindMark(mark.DefId)?.FindStage(mark.Stage);

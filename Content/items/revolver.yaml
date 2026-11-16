@@ -1,0 +1,11 @@
+id: revolver
+name: Revolver
+weight: 1.2
+tags: [gear]
+equip:
+  slot: sidearm
+  visual: revolver
+  effects:
+    - { stat: reload_speed, mul: 1.05 }
+  heirloom_effects:      # only for a blood descendant of whoever first carried it
+    - { stat: aim_steadiness, mul: 1.05 }

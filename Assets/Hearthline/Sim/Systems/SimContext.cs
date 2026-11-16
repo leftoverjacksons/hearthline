@@ -15,6 +15,7 @@ namespace Hearthline.Sim
         public WorldRules World;
         public HomeRules Home;
         public TripRules Trips;
+        public GearRules Gear;
         /// <summary>Age marks that arrive on their own (gained_at_age), sorted by id.</summary>
         public List<MarkDef> AgeMarks;
         public readonly List<DomainEvent> Events = new List<DomainEvent>();

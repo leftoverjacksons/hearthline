@@ -108,6 +108,7 @@ namespace Hearthline.Sim
             if (!town.OpenServices.Contains("general_store")) return "there is no store open in " + town.Id;
             if (count < 1) return "count must be at least 1";
             if (item.Value < 1 || item.Id == HomeRules.Currency) return "nobody trades in " + item.Id;
+            if (item.Equip != null) return item.Id + " is gear; trading unique items is not built yet";
             return null;
         }
     }

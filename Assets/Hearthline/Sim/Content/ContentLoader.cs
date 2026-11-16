@@ -251,7 +251,7 @@ namespace Hearthline.Sim.Content
             return def;
         }
 
-        private static MarkEffect ReadEffect(YamlMap e)
+        internal static MarkEffect ReadEffect(YamlMap e)
         {
             int kinds = (e.Has("stat") ? 1 : 0) + (e.Has("reaction") ? 1 : 0) + (e.Has("ability") ? 1 : 0);
             if (kinds != 1)

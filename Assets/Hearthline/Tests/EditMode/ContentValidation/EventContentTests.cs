@@ -36,7 +36,8 @@ namespace Hearthline.Tests.ContentValidation
 
             foreach (string id in TestSupport.Content.LootTables.Keys) Assert.That(loot, Does.Contain(id));
             foreach (string id in TestSupport.Content.Factions.Keys) Assert.That(factions, Does.Contain(id));
-            foreach (string id in TestSupport.Content.Items.Keys) Assert.That(items, Does.Contain(id), "item '" + id + "' is never given or taken");
+            foreach (ItemDef item in TestSupport.Content.Items.Values)
+                if (item.Equip == null) Assert.That(items, Does.Contain(item.Id), "item '" + item.Id + "' is never given or taken");
         }
 
         // ---- schema rules --------------------------------------------------------------------------

@@ -1,0 +1,11 @@
+id: wool_coat
+name: Wool coat
+weight: 2
+tags: [gear]
+equip:
+  slot: outer
+  visual: coat_wool
+  effects:
+    - { stat: stamina, mul: 1.05 }
+  heirloom_effects:      # only for a blood descendant of whoever first carried it
+    - { stat: persuasion, add: 1 }

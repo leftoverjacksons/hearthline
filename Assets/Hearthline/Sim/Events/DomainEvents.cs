@@ -23,6 +23,8 @@ namespace Hearthline.Sim
     public sealed class ServiceClosed : DomainEvent { public string SettlementId; public string ServiceId; }
     public sealed class ResidentSucceeded : DomainEvent { public string SettlementId; public string Role; public int PreviousId; public int NewId; }
     public sealed class GrudgeChanged : DomainEvent { public string FactionId; public bool Held; public string Reason; }
+    /// <summary>A piece of gear was created, moved, worn, taken off or named. Redraw that character's outfit.</summary>
+    public sealed class GearChanged : DomainEvent { public int GearId; public int? CharacterId; }
     public sealed class TripStarted : DomainEvent { public System.Collections.Generic.List<int> PartyIds; }
     public sealed class TripEnded : DomainEvent { public int DaysAway; public bool PackLost; }
     public sealed class ItemsSpoiled : DomainEvent { public string ItemId; public int Count; public bool InPack; }

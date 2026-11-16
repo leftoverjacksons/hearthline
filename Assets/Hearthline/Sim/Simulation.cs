@@ -46,6 +46,7 @@ namespace Hearthline.Sim
         public WorldRules World { get; } = new WorldRules();
         public HomeRules Home { get; } = new HomeRules();
         public TripRules Trips { get; } = new TripRules();
+        public GearRules Gear { get; } = new GearRules();
         private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
@@ -62,7 +63,7 @@ namespace Hearthline.Sim
         }
 
         private SimContext NewContext() =>
-            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, Trips = Trips, AgeMarks = _ageMarks };
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, Trips = Trips, Gear = Gear, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -156,6 +157,11 @@ namespace Hearthline.Sim
             SettlementState s = FindSettlement(settlementId);
             return s == null ? null : State.Characters.Find(c => c.Alive && c.SettlementId == s.Id && c.Role == role);
         }
+
+        /// <summary>Everything this person carries, worn or not, with asset keys and history.</summary>
+        public List<GearView> GearOf(Character character) => GearSystem.Views(Content, character.Gear);
+
+        public List<GearView> GearInStores() => GearSystem.Views(Content, State.Household.GearStore);
 
         public int StructureTier(string structureId) => HomeSystem.TierOf(State, structureId);
 

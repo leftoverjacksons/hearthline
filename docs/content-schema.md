@@ -305,3 +305,24 @@ outcome:
   morale: -10
   damage: garden                   # the structure loses a tier
 ```
+
+## Items: gear
+
+An item with `equip` is gear: each one is a unique object with its own history, carried by a person or
+kept in the stores. Gear cannot be given as a count (`item:`, loot tables, job yields, build costs).
+
+```yaml
+id: lever_rifle
+name: Lever rifle
+weight: 3.5
+tags: [gear]
+equip:
+  slot: long_gun            # base mid outer head hands feet accessory long_gun sidearm knife
+  visual: rifle_lever       # asset key for the bridge
+  effects:                  # while worn or wielded; same effects as marks, without regions
+    - { stat: marksmanship, add: 1 }
+  heirloom_effects:         # in addition, for a blood descendant of whoever first carried it
+    - { stat: aim_steadiness, mul: 1.08 }
+```
+
+Event outcome: `gear: { def: lever_rifle, to: hero, note: "Found in a wrecked truck by {hero.full_name}." }`

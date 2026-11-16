@@ -18,6 +18,14 @@ namespace Hearthline.Sim.Content
             var def = new ItemDef { SourceFile = path, Id = root.Str("id"), Name = root.Str("name"), Weight = root.Num("weight", true) ?? 0, Value = root.Int("value") ?? 0 };
             if (def.Value < 0) root.Error("'value' must not be negative");
             def.Tags.AddRange(root.StrList("tags"));
+            YamlMap equip = root.Map("equip", "equip");
+            if (equip != null)
+            {
+                def.Equip = new EquipDef { Slot = equip.Enum<EquipSlot>("slot") ?? EquipSlot.Accessory, Visual = equip.Str("visual") };
+                foreach (YamlMap e in equip.MapList("effects", "equip effects")) { MarkEffect fx = ContentLoader.ReadEffect(e); if (fx != null) def.Equip.Effects.Add(fx); }
+                foreach (YamlMap e in equip.MapList("heirloom_effects", "equip heirloom_effects")) { MarkEffect fx = ContentLoader.ReadEffect(e); if (fx != null) def.Equip.HeirloomEffects.Add(fx); }
+                equip.Done();
+            }
             if (def.Weight < 0) root.Error("'weight' must not be negative");
             root.Done();
             return def;
@@ -322,6 +330,12 @@ namespace Hearthline.Sim.Content
                 outcome.Memory = new MemoryOutcome { Target = mem.Str("target"), Text = mem.Str("text") };
                 mem.Done();
             }
+            YamlMap gear = o.Map("gear", "gear");
+            if (gear != null)
+            {
+                outcome.GearGiven = new GearOutcome { DefId = gear.Str("def"), To = gear.Str("to"), Note = gear.Has("note") ? gear.Str("note") : null };
+                gear.Done();
+            }
             outcome.Morale = o.Int("morale") ?? 0;
             if (o.Has("morale") && outcome.Morale == 0) o.Error("'morale' must not be zero");
             outcome.Damage = o.Has("damage") ? o.Str("damage") : null;
@@ -350,7 +364,26 @@ namespace Hearthline.Sim.Content
             foreach (FactionDef f in Sorted(db.Factions))
                 if (!Naming.IsSnakeId(f.Id)) errors.Add(new ContentError { File = f.SourceFile, Message = "id '" + f.Id + "' must be snake_case" });
             foreach (ItemDef i in Sorted(db.Items))
+            {
                 if (!Naming.IsSnakeId(i.Id)) errors.Add(new ContentError { File = i.SourceFile, Message = "id '" + i.Id + "' must be snake_case" });
+                if (i.Equip == null) continue;
+                var all = new List<MarkEffect>(i.Equip.Effects);
+                all.AddRange(i.Equip.HeirloomEffects);
+                foreach (MarkEffect fx in all)
+                {
+                    if (!ContentValidator.EffectTargetKnown(db, fx)) errors.Add(new ContentError { File = i.SourceFile, Message = Naming.ToSnake(fx.Kind) + " '" + fx.Target + "' is not defined in " + ContentLoader.VocabFile });
+                    if (fx.Regions.Count > 0) errors.Add(new ContentError { File = i.SourceFile, Message = "gear effects cannot be limited to regions" });
+                }
+            }
+            // Gear is unique; it cannot be handed out as a count.
+            void NotGear(string itemId, string file, string where)
+            {
+                if (db.Items.TryGetValue(itemId, out ItemDef item) && item.Equip != null)
+                    errors.Add(new ContentError { File = file, Message = where + ": '" + itemId + "' is gear and cannot be given as a count; use a gear outcome" });
+            }
+            foreach (LootTableDef l in Sorted(db.LootTables)) foreach (LootEntry e in l.Entries) NotGear(e.ItemId, l.SourceFile, "entries");
+            foreach (JobDef j in Sorted(db.Jobs)) foreach (LootEntry e in j.Produces) NotGear(e.ItemId, j.SourceFile, "produces");
+            foreach (StructureDef s in Sorted(db.Structures)) foreach (StructureTier t in s.Tiers) foreach (string k in t.Cost.Keys) NotGear(k, s.SourceFile, "cost");
             foreach (LootTableDef l in Sorted(db.LootTables))
             {
                 if (!Naming.IsSnakeId(l.Id)) errors.Add(new ContentError { File = l.SourceFile, Message = "id '" + l.Id + "' must be snake_case" });
@@ -446,7 +479,17 @@ namespace Hearthline.Sim.Content
             {
                 foreach (string role in o.Relationship.Keys) Role(role, where + " relationship");
                 foreach (string f in o.Reputation.Keys) Known(db.Factions.ContainsKey(f), "faction", f, where + " reputation");
-                foreach (string i in o.Items.Keys) Known(db.Items.ContainsKey(i), "item", i, where + " item");
+                foreach (string i in o.Items.Keys)
+                {
+                    Known(db.Items.ContainsKey(i), "item", i, where + " item");
+                    if (db.Items.TryGetValue(i, out ItemDef it) && it.Equip != null) Err(where + ": '" + i + "' is gear and cannot be given as a count; use a gear outcome");
+                }
+                if (o.GearGiven != null)
+                {
+                    Role(o.GearGiven.To, where + " gear");
+                    Known(o.GearGiven.DefId != null && db.Items.TryGetValue(o.GearGiven.DefId, out ItemDef g) && g.Equip != null, "gear", o.GearGiven.DefId, where);
+                    if (o.GearGiven.Note != null) CheckText(o.GearGiven.Note, where + " gear note");
+                }
                 if (o.LootTable != null) Known(db.LootTables.ContainsKey(o.LootTable), "loot table", o.LootTable, where);
                 if (o.Ambush != null) Known(db.Vocab.Encounters.Contains(o.Ambush), "encounter", o.Ambush, where + " ambush");
                 if (o.Recruit != null)
