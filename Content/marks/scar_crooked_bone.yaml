@@ -1,0 +1,15 @@
+id: scar_crooked_bone
+name: Crooked bone
+category: scar
+regions: [head, face, torso, arm_l, arm_r, hand_l, hand_r, leg_l, leg_r]
+heritable: none
+origin_text: "Bone broken by {cause}[ at {place}], {season} of year {year}. It set wrong."
+initial_stage: scarred
+stages:
+  - id: scarred
+    effects:
+      - { stat: carry_capacity, mul: 0.9 }
+      - { stat: aim_steadiness, mul: 0.9, regions: [arm_l, arm_r, hand_l, hand_r] }
+      - { stat: move_speed, mul: 0.92, regions: [leg_l, leg_r] }
+      - { reaction: disfigured, regions: [face] }
+    visual: { blendshapes: { crooked_bone: 1 } }

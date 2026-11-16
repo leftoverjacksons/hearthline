@@ -1,0 +1,12 @@
+id: rite_guilt_shadow
+name: Guilt's shadow
+category: rite
+regions: [head]
+heritable: none
+origin_text: "Carried since {cause}[ at {place}], {season} of year {year}"
+initial_stage: carried
+stages:
+  - id: carried
+    effects:
+      - { stat: persuasion, add: -1 }
+      - { reaction: guilty }

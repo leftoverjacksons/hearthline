@@ -1,0 +1,14 @@
+id: loss_limp
+name: Limp
+category: loss
+regions: [leg_l, leg_r]
+heritable: none
+origin_text: "Leg ruined by {cause}[ at {place}], {season} of year {year}"
+initial_stage: lost
+stages:
+  - id: lost
+    effects:
+      - { stat: move_speed, mul: 0.75 }
+      - { stat: stealth, add: -1 }
+      - { reaction: maimed }
+    visual: { part_swap: gait_limp }

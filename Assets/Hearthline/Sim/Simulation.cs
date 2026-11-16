@@ -1,0 +1,169 @@
+using System;
+using System.Collections.Generic;
+using Hearthline.Sim.Content;
+
+namespace Hearthline.Sim
+{
+    public sealed class NewGameOptions
+    {
+        public ulong Seed = 1;
+        public string Surname = "Ward";
+        public string HeadGivenName = "Ada";
+        public int HeadAgeYears = 28;
+    }
+
+    /// <summary>A mark as presentation needs it: instance data joined with its definition and current stage.</summary>
+    public sealed class MarkView
+    {
+        public int MarkId;
+        public string DefId;
+        public string Name;
+        public MarkCategory Category;
+        public BodyRegion Region;
+        public int Severity;
+        public string Stage;
+        public string OriginText;
+        /// <summary>Asset keys for the current stage. Never null.</summary>
+        public MarkVisual Visual;
+        /// <summary>True when the save refers to a definition or stage that content no longer has.</summary>
+        public bool Orphaned;
+    }
+
+    /// <summary>
+    /// The simulation: state plus the rules that change it. The only way in is <see cref="Execute"/>;
+    /// the only way out is reading <see cref="State"/>, the query methods, and <see cref="EventRaised"/>.
+    /// </summary>
+    public sealed class Simulation
+    {
+        private readonly SimRandom _rng;
+
+        /// <summary>Read it, never write it. Changes go through commands.</summary>
+        public SimState State { get; }
+        public ContentDatabase Content { get; }
+        public TreatmentRules Treatment { get; } = new TreatmentRules();
+
+        /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
+        public event Action<DomainEvent> EventRaised;
+
+        public Simulation(SimState state, ContentDatabase content)
+        {
+            State = state ?? throw new ArgumentNullException(nameof(state));
+            Content = content ?? throw new ArgumentNullException(nameof(content));
+            if (state.Rng == null) throw new ArgumentException("state has no RNG state", nameof(state));
+            _rng = new SimRandom(state.Rng);
+        }
+
+        public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
+        {
+            var state = new SimState { Rng = SimRandom.Seed(options.Seed) };
+            var head = new Character
+            {
+                Id = state.NextCharacterId++,
+                GivenName = options.HeadGivenName,
+                Surname = options.Surname,
+                BirthDay = state.Day - options.HeadAgeYears * GameDate.DaysPerYear,
+            };
+            state.Characters.Add(head);
+            state.Household.Surname = options.Surname;
+            state.Household.HeadId = head.Id;
+            state.Household.MemberIds.Add(head.Id);
+            return new Simulation(state, content);
+        }
+
+        public CommandResult Execute(Command command)
+        {
+            if (command == null) throw new ArgumentNullException(nameof(command));
+            var ctx = new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment };
+            string error = command.Apply(ctx);
+            if (error != null) return new CommandResult { Ok = false, Error = error };
+
+            var events = ctx.Events.ToArray();
+            Action<DomainEvent> handler = EventRaised;
+            if (handler != null) foreach (DomainEvent e in events) handler(e);
+            return new CommandResult { Ok = true, Events = events };
+        }
+
+        // ---- Queries -------------------------------------------------------------------------------
+
+        public GameDate Date => new GameDate(State.Day);
+
+        public Character FindCharacter(int id)
+        {
+            foreach (Character c in State.Characters) if (c.Id == id) return c;
+            return null;
+        }
+
+        /// <summary>The current head of household, or null if they have died and nobody has succeeded them.</summary>
+        public Character Head => State.Household.HeadId.HasValue ? FindCharacter(State.Household.HeadId.Value) : null;
+
+        /// <summary>Age in whole years today, or at death for the dead.</summary>
+        public int AgeOf(Character character) =>
+            GameDate.YearsBetween(character.BirthDay, character.DeathDay ?? State.Day);
+
+        public LifeStage LifeStageOf(Character character) => LifeStages.ForAge(AgeOf(character));
+
+        public double GetStat(Character character, string statId) => StatSystem.GetStat(Content, character, statId);
+
+        /// <summary>Tags NPCs and factions react to ("scarred", "changed"), from the character's marks.</summary>
+        public IReadOnlyCollection<string> ReactionTagsOf(Character character) =>
+            StatSystem.Collect(Content, character, EffectKind.Reaction);
+
+        public IReadOnlyCollection<string> AbilitiesOf(Character character) =>
+            StatSystem.Collect(Content, character, EffectKind.Ability);
+
+        public List<MarkView> MarkViewsOf(Character character)
+        {
+            var views = new List<MarkView>();
+            foreach (Mark mark in character.Marks)
+            {
+                MarkDef def = Content.FindMark(mark.DefId);
+                MarkStageDef stage = def?.FindStage(mark.Stage);
+                views.Add(new MarkView
+                {
+                    MarkId = mark.Id,
+                    DefId = mark.DefId,
+                    Name = def?.Name ?? mark.DefId,
+                    Category = mark.Category,
+                    Region = mark.Region,
+                    Severity = mark.Severity,
+                    Stage = mark.Stage,
+                    OriginText = mark.OriginText,
+                    Visual = stage?.Visual ?? new MarkVisual(),
+                    Orphaned = stage == null,
+                });
+            }
+            return views;
+        }
+
+        /// <summary>Marks whose definition or stage no longer exists in content. Check after loading a save.</summary>
+        public List<string> FindOrphanedMarks()
+        {
+            var problems = new List<string>();
+            foreach (Character c in State.Characters)
+                foreach (Mark mark in c.Marks)
+                    if (Content.FindMark(mark.DefId)?.FindStage(mark.Stage) == null)
+                        problems.Add(c.GivenName + " " + c.Surname + ": mark " + mark.Id + " refers to missing '" + mark.DefId + "' stage '" + mark.Stage + "'");
+            return problems;
+        }
+
+        // ---- Persistence ---------------------------------------------------------------------------
+
+        public string ToJson() => SaveFormat.ToJson(State);
+
+        public static Simulation FromJson(string json, ContentDatabase content) =>
+            new Simulation(SaveFormat.FromJson(json), content);
+    }
+
+    public static class LifeStages
+    {
+        /// <summary>Boundaries from the design doc: Child 0-12, Youth 13-17, Adult 18-45, Elder 46-65, Old above.</summary>
+        public static LifeStage ForAge(int years)
+        {
+            if (years <= 12) return LifeStage.Child;
+            if (years <= 17) return LifeStage.Youth;
+            if (years <= 45) return LifeStage.Adult;
+            if (years <= 65) return LifeStage.Elder;
+            return LifeStage.Old;
+        }
+    }
+}

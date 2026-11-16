@@ -1,0 +1,38 @@
+# Closed vocabularies. Content may only reference stats, reaction tags and abilities listed here.
+# Values are first-pass placeholders; add entries here before using them in a mark.
+
+stats:
+  # Skills (grow by use; 0 is untrained)
+  - { id: marksmanship, name: Marksmanship, base: 0 }
+  - { id: tracking, name: Tracking, base: 0 }
+  - { id: medicine, name: Medicine, base: 0 }
+  - { id: smithing, name: Smithing, base: 0 }
+  - { id: stealth, name: Stealth, base: 0 }
+  - { id: riding, name: Riding, base: 0 }
+  - { id: persuasion, name: Persuasion, base: 0 }
+  - { id: knack, name: Knack, base: 0 }
+  - { id: teaching, name: Teaching, base: 0 }
+  # Physical multipliers (1 is an unmarked adult)
+  - { id: move_speed, name: Movement speed, base: 1 }
+  - { id: reload_speed, name: Reload speed, base: 1 }
+  - { id: aim_steadiness, name: Aim steadiness, base: 1 }
+  - { id: carry_capacity, name: Carry capacity, base: 1 }
+  - { id: stamina, name: Stamina, base: 1 }
+  - { id: perception, name: Perception, base: 1 }
+
+reaction_tags:
+  - bleeding       # visibly hurt right now
+  - feverish       # visibly sick
+  - scarred        # carries visible old violence
+  - disfigured     # hard to look at
+  - maimed         # visibly missing something
+  - changed        # visibly altered by the Neighbors
+  - uncanny        # something is off, hard to say what
+  - guilty         # carries themselves like someone who did wrong
+  - elder          # reads as old
+  - neighbors_notice   # draws the Neighbors' attention
+
+abilities:
+  - night_sight    # sees in the dark
+  - dowse_thin     # senses Thin places
+  - numb_skin      # does not feel pain or cold in the marked place

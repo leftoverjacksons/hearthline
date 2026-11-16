@@ -1,0 +1,14 @@
+id: loss_eye
+name: Lost eye
+category: loss
+regions: [face]
+heritable: none
+origin_text: "Eye lost to {cause}[ at {place}], {season} of year {year}"
+initial_stage: lost
+stages:
+  - id: lost
+    effects:
+      - { stat: marksmanship, add: -2 }
+      - { stat: perception, mul: 0.75 }
+      - { reaction: maimed }
+    visual: { part_swap: eyepatch }

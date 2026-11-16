@@ -1,0 +1,19 @@
+id: rite_house_brand
+name: House brand
+category: rite
+regions: [torso, arm_l, arm_r, hand_l, hand_r]
+heritable: none
+origin_text: "Branded {cause}[ at {place}], {season} of year {year}"
+initial_stage: raw
+stages:
+  - id: raw
+    effects:
+      - { stat: stamina, mul: 0.95 }
+    visual: { decal: brand_raw }
+    after_days: 14
+    then: [{ to: healed }]
+  - id: healed
+    effects:
+      - { stat: persuasion, add: 1 }
+      - { reaction: scarred }
+    visual: { decal: brand_healed }

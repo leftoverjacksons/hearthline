@@ -1,0 +1,14 @@
+id: loss_weak_arm
+name: Dead arm
+category: loss
+regions: [arm_l, arm_r]
+heritable: none
+origin_text: "Arm ruined by {cause}[ at {place}], {season} of year {year}"
+initial_stage: lost
+stages:
+  - id: lost
+    effects:
+      - { stat: carry_capacity, mul: 0.6 }
+      - { stat: aim_steadiness, mul: 0.7 }
+      - { reaction: maimed }
+    visual: { part_swap: arm_sling }

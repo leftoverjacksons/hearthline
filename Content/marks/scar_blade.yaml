@@ -1,0 +1,13 @@
+id: scar_blade
+name: Blade scar
+category: scar
+regions: [head, face, torso, arm_l, arm_r, hand_l, hand_r, leg_l, leg_r]
+heritable: none
+origin_text: "Blade scar from {cause}[ at {place}], {season} of year {year}"
+initial_stage: scarred
+stages:
+  - id: scarred
+    effects:
+      - { reaction: scarred }
+      - { stat: persuasion, add: 1, regions: [head, face] }
+    visual: { decal: scar_blade }

@@ -1,0 +1,53 @@
+using System;
+using System.Collections.Generic;
+using Hearthline.Sim;
+using Hearthline.Sim.Content;
+using NUnit.Framework;
+
+namespace Hearthline.Tests.ContentValidation
+{
+    /// <summary>The real files in Content/ must load without a single error.</summary>
+    public class ContentValidationTests
+    {
+        [Test]
+        public void AllContentValidates()
+        {
+            ContentLoadResult result = ContentLoader.LoadDirectory(TestSupport.ContentRoot);
+            Assert.That(result.Errors, Is.Empty, string.Join("\n", result.Errors));
+        }
+
+        [Test]
+        public void EveryMarkCategoryHasAtLeastOneDefinition()
+        {
+            var seen = new HashSet<MarkCategory>();
+            foreach (MarkDef def in TestSupport.Content.Marks.Values) seen.Add(def.Category);
+            foreach (MarkCategory category in (MarkCategory[])Enum.GetValues(typeof(MarkCategory)))
+                Assert.That(seen, Does.Contain(category));
+        }
+
+        [Test]
+        public void EveryDamageTypeCanWoundEveryRegion()
+        {
+            foreach (DamageType damage in (DamageType[])Enum.GetValues(typeof(DamageType)))
+                foreach (BodyRegion region in (BodyRegion[])Enum.GetValues(typeof(BodyRegion)))
+                {
+                    bool found = false;
+                    foreach (MarkDef def in TestSupport.Content.Marks.Values)
+                        if (def.Category == MarkCategory.Wound && def.DamageTypes.Contains(damage) && def.Regions.Contains(region)) found = true;
+                    Assert.That(found, Is.True, "No wound for " + damage + " on " + region);
+                }
+        }
+
+        [Test]
+        public void EveryScarAndLossIsReachableFromSomeWound()
+        {
+            var produced = new HashSet<string>();
+            foreach (MarkDef def in TestSupport.Content.Marks.Values)
+                foreach (List<OutcomeCandidate> list in def.Outcomes.Values)
+                    foreach (OutcomeCandidate c in list) produced.Add(c.DefId);
+            foreach (MarkDef def in TestSupport.Content.Marks.Values)
+                if (def.Category == MarkCategory.Scar || def.Category == MarkCategory.Loss)
+                    Assert.That(produced, Does.Contain(def.Id), def.Id + " is never the outcome of any wound");
+        }
+    }
+}

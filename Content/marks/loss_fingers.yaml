@@ -1,0 +1,14 @@
+id: loss_fingers
+name: Missing fingers
+category: loss
+regions: [hand_l, hand_r]
+heritable: none
+origin_text: "Fingers lost to {cause}[ at {place}], {season} of year {year}"
+initial_stage: lost
+stages:
+  - id: lost
+    effects:
+      - { stat: reload_speed, mul: 0.7 }
+      - { stat: smithing, add: -1 }
+      - { reaction: maimed }
+    visual: { part_swap: missing_fingers }

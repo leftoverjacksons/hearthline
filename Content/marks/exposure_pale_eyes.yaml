@@ -1,0 +1,29 @@
+id: exposure_pale_eyes
+name: Pale-lit eyes
+category: exposure
+regions: [face]
+heritable: echo
+origin_text: "Eyes went pale after {cause}[ at {place}], {season} of year {year}"
+initial_stage: faint
+stages:
+  - id: faint
+    effects:
+      - { stat: perception, mul: 1.1 }
+      - { reaction: uncanny }
+    visual: { material_params: { iris_glow: 0.3 } }
+    after_days: 56
+    then:
+      - { to: lit, weight: 2 }
+      - { to: settled, weight: 1 }
+  - id: settled
+    effects:
+      - { stat: perception, mul: 1.1 }
+      - { reaction: uncanny }
+    visual: { material_params: { iris_glow: 0.2 } }
+  - id: lit
+    effects:
+      - { ability: night_sight }
+      - { stat: persuasion, add: -2 }
+      - { reaction: changed }
+      - { reaction: neighbors_notice }
+    visual: { material_params: { iris_glow: 1.0 } }

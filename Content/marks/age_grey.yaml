@@ -1,0 +1,14 @@
+id: age_grey
+name: Gone grey
+category: age
+regions: [head]
+heritable: none
+origin_text: "Went grey in the {season} of year {year}"
+initial_stage: grey
+stages:
+  - id: grey
+    effects:
+      - { stat: teaching, add: 1 }
+      - { stat: stamina, mul: 0.95 }
+      - { reaction: elder }
+    visual: { material_params: { hair_grey: 1.0 } }

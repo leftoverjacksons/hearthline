@@ -1,0 +1,13 @@
+id: scar_gunshot
+name: Bullet scar
+category: scar
+regions: [head, face, torso, arm_l, arm_r, hand_l, hand_r, leg_l, leg_r]
+heritable: none
+origin_text: "Bullet scar from {cause}[ at {place}], {season} of year {year}"
+initial_stage: scarred
+stages:
+  - id: scarred
+    effects:
+      - { reaction: scarred }
+      - { stat: stamina, mul: 0.97 }
+    visual: { decal: scar_gunshot }

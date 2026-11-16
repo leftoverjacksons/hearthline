@@ -1,0 +1,48 @@
+id: wound_blade
+name: Blade wound
+category: wound
+regions: [head, face, torso, arm_l, arm_r, hand_l, hand_r, leg_l, leg_r]
+heritable: none
+damage_types: [blade]
+origin_text: "Cut by {cause}[ at {place}], {season} of year {year}"
+initial_stage: fresh
+stages:
+  - id: fresh
+    effects:
+      - { stat: stamina, mul: 0.7 }
+      - { stat: aim_steadiness, mul: 0.85 }
+      - { reaction: bleeding }
+    visual: { decal: wound_blade_fresh }
+    after_days: 3
+    then: [{ to: infected }]
+  - id: stabilized
+    effects:
+      - { stat: stamina, mul: 0.85 }
+      - { reaction: bleeding }
+    visual: { decal: wound_blade_bound }
+    after_days: 10
+    then: [{ to: infected }]
+  - id: infected
+    effects:
+      - { stat: stamina, mul: 0.5 }
+      - { stat: move_speed, mul: 0.8 }
+      - { reaction: feverish }
+    visual: { decal: wound_blade_infected }
+    after_days: 7
+    then:
+      - { resolve: loss, weight: 2 }
+      - { resolve: bad_scar, weight: 1 }
+  - id: healing
+    effects:
+      - { stat: stamina, mul: 0.9 }
+    visual: { decal: wound_blade_bound }
+    after_days: 12
+    then: [{ resolve: treated }]
+outcomes:
+  clean_scar: [{ def: scar_blade }]
+  bad_scar: [{ def: scar_ragged }]
+  loss:
+    - { def: loss_eye, regions: [face] }
+    - { def: loss_fingers, regions: [hand_l, hand_r] }
+    - { def: loss_weak_arm, regions: [arm_l, arm_r] }
+    - { def: loss_limp, regions: [leg_l, leg_r] }

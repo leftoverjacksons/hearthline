@@ -1,0 +1,12 @@
+id: scar_knit_bone
+name: Knit bone
+category: scar
+regions: [head, face, torso, arm_l, arm_r, hand_l, hand_r, leg_l, leg_r]
+heritable: none
+origin_text: "Bone broken by {cause}[ at {place}], {season} of year {year}. It set straight."
+initial_stage: scarred
+stages:
+  - id: scarred
+    effects:
+      - { stat: perception, mul: 1.03 }
+    visual: { decal: scar_knit_bone }

@@ -1,0 +1,28 @@
+id: exposure_glass_skin
+name: Glassy skin
+category: exposure
+regions: [face, torso, arm_l, arm_r, hand_l, hand_r, leg_l, leg_r]
+heritable: echo
+origin_text: "Skin turned after {cause}[ at {place}], {season} of year {year}"
+initial_stage: patch
+stages:
+  - id: patch
+    effects:
+      - { ability: numb_skin }
+      - { reaction: uncanny }
+    visual: { material_params: { translucency: 0.4 } }
+    after_days: 84
+    then:
+      - { to: spread, weight: 1 }
+      - { to: settled, weight: 1 }
+  - id: settled
+    effects:
+      - { ability: numb_skin }
+      - { reaction: uncanny }
+    visual: { material_params: { translucency: 0.4 } }
+  - id: spread
+    effects:
+      - { ability: numb_skin }
+      - { stat: medicine, add: -1 }
+      - { reaction: changed }
+    visual: { material_params: { translucency: 0.8, emissive_veins: 0.5 } }

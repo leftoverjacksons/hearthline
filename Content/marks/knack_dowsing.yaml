@@ -1,0 +1,25 @@
+id: knack_dowsing
+name: The dowsing Knack
+category: knack
+regions: [head]
+heritable: latent
+origin_text: "The Knack stirred after {cause}[ at {place}], {season} of year {year}"
+initial_stage: latent
+stages:
+  - id: latent
+    effects:
+      - { reaction: neighbors_notice }
+    after_days: 112
+    then: [{ to: waking }]
+  - id: waking
+    effects:
+      - { stat: knack, add: 1 }
+      - { stat: stamina, mul: 0.95 }
+      - { reaction: neighbors_notice }
+    after_days: 112
+    then: [{ to: settled }]
+  - id: settled
+    effects:
+      - { stat: knack, add: 2 }
+      - { ability: dowse_thin }
+      - { reaction: neighbors_notice }
