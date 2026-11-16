@@ -1,0 +1,9 @@
+id: haunted
+name: Haunted
+description: "Something followed them home once. It has not left."
+inherit_chance: 0.1
+innate: false
+effects:
+  - { stat: knack, add: 1 }
+  - { stat: persuasion, add: -1 }
+  - { reaction: uncanny }

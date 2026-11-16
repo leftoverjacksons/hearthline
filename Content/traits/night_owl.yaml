@@ -1,0 +1,8 @@
+id: night_owl
+name: Night Owl
+description: "Sleeps little and sees well by poor light."
+inherit_chance: 0.3
+innate: true
+effects:
+  - { stat: perception, mul: 1.05 }
+  - { stat: stealth, add: 1 }

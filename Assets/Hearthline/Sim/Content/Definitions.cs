@@ -76,6 +76,10 @@ namespace Hearthline.Sim.Content
         public readonly List<BodyRegion> Regions = new List<BodyRegion>();
         public Heritability Heritable;
         public string OriginText;
+        /// <summary>Required when heritable: the name a child's inherited mark gets. {cause} is the parent's name.</summary>
+        public string InheritedOriginText;
+        /// <summary>Age marks only: everyone gains this mark on reaching this age.</summary>
+        public int? GainedAtAge;
         public string InitialStage;
         public readonly List<MarkStageDef> Stages = new List<MarkStageDef>();
         /// <summary>Wounds only: the kinds of hit that cause this wound.</summary>
@@ -91,10 +95,30 @@ namespace Hearthline.Sim.Content
         }
     }
 
+    public sealed class TraitDef
+    {
+        public string Id;
+        public string Name;
+        public string Description;
+        public readonly List<MarkEffect> Effects = new List<MarkEffect>();
+        /// <summary>Chance a child gets this trait from a parent who has it.</summary>
+        public double InheritChance;
+        /// <summary>Can appear in a newborn by mutation, without either parent having it.</summary>
+        public bool Innate;
+        public string SourceFile;
+    }
+
     public sealed class ContentDatabase
     {
         public readonly Vocab Vocab = new Vocab();
         public readonly Dictionary<string, MarkDef> Marks = new Dictionary<string, MarkDef>();
+        public readonly Dictionary<string, TraitDef> Traits = new Dictionary<string, TraitDef>();
+        public readonly List<string> GivenNames = new List<string>();
+
+        public TraitDef FindTrait(string id)
+        {
+            return id != null && Traits.TryGetValue(id, out var def) ? def : null;
+        }
 
         public MarkDef FindMark(string id)
         {

@@ -90,7 +90,39 @@ namespace Hearthline.Sim
             if (def == null) return "no wound is defined for " + Naming.ToSnake(Damage) + " on " + Naming.ToSnake(Region);
             error = MarkSystem.CheckCanAdd(def, Region, Severity, Origin);
             if (error != null) return error;
+            if (character.Downed) return character.GivenName + " is already down";
             MarkSystem.Add(ctx, character, def, Region, Severity, Origin);
+            LifeSystem.TakeDamage(ctx, character, Severity);
+            return null;
+        }
+    }
+
+    /// <summary>A companion gets a downed character back on their feet, barely.</summary>
+    public sealed class ReviveCharacter : Command
+    {
+        public int CharacterId;
+
+        internal override string Apply(SimContext ctx)
+        {
+            string error = LivingCharacter(ctx, CharacterId, out Character character);
+            if (error != null) return error;
+            if (!character.Downed) return character.GivenName + " is not down";
+            LifeSystem.Revive(ctx, character);
+            return null;
+        }
+    }
+
+    /// <summary>A downed character is left unattended: they die, or lose something for good. Also happens by itself when a day passes.</summary>
+    public sealed class LeaveDowned : Command
+    {
+        public int CharacterId;
+
+        internal override string Apply(SimContext ctx)
+        {
+            string error = LivingCharacter(ctx, CharacterId, out Character character);
+            if (error != null) return error;
+            if (!character.Downed) return character.GivenName + " is not down";
+            LifeSystem.ResolveDowned(ctx, character);
             return null;
         }
     }
@@ -177,7 +209,11 @@ namespace Hearthline.Sim
             for (int i = 0; i < days; i++)
             {
                 ctx.State.Day++;
-                foreach (Character c in ctx.State.Characters) MarkSystem.Tick(ctx, c);
+                foreach (Character c in ctx.State.Characters.ToArray())
+                {
+                    MarkSystem.Tick(ctx, c);
+                    LifeSystem.DailyTick(ctx, c);
+                }
             }
             ctx.Emit(new DateAdvanced { Day = ctx.State.Day, FromDay = from, ToDay = ctx.State.Day });
         }
@@ -191,6 +227,7 @@ namespace Hearthline.Sim
             var now = new GameDate(ctx.State.Day);
             GameDate next = now.NextSeasonStart;
             AdvanceDays.Run(ctx, next.TotalDays - now.TotalDays);
+            LifeSystem.RunInterlude(ctx);
             ctx.Emit(new SeasonPassed { Day = ctx.State.Day, Ended = now.Season, Began = next.Season });
             return null;
         }
@@ -223,12 +260,132 @@ namespace Hearthline.Sim
             string error = LivingCharacter(ctx, CharacterId, out Character character);
             if (error != null) return error;
             if (string.IsNullOrWhiteSpace(Cause)) return "a death needs a cause; the chronicle records it";
-            bool wasHead = ctx.State.Household.HeadId == character.Id;
-            character.Alive = false;
-            character.DeathDay = ctx.State.Day;
-            character.DeathCause = Cause;
-            if (wasHead) ctx.State.Household.HeadId = null;
-            ctx.Emit(new CharacterDied { Day = ctx.State.Day, CharacterId = character.Id, Cause = Cause, WasHeadOfHousehold = wasHead });
+            LifeSystem.Kill(ctx, character, Cause);
+            return null;
+        }
+    }
+
+    /// <summary>Someone joins the household: a recruit, a rescued stranger, a ward, a partner-to-be.</summary>
+    public sealed class AddHouseholdMember : Command
+    {
+        public string GivenName;
+        /// <summary>Recruits keep their own surname. Null uses the household's.</summary>
+        public string Surname;
+        public int AgeYears = 25;
+        public HouseholdBond Bond = HouseholdBond.Sworn;
+        public System.Collections.Generic.List<string> Traits = new System.Collections.Generic.List<string>();
+
+        internal override string Apply(SimContext ctx)
+        {
+            if (string.IsNullOrWhiteSpace(GivenName)) return "a household member needs a name";
+            if (AgeYears < 0 || AgeYears > 120) return "age must be 0..120";
+            if (Bond == HouseholdBond.Founder || Bond == HouseholdBond.Blood) return "people join as partner, ward or sworn; blood is born";
+            foreach (string trait in Traits)
+                if (ctx.Content.FindTrait(trait) == null) return "no trait '" + trait + "'";
+            Character c = LifeSystem.CreateCharacter(ctx, GivenName, Surname ?? ctx.State.Household.Surname,
+                ctx.State.Day - AgeYears * GameDate.DaysPerYear, Bond);
+            foreach (string trait in Traits) if (!c.Traits.Contains(trait)) c.Traits.Add(trait);
+            ctx.Emit(new CharacterJoined { Day = ctx.State.Day, CharacterId = c.Id });
+            ctx.Chronicle(c, ChronicleKind.Joined, c.GivenName + " " + c.Surname + " joined the household.");
+            return null;
+        }
+    }
+
+    public sealed class SetPartners : Command
+    {
+        public int CharacterAId;
+        public int CharacterBId;
+
+        internal override string Apply(SimContext ctx)
+        {
+            string error = LivingCharacter(ctx, CharacterAId, out Character a) ?? LivingCharacter(ctx, CharacterBId, out Character b0);
+            if (error != null) return error;
+            Character b = ctx.FindCharacter(CharacterBId);
+            if (a.Id == b.Id) return "a partnership needs two people";
+            foreach (Character c in new[] { a, b })
+            {
+                if (c.PartnerId.HasValue) return c.GivenName + " already has a partner";
+                if (!LifeSystem.InHousehold(ctx, c)) return c.GivenName + " is not in the household";
+                if (LifeSystem.AgeOf(ctx, c) < LifeRules.AdultAge) return c.GivenName + " is not an adult";
+            }
+            a.PartnerId = b.Id;
+            b.PartnerId = a.Id;
+            ctx.Emit(new PartnersJoined { Day = ctx.State.Day, CharacterAId = a.Id, CharacterBId = b.Id });
+            ctx.Chronicle(a, ChronicleKind.Partnered, a.GivenName + " and " + b.GivenName + " became partners.");
+            return null;
+        }
+    }
+
+    /// <summary>A child is born now. Interludes do this by chance; events and the cheat panel do it directly.</summary>
+    public sealed class BirthChild : Command
+    {
+        public int ParentAId;
+        public int ParentBId;
+        /// <summary>Null picks an unused name from Content/names.yaml.</summary>
+        public string GivenName;
+
+        internal override string Apply(SimContext ctx)
+        {
+            Character a = ctx.FindCharacter(ParentAId), b = ctx.FindCharacter(ParentBId);
+            if (a == null || b == null) return "both parents must exist";
+            string error = LifeSystem.CheckCanParent(ctx, a, b);
+            if (error != null) return error;
+            LifeSystem.Birth(ctx, a, b, string.IsNullOrWhiteSpace(GivenName) ? null : GivenName);
+            return null;
+        }
+    }
+
+    public sealed class SetTrait : Command
+    {
+        public int CharacterId;
+        public string TraitId;
+        /// <summary>True gives the trait, false takes it away.</summary>
+        public bool Has = true;
+
+        internal override string Apply(SimContext ctx)
+        {
+            string error = LivingCharacter(ctx, CharacterId, out Character character);
+            if (error != null) return error;
+            if (ctx.Content.FindTrait(TraitId) == null) return "no trait '" + TraitId + "'";
+            if (character.Traits.Contains(TraitId) == Has) return character.GivenName + (Has ? " already has " : " does not have ") + TraitId;
+            if (Has) character.Traits.Add(TraitId); else character.Traits.Remove(TraitId);
+            ctx.Emit(new TraitChanged { Day = ctx.State.Day, CharacterId = character.Id, TraitId = TraitId, Gained = Has });
+            return null;
+        }
+    }
+
+    /// <summary>After the head has died: the player picks who carries the household on.</summary>
+    public sealed class ChooseHeir : Command
+    {
+        public int HeirId;
+
+        internal override string Apply(SimContext ctx)
+        {
+            if (ctx.State.Household.HeadId.HasValue) return "the household already has a head";
+            if (ctx.State.Household.LineEnded) return "the line has ended";
+            Character heir = ctx.FindCharacter(HeirId);
+            if (heir == null || !LifeSystem.EligibleHeirs(ctx).Contains(heir)) return "that person cannot inherit the household";
+            LifeSystem.Succeed(ctx, heir);
+            return null;
+        }
+    }
+
+    /// <summary>An Elder head steps down in favour of an heir and stays home as a mentor.</summary>
+    public sealed class RetireHead : Command
+    {
+        public int HeirId;
+
+        internal override string Apply(SimContext ctx)
+        {
+            if (!ctx.State.Household.HeadId.HasValue) return "there is no head of household to retire";
+            Character head = ctx.FindCharacter(ctx.State.Household.HeadId.Value);
+            if (LifeStages.ForAge(LifeSystem.AgeOf(ctx, head)) < LifeStage.Elder) return head.GivenName + " is too young to retire";
+            Character heir = ctx.FindCharacter(HeirId);
+            if (heir == null || !LifeSystem.EligibleHeirs(ctx).Contains(heir)) return "that person cannot inherit the household";
+            head.Retired = true;
+            ctx.Emit(new HeadRetired { Day = ctx.State.Day, CharacterId = head.Id });
+            ctx.Chronicle(head, ChronicleKind.Retired, head.GivenName + " stepped down.");
+            LifeSystem.Succeed(ctx, heir);
             return null;
         }
     }

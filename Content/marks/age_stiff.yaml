@@ -1,0 +1,15 @@
+id: age_stiff
+name: Stiff joints
+category: age
+regions: [torso]
+heritable: none
+origin_text: "Slowed down in the {season} of year {year}"
+gained_at_age: 62
+initial_stage: stiff
+stages:
+  - id: stiff
+    effects:
+      - { stat: move_speed, mul: 0.9 }
+      - { stat: carry_capacity, mul: 0.85 }
+      - { stat: teaching, add: 1 }
+    visual: { blendshapes: { posture_stoop: 0.5 } }

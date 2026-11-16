@@ -79,6 +79,7 @@ namespace Hearthline.Tests
             {
                 Simulation sim = TestSupport.NewSim(seed);
                 Mark wound = Hit(sim, BodyRegion.Torso, severity: 3);
+                TestSupport.Ok(sim.Execute(new ReviveCharacter { CharacterId = sim.Head.Id }));
                 TestSupport.Ok(sim.Execute(new AdvanceDays { Days = 30 }));
                 Assert.That(wound.DefId, Is.EqualTo("scar_ragged"));
             }

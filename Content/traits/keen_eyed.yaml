@@ -1,0 +1,7 @@
+id: keen_eyed
+name: Keen-Eyed
+description: "Reads sign others walk past."
+inherit_chance: 0.4
+innate: true
+effects:
+  - { stat: tracking, add: 1 }

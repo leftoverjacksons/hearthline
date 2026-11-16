@@ -1,0 +1,8 @@
+id: hot_tempered
+name: Hot-Tempered
+description: "Quick to anger and slow to let it go."
+inherit_chance: 0.35
+innate: true
+effects:
+  - { stat: persuasion, add: -1 }
+  - { stat: stamina, mul: 1.05 }

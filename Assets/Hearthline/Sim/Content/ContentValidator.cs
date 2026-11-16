@@ -11,6 +11,31 @@ namespace Hearthline.Sim.Content
             var ids = new List<string>(db.Marks.Keys);
             ids.Sort(StringComparer.Ordinal);
             foreach (string id in ids) ValidateMark(db, db.Marks[id], errors);
+
+            ids = new List<string>(db.Traits.Keys);
+            ids.Sort(StringComparer.Ordinal);
+            foreach (string id in ids) ValidateTrait(db, db.Traits[id], errors);
+        }
+
+        private static bool EffectTargetKnown(ContentDatabase db, MarkEffect effect)
+        {
+            return effect.Kind == EffectKind.Stat ? db.Vocab.Stats.ContainsKey(effect.Target)
+                : effect.Kind == EffectKind.Reaction ? db.Vocab.ReactionTags.Contains(effect.Target)
+                : db.Vocab.Abilities.Contains(effect.Target);
+        }
+
+        private static void ValidateTrait(ContentDatabase db, TraitDef def, List<ContentError> errors)
+        {
+            void Err(string message) => errors.Add(new ContentError { File = def.SourceFile, Message = message });
+            if (!Naming.IsSnakeId(def.Id)) Err("id '" + def.Id + "' must be snake_case");
+            if (def.InheritChance < 0 || def.InheritChance > 1) Err("inherit_chance must be between 0 and 1");
+            if (def.Effects.Count == 0) Err("a trait needs at least one effect");
+            foreach (MarkEffect effect in def.Effects)
+            {
+                if (!EffectTargetKnown(db, effect))
+                    Err(Naming.ToSnake(effect.Kind) + " '" + effect.Target + "' is not defined in " + ContentLoader.VocabFile);
+                if (effect.Regions.Count > 0) Err("trait effects cannot be limited to regions");
+            }
         }
 
         private static void ValidateMark(ContentDatabase db, MarkDef def, List<ContentError> errors)
@@ -23,6 +48,20 @@ namespace Hearthline.Sim.Content
             {
                 string problem = OriginText.Validate(def.OriginText);
                 if (problem != null) Err(problem);
+            }
+
+            if ((def.Heritable != Heritability.None) != (def.InheritedOriginText != null))
+                Err("inherited_origin_text is required on heritable marks and not allowed on others");
+            else if (def.InheritedOriginText != null)
+            {
+                string problem = OriginText.Validate(def.InheritedOriginText);
+                if (problem != null) Err("inherited_origin_text: " + problem);
+            }
+            if (def.GainedAtAge.HasValue)
+            {
+                if (def.Category != MarkCategory.Age) Err("gained_at_age is only allowed on age marks");
+                if (def.GainedAtAge.Value < 1) Err("gained_at_age must be positive");
+                if (def.OriginText != null && OriginText.RequiresCause(def.OriginText)) Err("a mark with gained_at_age cannot require {cause}");
             }
 
             var stageIds = new HashSet<string>();
@@ -38,11 +77,7 @@ namespace Hearthline.Sim.Content
                 string where = "stage '" + stage.Id + "': ";
                 foreach (var effect in stage.Effects)
                 {
-                    bool known =
-                        effect.Kind == EffectKind.Stat ? db.Vocab.Stats.ContainsKey(effect.Target) :
-                        effect.Kind == EffectKind.Reaction ? db.Vocab.ReactionTags.Contains(effect.Target) :
-                        db.Vocab.Abilities.Contains(effect.Target);
-                    if (!known)
+                    if (!EffectTargetKnown(db, effect))
                         Err(where + Naming.ToSnake(effect.Kind) + " '" + effect.Target + "' is not defined in " + ContentLoader.VocabFile);
                     foreach (var region in effect.Regions)
                         if (!def.Regions.Contains(region))

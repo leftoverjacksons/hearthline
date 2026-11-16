@@ -4,6 +4,7 @@ category: exposure
 regions: [face]
 heritable: echo
 origin_text: "Eyes went pale after {cause}[ at {place}], {season} of year {year}"
+inherited_origin_text: "Born pale-eyed, like {cause}, {season} of year {year}"
 initial_stage: faint
 stages:
   - id: faint

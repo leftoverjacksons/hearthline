@@ -1,0 +1,7 @@
+id: steady_hands
+name: Steady Hands
+description: "Hands that do not shake, whatever else does."
+inherit_chance: 0.4
+innate: true
+effects:
+  - { stat: aim_steadiness, mul: 1.1 }

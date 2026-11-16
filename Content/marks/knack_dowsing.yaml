@@ -4,6 +4,7 @@ category: knack
 regions: [head]
 heritable: latent
 origin_text: "The Knack stirred after {cause}[ at {place}], {season} of year {year}"
+inherited_origin_text: "Born with the Knack {cause} carried, {season} of year {year}"
 initial_stage: latent
 stages:
   - id: latent

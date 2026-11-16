@@ -48,6 +48,29 @@ namespace Hearthline.Sim
         /// <summary>Per-character overrides of a stat's base value. Missing stats use the content default.</summary>
         public Dictionary<string, double> BaseStats = new Dictionary<string, double>();
         public List<Mark> Marks = new List<Mark>();
+        public List<string> Traits = new List<string>();
+        /// <summary>Latent heritable marks this person carries without showing. They can surface in a child.</summary>
+        public List<string> CarriedLatent = new List<string>();
+        public HouseholdBond Bond = HouseholdBond.Sworn;
+        public List<int> ParentIds = new List<int>();
+        public int? PartnerId;
+        /// <summary>Stepped down as head. Stays home as a mentor.</summary>
+        public bool Retired;
+        /// <summary>Hits a person can still take before going down.</summary>
+        public int Health = LifeRules.MaxHealth;
+        /// <summary>At zero health: alive, but out of the fight until revived. Left alone, it ends in death or a loss.</summary>
+        public bool Downed;
+        /// <summary>What this person thinks of others, by character id. -100..100.</summary>
+        public Dictionary<int, int> Opinions = new Dictionary<int, int>();
+    }
+
+    /// <summary>One line of the family chronicle. Written by the sim as things happen; never edited.</summary>
+    public sealed class ChronicleEntry
+    {
+        public int Day;
+        public int CharacterId;
+        public ChronicleKind Kind;
+        public string Text;
     }
 
     public sealed class Household
@@ -56,6 +79,10 @@ namespace Hearthline.Sim
         /// <summary>Null when the head has died and no heir has taken over yet.</summary>
         public int? HeadId;
         public List<int> MemberIds = new List<int>();
+        /// <summary>Every head so far, oldest first.</summary>
+        public List<int> PastHeadIds = new List<int>();
+        /// <summary>True once the head died with nobody eligible to follow. The campaign is over.</summary>
+        public bool LineEnded;
     }
 
     /// <summary>
@@ -71,5 +98,6 @@ namespace Hearthline.Sim
         public int NextMarkId = 1;
         public Household Household = new Household();
         public List<Character> Characters = new List<Character>();
+        public List<ChronicleEntry> Chronicle = new List<ChronicleEntry>();
     }
 }

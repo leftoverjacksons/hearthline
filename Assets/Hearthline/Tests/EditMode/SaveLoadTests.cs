@@ -95,7 +95,7 @@ namespace Hearthline.Tests
         {
             Simulation sim = TestSupport.NewSim(77);
             int head = sim.Head.Id;
-            sim.Execute(new InflictHit { CharacterId = head, Region = BodyRegion.HandL, Damage = DamageType.Gunshot, Severity = 3, Origin = TestSupport.Boar });
+            sim.Execute(new InflictHit { CharacterId = head, Region = BodyRegion.HandL, Damage = DamageType.Gunshot, Severity = 2, Origin = TestSupport.Boar });
             sim.Execute(new AddMark { CharacterId = head, DefId = "exposure_pale_eyes", Region = BodyRegion.Face, Origin = new MarkOrigin { EventId = "light_in_trees", Cause = "the light in the trees" } });
             sim.Execute(new AddMark { CharacterId = head, DefId = "knack_dowsing", Region = BodyRegion.Head, Origin = new MarkOrigin { Cause = "a night in the hollow" } });
             sim.Execute(new AdvanceDays { Days = 1 });

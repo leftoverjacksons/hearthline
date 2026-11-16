@@ -1,0 +1,7 @@
+id: sturdy
+name: Sturdy
+description: "Built to carry and to last."
+inherit_chance: 0.45
+innate: true
+effects:
+  - { stat: carry_capacity, mul: 1.15 }

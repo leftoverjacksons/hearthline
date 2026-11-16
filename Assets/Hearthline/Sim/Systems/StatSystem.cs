@@ -8,6 +8,12 @@ namespace Hearthline.Sim
     {
         public static IEnumerable<MarkEffect> ActiveEffects(ContentDatabase content, Character character)
         {
+            foreach (string traitId in character.Traits)
+            {
+                TraitDef trait = content.FindTrait(traitId);
+                if (trait == null) continue;
+                foreach (MarkEffect effect in trait.Effects) yield return effect;
+            }
             foreach (Mark mark in character.Marks)
             {
                 MarkStageDef stage = content.FindMark(mark.DefId)?.FindStage(mark.Stage);

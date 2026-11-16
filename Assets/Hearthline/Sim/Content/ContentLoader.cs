@@ -13,7 +13,8 @@ namespace Hearthline.Sim.Content
     {
         public const string VocabFile = "vocab.yaml";
         /// <summary>Folders that will hold content later but have no schema yet. YAML found there is an error.</summary>
-        private static readonly string[] FoldersWithoutSchema = { "events", "items", "traits", "factions" };
+        private static readonly string[] FoldersWithoutSchema = { "events", "items", "factions" };
+        public const string NamesFile = "names.yaml";
 
         public static ContentLoadResult LoadDirectory(string contentRoot)
         {
@@ -52,6 +53,24 @@ namespace Hearthline.Sim.Content
                 {
                     sawVocab = true;
                     ReadVocab(root, db.Vocab);
+                }
+                else if (file.Path == NamesFile)
+                {
+                    foreach (string name in root.StrList("given_names", true))
+                    {
+                        if (db.GivenNames.Contains(name)) root.Error("given_names lists '" + name + "' twice");
+                        else db.GivenNames.Add(name);
+                    }
+                    root.Done();
+                }
+                else if (folder == "traits")
+                {
+                    TraitDef def = ReadTrait(root, file.Path);
+                    if (def.Id == null) continue;
+                    string expected = "traits/" + def.Id + ".yaml";
+                    if (file.Path != expected) root.Error("file must be named " + expected + " to match its id");
+                    if (db.Traits.ContainsKey(def.Id)) root.Error("duplicate trait id '" + def.Id + "'");
+                    else db.Traits[def.Id] = def;
                 }
                 else if (folder == "marks")
                 {
@@ -133,6 +152,8 @@ namespace Hearthline.Sim.Content
             def.Regions.AddRange(root.EnumList<BodyRegion>("regions", true));
             def.Heritable = root.Enum<Heritability>("heritable") ?? Heritability.None;
             def.OriginText = root.Str("origin_text");
+            def.InheritedOriginText = root.Has("inherited_origin_text") ? root.Str("inherited_origin_text") : null;
+            def.GainedAtAge = root.Int("gained_at_age");
             def.InitialStage = root.Str("initial_stage");
             def.DamageTypes.AddRange(root.EnumList<DamageType>("damage_types"));
 
@@ -187,6 +208,23 @@ namespace Hearthline.Sim.Content
                     }
                     def.Outcomes[key] = list;
                 }
+            }
+            root.Done();
+            return def;
+        }
+
+        private static TraitDef ReadTrait(YamlMap root, string path)
+        {
+            var def = new TraitDef { SourceFile = path };
+            def.Id = root.Str("id");
+            def.Name = root.Str("name");
+            def.Description = root.Str("description");
+            def.InheritChance = root.Num("inherit_chance", true) ?? 0;
+            def.Innate = root.Bool("innate") ?? false;
+            foreach (YamlMap e in root.MapList("effects", "effects", true))
+            {
+                MarkEffect effect = ReadEffect(e);
+                if (effect != null) def.Effects.Add(effect);
             }
             root.Done();
             return def;

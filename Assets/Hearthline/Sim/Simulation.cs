@@ -41,6 +41,8 @@ namespace Hearthline.Sim
         public SimState State { get; }
         public ContentDatabase Content { get; }
         public TreatmentRules Treatment { get; } = new TreatmentRules();
+        public LifeRules Life { get; } = new LifeRules();
+        private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
         public event Action<DomainEvent> EventRaised;
@@ -51,7 +53,12 @@ namespace Hearthline.Sim
             Content = content ?? throw new ArgumentNullException(nameof(content));
             if (state.Rng == null) throw new ArgumentException("state has no RNG state", nameof(state));
             _rng = new SimRandom(state.Rng);
+            foreach (MarkDef def in content.Marks.Values) if (def.GainedAtAge.HasValue) _ageMarks.Add(def);
+            _ageMarks.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
         }
+
+        private SimContext NewContext() =>
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -62,18 +69,20 @@ namespace Hearthline.Sim
                 GivenName = options.HeadGivenName,
                 Surname = options.Surname,
                 BirthDay = state.Day - options.HeadAgeYears * GameDate.DaysPerYear,
+                Bond = HouseholdBond.Founder,
             };
             state.Characters.Add(head);
             state.Household.Surname = options.Surname;
             state.Household.HeadId = head.Id;
             state.Household.MemberIds.Add(head.Id);
+            state.Household.PastHeadIds.Add(head.Id);
             return new Simulation(state, content);
         }
 
         public CommandResult Execute(Command command)
         {
             if (command == null) throw new ArgumentNullException(nameof(command));
-            var ctx = new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment };
+            var ctx = NewContext();
             string error = command.Apply(ctx);
             if (error != null) return new CommandResult { Ok = false, Error = error };
 
@@ -101,6 +110,16 @@ namespace Hearthline.Sim
             GameDate.YearsBetween(character.BirthDay, character.DeathDay ?? State.Day);
 
         public LifeStage LifeStageOf(Character character) => LifeStages.ForAge(AgeOf(character));
+
+        /// <summary>Who the player may pick as the next head, in order of precedence.</summary>
+        public List<Character> EligibleHeirs() => LifeSystem.EligibleHeirs(NewContext());
+
+        public List<ChronicleEntry> ChronicleOf(Character character)
+        {
+            var entries = new List<ChronicleEntry>();
+            foreach (ChronicleEntry e in State.Chronicle) if (e.CharacterId == character.Id) entries.Add(e);
+            return entries;
+        }
 
         public double GetStat(Character character, string statId) => StatSystem.GetStat(Content, character, statId);
 

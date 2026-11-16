@@ -73,6 +73,15 @@ namespace Hearthline.Sim.Content
             return null;
         }
 
+        public bool? Bool(string key, bool required = false)
+        {
+            var node = Take(key, required);
+            if (node == null) return null;
+            if (node is YamlScalarNode s && (s.Value == "true" || s.Value == "false")) return s.Value == "true";
+            Error("'" + key + "' must be true or false");
+            return null;
+        }
+
         public List<string> StrList(string key, bool required = false)
         {
             var result = new List<string>();

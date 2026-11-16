@@ -21,7 +21,7 @@ namespace Hearthline.Sim
             return null;
         }
 
-        public static Mark Add(SimContext ctx, Character character, MarkDef def, BodyRegion region, int severity, MarkOrigin origin)
+        public static Mark Add(SimContext ctx, Character character, MarkDef def, BodyRegion region, int severity, MarkOrigin origin, string originTemplate = null)
         {
             int day = ctx.State.Day;
             origin = origin?.Clone() ?? new MarkOrigin();
@@ -36,9 +36,11 @@ namespace Hearthline.Sim
                 StageEnteredDay = day,
                 DayGained = day,
                 Origin = origin,
-                OriginText = OriginText.Format(def.OriginText, origin, day),
+                OriginText = OriginText.Format(originTemplate ?? def.OriginText, origin, day),
             };
             character.Marks.Add(mark);
+            ctx.Chronicle(character, ChronicleKind.Mark, mark.OriginText + ".");
+
             ctx.Emit(new MarkAdded { Day = day, CharacterId = character.Id, MarkId = mark.Id, DefId = def.Id });
             return mark;
         }
@@ -105,6 +107,7 @@ namespace Hearthline.Sim
             mark.Severity = Math.Max(MinSeverity, Math.Min(MaxSeverity, mark.Severity + candidate.SeverityDelta));
             mark.PendingOutcome = null;
             mark.OriginText = OriginText.Format(target.OriginText, mark.Origin, mark.DayGained);
+            ctx.Chronicle(character, ChronicleKind.Mark, mark.OriginText + ".");
             ctx.Emit(new MarkTransformed { Day = day, CharacterId = character.Id, MarkId = mark.Id, FromDefId = fromDef, ToDefId = target.Id, Outcome = outcome });
             return true;
         }

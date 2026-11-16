@@ -4,6 +4,7 @@ category: age
 regions: [head]
 heritable: none
 origin_text: "Went grey in the {season} of year {year}"
+gained_at_age: 50
 initial_stage: grey
 stages:
   - id: grey
