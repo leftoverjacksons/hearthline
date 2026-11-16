@@ -38,6 +38,21 @@ namespace Hearthline.Tests
         }
 
         [Test]
+        public void StrangersAreNotWrittenIntoTheFamilyChronicle()
+        {
+            Simulation sim = Started("peddler_on_the_road");
+            Character peddler = sim.FindCharacter(sim.GetActiveEvent().Cast["peddler"]);
+            TestSupport.Ok(sim.Execute(new ChooseEventOption { ChoiceIndex = 1 }));
+            TestSupport.Ok(sim.Execute(new SetAge { CharacterId = peddler.Id, AgeYears = 70 }));
+            TestSupport.Ok(sim.Execute(new AdvanceDays { Days = 2 }));
+            TestSupport.Ok(sim.Execute(new KillCharacter { CharacterId = peddler.Id, Cause = "fever" }));
+
+            Assert.That(peddler.Marks.Count, Is.GreaterThan(0), "people in the world still age");
+            Assert.That(sim.ChronicleOf(peddler), Is.Empty);
+            Assert.That(sim.Head, Is.Not.Null, "a stranger's death does not touch the household");
+        }
+
+        [Test]
         public void ChoicesAreGatedByWhatTheHouseholdHas()
         {
             Simulation sim = Started("wounded_stranger_creek");

@@ -18,8 +18,10 @@ namespace Hearthline.Sim
 
         public void Emit(DomainEvent e) => Events.Add(e);
 
+        /// <summary>The chronicle is the family's. People met on the road are not written into it.</summary>
         public void Chronicle(Character character, ChronicleKind kind, string text)
         {
+            if (!State.Household.MemberIds.Contains(character.Id)) return;
             State.Chronicle.Add(new ChronicleEntry { Day = State.Day, CharacterId = character.Id, Kind = kind, Text = text });
         }
 
