@@ -46,7 +46,7 @@ namespace Hearthline.Sim
         public int? DeathDay;
         public string DeathCause;
         /// <summary>Per-character overrides of a stat's base value. Missing stats use the content default.</summary>
-        public Dictionary<string, double> BaseStats = new Dictionary<string, double>();
+        public SortedDictionary<string, double> BaseStats = new SortedDictionary<string, double>();
         public List<Mark> Marks = new List<Mark>();
         public List<string> Traits = new List<string>();
         /// <summary>For people the event engine generated: what kind of person they are (traveler, reaver).</summary>
@@ -54,6 +54,8 @@ namespace Hearthline.Sim
         /// <summary>For townsfolk: where they live and what they do there (shopkeeper, doctor).</summary>
         public string SettlementId;
         public string Role;
+        /// <summary>Work this household member does at home. Null for none.</summary>
+        public string JobId;
         /// <summary>Notable dealings with the family, oldest first. Passed on to whoever takes over their work.</summary>
         public List<Memory> Memories = new List<Memory>();
         /// <summary>Latent heritable marks this person carries without showing. They can surface in a child.</summary>
@@ -68,7 +70,7 @@ namespace Hearthline.Sim
         /// <summary>At zero health: alive, but out of the fight until revived. Left alone, it ends in death or a loss.</summary>
         public bool Downed;
         /// <summary>What this person thinks of others, by character id. -100..100.</summary>
-        public Dictionary<int, int> Opinions = new Dictionary<int, int>();
+        public SortedDictionary<int, int> Opinions = new SortedDictionary<int, int>();
     }
 
     public sealed class Memory { public int Day; public string Text; }
@@ -79,9 +81,9 @@ namespace Hearthline.Sim
     public sealed class SettlementState
     {
         public string Id;
-        public Dictionary<SettlementValue, int> Values = new Dictionary<SettlementValue, int>();
+        public SortedDictionary<SettlementValue, int> Values = new SortedDictionary<SettlementValue, int>();
         /// <summary>What the family has done this season. Applied when the season turns.</summary>
-        public Dictionary<SettlementValue, int> Pending = new Dictionary<SettlementValue, int>();
+        public SortedDictionary<SettlementValue, int> Pending = new SortedDictionary<SettlementValue, int>();
         public List<string> OpenServices = new List<string>();
     }
 
@@ -105,10 +107,16 @@ namespace Hearthline.Sim
         /// <summary>True once the head died with nobody eligible to follow. The campaign is over.</summary>
         public bool LineEnded;
         /// <summary>What the household owns, by item id.</summary>
-        public Dictionary<string, int> Inventory = new Dictionary<string, int>();
+        public SortedDictionary<string, int> Inventory = new SortedDictionary<string, int>();
         /// <summary>Standing with each faction, -100..100. It belongs to the surname, so heirs inherit it.</summary>
-        public Dictionary<string, int> Reputation = new Dictionary<string, int>();
+        public SortedDictionary<string, int> Reputation = new SortedDictionary<string, int>();
         public List<Grudge> Grudges = new List<Grudge>();
+        /// <summary>Structure id -> tier built. 0 is not built.</summary>
+        public SortedDictionary<string, int> Structures = new SortedDictionary<string, int>();
+        /// <summary>How the house is holding together, 0..100.</summary>
+        public int Morale = HomeRules.StartMorale;
+        /// <summary>What everyone at home did last season, for the head's return.</summary>
+        public List<HomeReportLine> LastReport = new List<HomeReportLine>();
     }
 
     /// <summary>The event the player is in the middle of. Saved, so a game can be saved mid-event.</summary>
@@ -117,7 +125,7 @@ namespace Hearthline.Sim
         public string EventId;
         public string BeatId;
         /// <summary>Cast role -> character id.</summary>
-        public Dictionary<string, int> Cast = new Dictionary<string, int>();
+        public SortedDictionary<string, int> Cast = new SortedDictionary<string, int>();
         public string PlaceName;
         /// <summary>The settlement the event's settlement outcomes and townsfolk refer to.</summary>
         public string SettlementId;
@@ -128,13 +136,17 @@ namespace Hearthline.Sim
         /// <summary>Builds up while nothing happens; an event spends it.</summary>
         public double Budget;
         /// <summary>Event id -> the day it last fired, for cooldowns.</summary>
-        public Dictionary<string, int> LastFiredDay = new Dictionary<string, int>();
+        public SortedDictionary<string, int> LastFiredDay = new SortedDictionary<string, int>();
     }
 
     /// <summary>
     /// The whole persistent simulation. Everything that must survive save and load is in here.
     /// Only the simulation mutates it; presentation reads it and sends commands.
     /// </summary>
+    /// <remarks>
+    /// Dictionaries in the state are sorted, so a save never depends on the order things happened to be
+    /// inserted or removed, and two equal states always serialize to the same text.
+    /// </remarks>
     public sealed class SimState
     {
         public int SaveVersion = SaveFormat.CurrentVersion;

@@ -7,6 +7,8 @@ namespace Hearthline.Sim.Content
     public sealed class ItemDef
     {
         public string Id; public string Name; public double Weight;
+        /// <summary>What the store pays for one, in coin. 0 means nobody trades in it.</summary>
+        public int Value;
         public readonly List<string> Tags = new List<string>();
         public string SourceFile;
     }
@@ -39,6 +41,9 @@ namespace Hearthline.Sim.Content
         public readonly List<string> ServicesAny = new List<string>();
         public readonly Dictionary<SettlementValue, int> SettlementMin = new Dictionary<SettlementValue, int>();
         public readonly Dictionary<SettlementValue, int> SettlementMax = new Dictionary<SettlementValue, int>();
+        public readonly Dictionary<HomeStat, int> HomeMin = new Dictionary<HomeStat, int>();
+        public readonly Dictionary<HomeStat, int> HomeMax = new Dictionary<HomeStat, int>();
+        public int? MoraleMin, MoraleMax;
     }
 
     public sealed class CastSlot
@@ -112,6 +117,10 @@ namespace Hearthline.Sim.Content
         public string SettleGrudge;
         /// <summary>Something a cast member will remember about the family.</summary>
         public MemoryOutcome Memory;
+        /// <summary>Change in household morale.</summary>
+        public int Morale;
+        /// <summary>Structure that loses a tier.</summary>
+        public string Damage;
         public string Goto;
         public readonly List<ChanceBranch> Chance = new List<ChanceBranch>();
 
@@ -132,13 +141,15 @@ namespace Hearthline.Sim.Content
             if (Settlement.Count > 0) kinds.Add("settlement");
             if (Grudge != null || SettleGrudge != null) kinds.Add("grudge");
             if (Memory != null) kinds.Add("memory");
+            if (Morale != 0) kinds.Add("morale");
+            if (Damage != null) kinds.Add("damage");
             if (Goto != null) kinds.Add("goto");
             if (Chance.Count > 0) kinds.Add("chance");
             foreach (ChanceBranch b in Chance) b.Outcome.CollectKinds(kinds);
         }
 
         public static readonly string[] AllKinds =
-            { "relationship", "reputation", "item", "mark", "hit", "trait", "loot_table", "flag", "recruit", "ambush", "chronicle", "settlement", "grudge", "memory", "goto", "chance" };
+            { "relationship", "reputation", "item", "mark", "hit", "trait", "loot_table", "flag", "recruit", "ambush", "chronicle", "settlement", "grudge", "memory", "morale", "damage", "goto", "chance" };
     }
 
     public sealed class EventChoice { public string Label; public ChoiceRequires Requires; public EventOutcome Outcome = new EventOutcome(); }

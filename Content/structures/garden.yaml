@@ -1,0 +1,7 @@
+id: garden
+name: Garden and fields
+starts_at: 0
+tiers:
+  - { name: Plot, cost: { lumber: 2 } }
+  - { name: Fields, cost: { lumber: 6, old_coin: 4 } }
+  - { name: Orchard, cost: { lumber: 10, old_coin: 8 }, provides: { morale: 1 } }

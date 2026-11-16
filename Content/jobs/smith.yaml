@@ -1,0 +1,6 @@
+id: smith
+name: Smith
+skill: smithing
+structure: workshop
+produces:
+  - { item: cartridges, count_min: 2, count_max: 4 }

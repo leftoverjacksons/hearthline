@@ -1,0 +1,7 @@
+id: infirmary
+name: Infirmary
+starts_at: 0
+tiers:
+  - { name: Cot, cost: { lumber: 3, bandage: 2 }, provides: { treatment: 1 } }
+  - { name: Sickroom, cost: { lumber: 8, medkit: 1 }, provides: { treatment: 2 } }
+  - { name: Surgery, cost: { lumber: 12, medkit: 2, old_coin: 10 }, provides: { treatment: 3 } }

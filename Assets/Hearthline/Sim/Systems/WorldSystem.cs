@@ -185,7 +185,7 @@ namespace Hearthline.Sim
 
         public static void ChangeReputation(SimContext ctx, string factionId, int delta)
         {
-            Dictionary<string, int> rep = ctx.State.Household.Reputation;
+            IDictionary<string, int> rep = ctx.State.Household.Reputation;
             rep.TryGetValue(factionId, out int old);
             int value = Math.Max(-100, Math.Min(100, old + delta));
             if (HasGrudge(ctx.State, factionId)) value = Math.Min(value, ctx.World.GrudgeCeiling);

@@ -1,0 +1,26 @@
+id: night_raid
+tags: [home, danger, reavers]
+weight: 6
+cooldown_days: 60
+intensity: 3
+when:
+  at_home: true
+  time_of_day: [night]
+  home_max: { defense: 0 }
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The dog is barking and then it is not. Shapes at the smokehouse door. Nobody was set to watch."
+    choices:
+      - label: Go out shooting
+        outcome:
+          ambush: reavers_small
+          morale: -5
+          settlement: { safety: 2 }
+          reputation: { reavers: -5 }
+      - label: Bar the door and let them take it
+        outcome:
+          item: { jerky: -4, cornmeal: -4, boar_meat: -2 }
+          morale: -10
+          damage: garden
+          chronicle: "Reavers went through the {hero.surname} stores while the house kept its door barred."

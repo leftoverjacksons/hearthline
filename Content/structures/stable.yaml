@@ -1,0 +1,6 @@
+id: stable
+name: Stable
+starts_at: 0
+tiers:
+  - { name: Hitch, cost: { lumber: 2 }, provides: { stabling: 1 } }
+  - { name: Barn, cost: { lumber: 16 }, provides: { stabling: 3 } }

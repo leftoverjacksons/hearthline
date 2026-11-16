@@ -1,0 +1,5 @@
+id: woodcutter
+name: Woodcutter
+skill: husbandry
+produces:
+  - { item: lumber, count_min: 2, count_max: 4 }

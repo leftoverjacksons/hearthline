@@ -31,7 +31,7 @@ namespace Hearthline.Game
         private int _regionIndex = (int)BodyRegion.Face;
         private bool _atHome;
         private string _cause = "the boar", _place = "Miller's Ford", _age = "50", _areaTags = "road", _newName = "Levi", _status = "";
-        private string[] _defIds = new string[0], _eventIds = new string[0], _itemIds = new string[0];
+        private string[] _defIds = new string[0], _eventIds = new string[0], _itemIds = new string[0], _jobIds = new string[0], _structureIds = new string[0];
 
         private void Start()
         {
@@ -194,8 +194,15 @@ namespace Hearthline.Game
             GUILayout.Space(8);
             GUILayout.Label("Items");
             _itemIndex = GUILayout.SelectionGrid(Clamp(_itemIndex, _itemIds), _itemIds, 4);
-            if (_itemIds.Length > 0 && GUILayout.Button("Give 1 " + _itemIds[_itemIndex]))
-                Run(sim, new GiveItem { ItemId = _itemIds[_itemIndex], Count = 1 });
+            if (_itemIds.Length > 0)
+            {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Give 1")) Run(sim, new GiveItem { ItemId = _itemIds[_itemIndex], Count = 1 });
+                if (GUILayout.Button("Give 10")) Run(sim, new GiveItem { ItemId = _itemIds[_itemIndex], Count = 10 });
+                if (GUILayout.Button("Sell 1")) Run(sim, new SellItems { ItemId = _itemIds[_itemIndex], Count = 1 });
+                if (GUILayout.Button("Buy 1")) Run(sim, new BuyItems { ItemId = _itemIds[_itemIndex], Count = 1 });
+                GUILayout.EndHorizontal();
+            }
 
             _scroll = GUILayout.BeginScrollView(_scroll);
             foreach (KeyValuePair<string, int> kv in sim.State.Household.Inventory) GUILayout.Label(kv.Value + " × " + kv.Key);
@@ -222,6 +229,24 @@ namespace Hearthline.Game
             GUILayout.EndHorizontal();
 
             _scroll = GUILayout.BeginScrollView(_scroll);
+            GUILayout.Label("Morale " + sim.State.Household.Morale + "   capacity " + sim.HomeStatOf(HomeStat.Capacity)
+                + "   treatment " + sim.HomeStatOf(HomeStat.Treatment) + "   defense " + sim.HomeStatOf(HomeStat.Defense));
+            foreach (string structureId in _structureIds)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(structureId + ": tier " + sim.StructureTier(structureId), GUILayout.Width(220));
+                if (GUILayout.Button("Build next tier", GUILayout.Width(120))) Run(sim, new BuildStructure { StructureId = structureId });
+                GUILayout.EndHorizontal();
+            }
+            foreach (HomeReportLine line in sim.State.Household.LastReport)
+            {
+                Character worker = sim.FindCharacter(line.CharacterId);
+                var goods = new List<string>();
+                foreach (KeyValuePair<string, int> kv in line.Items) goods.Add(kv.Value + " " + kv.Key);
+                GUILayout.Label("Last season: " + (worker != null ? worker.GivenName : "?") + " (" + line.JobId + "): "
+                    + (line.Problem ?? (goods.Count > 0 ? string.Join(", ", goods) : "kept at it")));
+            }
+            GUILayout.Space(8);
             foreach (int memberId in sim.State.Household.MemberIds)
             {
                 Character c = sim.FindCharacter(memberId);
@@ -229,6 +254,13 @@ namespace Hearthline.Game
                 GUILayout.BeginHorizontal();
                 GUILayout.Label((c.Alive ? "" : "† ") + c.GivenName + " " + c.Surname + ", " + sim.AgeOf(c) + " · " + c.Bond
                     + (c.Traits.Count > 0 ? " · " + string.Join(", ", c.Traits) : "") + " · " + c.Marks.Count + " marks");
+                if (c.Alive && (head == null || c.Id != head.Id) && _jobIds.Length > 0
+                    && GUILayout.Button(c.JobId ?? "no job", GUILayout.Width(80)))
+                {
+                    // Cycle: no job -> first job -> ... -> last job -> no job.
+                    int next = Array.IndexOf(_jobIds, c.JobId) + 1;
+                    Run(sim, new AssignJob { CharacterId = c.Id, JobId = next < _jobIds.Length ? _jobIds[next] : null });
+                }
                 if (head != null && c.Alive && c.Id != head.Id)
                 {
                     if (head.PartnerId == c.Id)
@@ -296,6 +328,8 @@ namespace Hearthline.Game
             if (_defIds.Length != content.Marks.Count) _defIds = SortedKeys(content.Marks.Keys);
             if (_eventIds.Length != content.Events.Count) _eventIds = SortedKeys(content.Events.Keys);
             if (_itemIds.Length != content.Items.Count) _itemIds = SortedKeys(content.Items.Keys);
+            if (_jobIds.Length != content.Jobs.Count) _jobIds = SortedKeys(content.Jobs.Keys);
+            if (_structureIds.Length != content.Structures.Count) _structureIds = SortedKeys(content.Structures.Keys);
         }
 
         private static string[] SortedKeys(IEnumerable<string> keys)

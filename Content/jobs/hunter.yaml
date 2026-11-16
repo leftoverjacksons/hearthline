@@ -1,0 +1,6 @@
+id: hunter
+name: Hunter
+skill: tracking
+produces:
+  - { item: jerky, count_min: 2, count_max: 4 }
+  - { item: pelt_deer, count_min: 1, count_max: 2 }

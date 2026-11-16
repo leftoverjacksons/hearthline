@@ -15,11 +15,78 @@ namespace Hearthline.Sim.Content
 
         public static ItemDef ReadItem(YamlMap root, string path)
         {
-            var def = new ItemDef { SourceFile = path, Id = root.Str("id"), Name = root.Str("name"), Weight = root.Num("weight", true) ?? 0 };
+            var def = new ItemDef { SourceFile = path, Id = root.Str("id"), Name = root.Str("name"), Weight = root.Num("weight", true) ?? 0, Value = root.Int("value") ?? 0 };
+            if (def.Value < 0) root.Error("'value' must not be negative");
             def.Tags.AddRange(root.StrList("tags"));
             if (def.Weight < 0) root.Error("'weight' must not be negative");
             root.Done();
             return def;
+        }
+
+        public static StructureDef ReadStructure(YamlMap root, string path)
+        {
+            var def = new StructureDef { SourceFile = path, Id = root.Str("id"), Name = root.Str("name"), StartsAt = root.Int("starts_at") ?? 0 };
+            foreach (YamlMap t in root.MapList("tiers", "tiers", true))
+            {
+                var tier = new StructureTier { Name = t.Str("name") };
+                ReadWholeNumbers(t, "cost", tier.Cost);
+                foreach (var kv in t.EnumIntMap<HomeStat>("provides")) tier.Provides[kv.Key] = kv.Value;
+                t.Done();
+                def.Tiers.Add(tier);
+            }
+            root.Done();
+            return def;
+        }
+
+        public static JobDef ReadJob(YamlMap root, string path)
+        {
+            var def = new JobDef { SourceFile = path, Id = root.Str("id"), Name = root.Str("name"), Skill = root.Str("skill") };
+            def.Structure = root.Has("structure") ? root.Str("structure") : null;
+            ReadEntries(root, "produces", false, def.Produces);
+            foreach (var kv in root.EnumIntMap<HomeStat>("provides")) def.Provides[kv.Key] = kv.Value;
+            root.Done();
+            return def;
+        }
+
+        private static void ValidateHome(ContentDatabase db, List<ContentError> errors)
+        {
+            foreach (StructureDef def in Sorted(db.Structures))
+            {
+                void Err(string message) => errors.Add(new ContentError { File = def.SourceFile, Message = message });
+                if (!Naming.IsSnakeId(def.Id)) Err("id '" + def.Id + "' must be snake_case");
+                if (def.Tiers.Count == 0) Err("a structure needs at least one tier");
+                if (def.StartsAt < 0 || def.StartsAt > def.Tiers.Count) Err("starts_at must be 0.." + def.Tiers.Count);
+                foreach (StructureTier tier in def.Tiers)
+                {
+                    foreach (var kv in tier.Cost)
+                    {
+                        if (!db.Items.ContainsKey(kv.Key)) Err("tier '" + tier.Name + "': no item '" + kv.Key + "'");
+                        if (kv.Value < 1) Err("tier '" + tier.Name + "': cost of " + kv.Key + " must be positive");
+                    }
+                }
+            }
+            foreach (JobDef def in Sorted(db.Jobs))
+            {
+                void Err(string message) => errors.Add(new ContentError { File = def.SourceFile, Message = message });
+                if (!Naming.IsSnakeId(def.Id)) Err("id '" + def.Id + "' must be snake_case");
+                if (def.Skill != null && !db.Vocab.Stats.ContainsKey(def.Skill)) Err("no stat '" + def.Skill + "'");
+                if (def.Structure != null && !db.Structures.ContainsKey(def.Structure)) Err("no structure '" + def.Structure + "'");
+                if (def.Produces.Count == 0 && def.Provides.Count == 0) Err("a job must produce or provide something");
+                foreach (LootEntry e in def.Produces) if (!db.Items.ContainsKey(e.ItemId)) Err("no item '" + e.ItemId + "'");
+            }
+        }
+
+        private static void ReadEntries(YamlMap root, string key, bool required, List<LootEntry> target)
+        {
+            foreach (YamlMap e in root.MapList(key, key, required))
+            {
+                var entry = new LootEntry { ItemId = e.Str("item"), Weight = e.Num("weight") ?? 1 };
+                entry.CountMin = e.Int("count_min") ?? 1;
+                entry.CountMax = e.Int("count_max") ?? entry.CountMin;
+                if (entry.CountMin < 1 || entry.CountMax < entry.CountMin) e.Error("needs 1 <= count_min <= count_max");
+                e.Done();
+                if (entry.ItemId != null) target.Add(entry);
+            }
         }
 
         public static LootTableDef ReadLoot(YamlMap root, string path)
@@ -120,6 +187,10 @@ namespace Hearthline.Sim.Content
                 def.When.ServicesAny.AddRange(when.StrList("services_any"));
                 foreach (var kv in when.EnumIntMap<SettlementValue>("settlement_min")) def.When.SettlementMin[kv.Key] = kv.Value;
                 foreach (var kv in when.EnumIntMap<SettlementValue>("settlement_max")) def.When.SettlementMax[kv.Key] = kv.Value;
+                foreach (var kv in when.EnumIntMap<HomeStat>("home_min")) def.When.HomeMin[kv.Key] = kv.Value;
+                foreach (var kv in when.EnumIntMap<HomeStat>("home_max")) def.When.HomeMax[kv.Key] = kv.Value;
+                def.When.MoraleMin = when.Int("morale_min");
+                def.When.MoraleMax = when.Int("morale_max");
                 when.Done();
             }
 
@@ -251,6 +322,9 @@ namespace Hearthline.Sim.Content
                 outcome.Memory = new MemoryOutcome { Target = mem.Str("target"), Text = mem.Str("text") };
                 mem.Done();
             }
+            outcome.Morale = o.Int("morale") ?? 0;
+            if (o.Has("morale") && outcome.Morale == 0) o.Error("'morale' must not be zero");
+            outcome.Damage = o.Has("damage") ? o.Str("damage") : null;
             outcome.Goto = o.Has("goto") ? o.Str("goto") : null;
             if (o.Has("chance"))
             {
@@ -284,6 +358,7 @@ namespace Hearthline.Sim.Content
                 foreach (LootEntry e in l.Entries)
                     if (!db.Items.ContainsKey(e.ItemId)) errors.Add(new ContentError { File = l.SourceFile, Message = "no item '" + e.ItemId + "'" });
             }
+            ValidateHome(db, errors);
             int homes = 0;
             foreach (SettlementDef s in Sorted(db.Settlements))
             {
@@ -423,6 +498,7 @@ namespace Hearthline.Sim.Content
                     Role(o.Memory.Target, where + " memory");
                     if (o.Memory.Text != null) CheckText(o.Memory.Text, where + " memory");
                 }
+                if (o.Damage != null) Known(db.Structures.ContainsKey(o.Damage), "structure", o.Damage, where + " damage");
                 if (o.Settlement.Count > 0 && db.Settlements.Count == 0) Err(where + ": settlement outcome but no settlement is defined");
                 foreach (ChanceBranch b in o.Chance) CheckOutcome(b.Outcome, where + " chance");
             }

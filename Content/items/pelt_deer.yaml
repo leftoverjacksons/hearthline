@@ -1,0 +1,5 @@
+id: pelt_deer
+name: Deer pelt
+weight: 3
+value: 4
+tags: [pelt, trade]

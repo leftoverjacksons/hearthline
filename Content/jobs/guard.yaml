@@ -1,0 +1,4 @@
+id: guard
+name: Guard
+skill: marksmanship
+provides: { defense: 1 }

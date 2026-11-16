@@ -1,4 +1,5 @@
 id: whiskey
 name: Whiskey
 weight: 1
+value: 3
 tags: [trade, medicine]

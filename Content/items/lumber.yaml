@@ -1,0 +1,5 @@
+id: lumber
+name: Lumber
+weight: 10
+value: 1
+tags: [building, trade]

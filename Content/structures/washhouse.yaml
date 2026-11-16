@@ -1,0 +1,6 @@
+id: washhouse
+name: Washhouse
+starts_at: 0
+tiers:
+  - { name: Tub, cost: { lumber: 3 }, provides: { hygiene: 1 } }
+  - { name: Bathhouse, cost: { lumber: 10, copper_wire: 2 }, provides: { hygiene: 2, morale: 1 } }

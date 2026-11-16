@@ -1,4 +1,5 @@
 id: lamp_oil
 name: Lamp oil
 weight: 1
+value: 2
 tags: [supply]

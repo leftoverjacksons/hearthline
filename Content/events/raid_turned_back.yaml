@@ -1,0 +1,25 @@
+id: raid_turned_back
+tags: [home, reavers]
+weight: 6
+cooldown_days: 60
+when:
+  at_home: true
+  time_of_day: [dawn, day]
+  home_min: { defense: 1 }
+cast:
+  hero: { from: party, role: head }
+  watch: { from: household, role: any }
+beats:
+  - text: "{watch.name} has it all laid out by the time {hero.name} is through the gate: boot prints at the fence, two spent shells, and the place where they turned around."
+    choices:
+      - label: Say it was well done, in front of everyone
+        outcome:
+          relationship: { watch: 15 }
+          morale: 6
+          settlement: { safety: 2 }
+          reputation: { reavers: -3 }
+      - label: Ask why they were let get so close
+        outcome:
+          relationship: { watch: -15 }
+          morale: -3
+          settlement: { safety: 2 }

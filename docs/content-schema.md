@@ -257,3 +257,51 @@ outcome:
   settle_grudge: reavers
   memory: { target: shopkeeper, text: "{hero.full_name} called me a cheat in my own store." }
 ```
+
+## Items: value
+
+`value: 4` is what the store pays for one, in `old_coin`. Buying costs double. Items without a value
+cannot be traded. Items tagged `food` are what the household eats.
+
+## structures/<id>.yaml
+
+A fixed slot on the homestead. Tier 0 is "not built"; `BuildStructure` goes up one tier at a time.
+
+```yaml
+id: infirmary
+name: Infirmary
+starts_at: 0                       # tier a new homestead begins with
+tiers:
+  - { name: Cot, cost: { lumber: 3, bandage: 2 }, provides: { treatment: 1 } }
+  - { name: Sickroom, cost: { lumber: 8, medkit: 1 }, provides: { treatment: 2 } }
+```
+
+`provides` is what the homestead has while the structure is at that tier (not added to lower tiers).
+Keys: capacity, morale, treatment, defense, workshop, preserving, stabling, hygiene, warding.
+
+## jobs/<id>.yaml
+
+```yaml
+id: farmer
+name: Farmer
+skill: husbandry                   # the stat that grows with the work and scales the yield
+structure: garden                  # optional: must be built; higher tiers yield more
+produces:                          # per season, before scaling
+  - { item: cornmeal, count_min: 3, count_max: 5 }
+provides: { morale: 1 }            # optional: homestead totals while someone holds the job
+```
+
+A job must produce or provide something.
+
+## Events and the homestead
+
+```yaml
+when:
+  home_min: { defense: 1 }         # homestead totals
+  home_max: { defense: 0 }
+  morale_min: 60
+  morale_max: 40
+outcome:
+  morale: -10
+  damage: garden                   # the structure loses a tier
+```

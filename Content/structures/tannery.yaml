@@ -1,0 +1,6 @@
+id: tannery
+name: Tannery and larder
+starts_at: 0
+tiers:
+  - { name: Drying rack, cost: { lumber: 3 }, provides: { preserving: 1 } }
+  - { name: Tannery, cost: { lumber: 10 }, provides: { preserving: 2 } }

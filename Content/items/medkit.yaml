@@ -1,4 +1,5 @@
 id: medkit
 name: Old-world medkit
 weight: 1
+value: 6
 tags: [medicine, salvage]

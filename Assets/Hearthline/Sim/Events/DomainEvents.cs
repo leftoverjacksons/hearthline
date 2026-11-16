@@ -23,6 +23,12 @@ namespace Hearthline.Sim
     public sealed class ServiceClosed : DomainEvent { public string SettlementId; public string ServiceId; }
     public sealed class ResidentSucceeded : DomainEvent { public string SettlementId; public string Role; public int PreviousId; public int NewId; }
     public sealed class GrudgeChanged : DomainEvent { public string FactionId; public bool Held; public string Reason; }
+    public sealed class StructureChanged : DomainEvent { public string StructureId; public int OldTier; public int NewTier; }
+    public sealed class JobAssigned : DomainEvent { public int CharacterId; public string JobId; }
+    public sealed class MoraleChanged : DomainEvent { public int OldValue; public int NewValue; }
+    /// <summary>The season's account of the home: who did what, who went hungry. Show it when the head returns.</summary>
+    public sealed class HomeReported : DomainEvent { public System.Collections.Generic.List<HomeReportLine> Lines; public int HungryMembers; public int Morale; }
+    public sealed class CharacterLeft : DomainEvent { public int CharacterId; public string StolenItemId; }
     public sealed class EventStarted : DomainEvent { public string EventId; }
     public sealed class EventBeatEntered : DomainEvent { public string EventId; public string BeatId; }
     public sealed class EventChoiceMade : DomainEvent { public string EventId; public string BeatId; public int ChoiceIndex; }

@@ -1,0 +1,6 @@
+id: healer
+name: Healer
+skill: medicine
+structure: infirmary
+produces:
+  - { item: bandage, count_min: 1, count_max: 2 }

@@ -1,0 +1,6 @@
+id: farmer
+name: Farmer
+skill: husbandry
+structure: garden
+produces:
+  - { item: cornmeal, count_min: 3, count_max: 5 }

@@ -1,4 +1,5 @@
 id: boar_meat
 name: Boar meat
 weight: 8
+value: 2
 tags: [food, perishable]

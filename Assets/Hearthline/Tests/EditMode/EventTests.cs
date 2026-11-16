@@ -269,7 +269,7 @@ namespace Hearthline.Tests
             var seen = new HashSet<string>();
             for (ulong seed = 1; seed <= 20; seed++) seen.UnionWith(Run(seed, home, 60));
             seen.Remove("");
-            Assert.That(seen, Is.EquivalentTo(new[] { "seeker_at_the_gate", "brand_night" }), "fever needs a second household member");
+            Assert.That(seen, Is.EquivalentTo(new[] { "seeker_at_the_gate", "brand_night", "night_raid" }), "the others need a second household member, a guard, or low morale");
         }
 
         [Test]

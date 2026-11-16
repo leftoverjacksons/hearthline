@@ -1,4 +1,5 @@
 id: copper_wire
 name: Copper wire
 weight: 1
+value: 2
 tags: [salvage, trade]

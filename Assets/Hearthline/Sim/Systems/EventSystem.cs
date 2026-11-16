@@ -115,10 +115,14 @@ namespace Hearthline.Sim
             if (w.AtHome.HasValue && w.AtHome.Value != where.AtHome) return false;
             if (!w.FlagsAll.TrueForAll(ctx.State.Flags.Contains)) return false;
             if (w.FlagsNone.Exists(ctx.State.Flags.Contains)) return false;
-            Dictionary<string, int> rep = ctx.State.Household.Reputation;
+            IDictionary<string, int> rep = ctx.State.Household.Reputation;
             foreach (var kv in w.ReputationMin) { rep.TryGetValue(kv.Key, out int r); if (r < kv.Value) return false; }
             foreach (var kv in w.ReputationMax) { rep.TryGetValue(kv.Key, out int r); if (r > kv.Value) return false; }
             if (w.GrudgeAny.Count > 0 && !w.GrudgeAny.Exists(f => WorldSystem.HasGrudge(ctx.State, f))) return false;
+            if (w.MoraleMin.HasValue && ctx.State.Household.Morale < w.MoraleMin.Value) return false;
+            if (w.MoraleMax.HasValue && ctx.State.Household.Morale > w.MoraleMax.Value) return false;
+            foreach (var kv in w.HomeMin) if (HomeSystem.Stat(ctx, kv.Key) < kv.Value) return false;
+            foreach (var kv in w.HomeMax) if (HomeSystem.Stat(ctx, kv.Key) > kv.Value) return false;
             if (w.ServicesAny.Count > 0 || w.SettlementMin.Count > 0 || w.SettlementMax.Count > 0)
             {
                 SettlementState town = WorldSystem.Resolve(ctx.State, ctx.Content, where.SettlementId);
@@ -237,7 +241,7 @@ namespace Hearthline.Sim
             if (r == null) return null;
             Character who = Who(ctx, active, r.Who);
             if (who == null || !who.Alive) return "nobody to do it";
-            Dictionary<string, int> inv = ctx.State.Household.Inventory;
+            IDictionary<string, int> inv = ctx.State.Household.Inventory;
             if (r.ItemAny.Count > 0 && !r.ItemAny.Exists(i => inv.TryGetValue(i, out int n) && n > 0))
                 return "needs " + string.Join(" or ", r.ItemAny);
             if (r.TraitAny.Count > 0 && !r.TraitAny.Exists(who.Traits.Contains)) return "needs " + string.Join(" or ", r.TraitAny);
@@ -339,6 +343,8 @@ namespace Hearthline.Sim
                     foreach (SettlementValue v in (SettlementValue[])Enum.GetValues(typeof(SettlementValue)))
                         if (o.Settlement.TryGetValue(v, out int push)) WorldSystem.Influence(ctx, town, v, push);
             }
+            if (o.Morale != 0) HomeSystem.ChangeMorale(ctx, o.Morale);
+            if (o.Damage != null) HomeSystem.Damage(ctx, o.Damage);
             if (o.Memory != null)
             {
                 Character who = Who(ctx, active, o.Memory.Target);
@@ -418,7 +424,7 @@ namespace Hearthline.Sim
 
         public static void ChangeItem(SimContext ctx, string itemId, int delta)
         {
-            Dictionary<string, int> inv = ctx.State.Household.Inventory;
+            IDictionary<string, int> inv = ctx.State.Household.Inventory;
             inv.TryGetValue(itemId, out int old);
             int count = Math.Max(0, old + delta);
             if (count == old) return;

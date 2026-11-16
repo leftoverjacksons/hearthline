@@ -1,4 +1,5 @@
 id: bandage
 name: Bandage
 weight: 0.1
+value: 1
 tags: [medicine]

@@ -1,4 +1,5 @@
 id: pelt_wolf
 name: Wolf pelt
 weight: 4
+value: 6
 tags: [pelt, trade]

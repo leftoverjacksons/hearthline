@@ -1,0 +1,6 @@
+id: shrine
+name: Shrine
+starts_at: 0
+tiers:
+  - { name: Cairn, cost: { lumber: 1 }, provides: { warding: 1 } }
+  - { name: Warded ring, cost: { lumber: 4, humming_stone: 1 }, provides: { warding: 2 } }

@@ -1,0 +1,7 @@
+id: workshop
+name: Workshop
+starts_at: 0
+tiers:
+  - { name: Bench, cost: { lumber: 4 }, provides: { workshop: 1 } }
+  - { name: Forge, cost: { lumber: 8, copper_wire: 3 }, provides: { workshop: 2 } }
+  - { name: Gunsmithy, cost: { lumber: 12, copper_wire: 4, old_coin: 12 }, provides: { workshop: 3 } }

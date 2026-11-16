@@ -1,0 +1,28 @@
+id: quarrel_at_supper
+tags: [home, household]
+weight: 8
+cooldown_days: 30
+when:
+  at_home: true
+  time_of_day: [dusk, night]
+  morale_max: 40
+cast:
+  hero: { from: party, role: head }
+  angry: { from: household, role: any }
+beats:
+  - text: "{angry.name} puts the spoon down hard. It is about the portions, and it is not about the portions."
+    choices:
+      - label: Open the whiskey and let everyone talk
+        requires: { item_any: [whiskey] }
+        outcome:
+          item: { whiskey: -1 }
+          morale: 8
+          relationship: { angry: 10 }
+      - label: Hear them out
+        outcome:
+          morale: 3
+          relationship: { angry: 5 }
+      - label: Tell them whose table it is
+        outcome:
+          morale: -6
+          relationship: { angry: -20 }

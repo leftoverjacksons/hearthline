@@ -1,0 +1,7 @@
+id: dwelling
+name: Dwelling
+starts_at: 1
+tiers:
+  - { name: Tent, provides: { capacity: 3 } }
+  - { name: Cabin, cost: { lumber: 10 }, provides: { capacity: 6, morale: 1 } }
+  - { name: Farmhouse, cost: { lumber: 24, old_coin: 10 }, provides: { capacity: 12, morale: 2 } }

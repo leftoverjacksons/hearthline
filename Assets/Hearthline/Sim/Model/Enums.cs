@@ -16,9 +16,12 @@ namespace Hearthline.Sim
     /// <summary>The numbers a settlement is made of, each 0..100.</summary>
     public enum SettlementValue { Prosperity, Safety, Strangeness, Openness }
 
+    /// <summary>What a homestead has, summed over its structures and the people working there.</summary>
+    public enum HomeStat { Capacity, Morale, Treatment, Defense, Workshop, Preserving, Stabling, Hygiene, Warding }
+
     public enum TimeOfDay { Dawn, Day, Dusk, Night }
 
-    public enum ChronicleKind { Joined, Born, Mark, Partnered, Died, Succeeded, Retired, LineEnded, Deed }
+    public enum ChronicleKind { Joined, Born, Mark, Partnered, Died, Succeeded, Retired, LineEnded, Deed, Left }
 
     /// <summary>Stage ids every wound definition must provide. The wound state machine is driven by the engine.</summary>
     public static class WoundStages

@@ -12,6 +12,7 @@ stats:
   - { id: persuasion, name: Persuasion, base: 0 }
   - { id: knack, name: Knack, base: 0 }
   - { id: teaching, name: Teaching, base: 0 }
+  - { id: husbandry, name: Husbandry, base: 0 }   # farming, cooking, woodcutting, keeping animals
   # Physical multipliers (1 is an unmarked adult)
   - { id: move_speed, name: Movement speed, base: 1 }
   - { id: reload_speed, name: Reload speed, base: 1 }

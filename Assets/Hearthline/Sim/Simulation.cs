@@ -44,6 +44,7 @@ namespace Hearthline.Sim
         public LifeRules Life { get; } = new LifeRules();
         public StorytellerRules Storyteller { get; } = new StorytellerRules();
         public WorldRules World { get; } = new WorldRules();
+        public HomeRules Home { get; } = new HomeRules();
         private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
@@ -60,7 +61,7 @@ namespace Hearthline.Sim
         }
 
         private SimContext NewContext() =>
-            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, AgeMarks = _ageMarks };
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -78,6 +79,7 @@ namespace Hearthline.Sim
             state.Household.HeadId = head.Id;
             state.Household.MemberIds.Add(head.Id);
             state.Household.PastHeadIds.Add(head.Id);
+            HomeSystem.EnsureHomestead(state, content);
             // A separate stream, so that adding townsfolk to content does not reshuffle everything else in a seed.
             WorldSystem.EnsureSettlements(state, content, new SimRandom(SimRandom.Seed(options.Seed, 77)));
             return new Simulation(state, content);
@@ -143,6 +145,11 @@ namespace Hearthline.Sim
             return s == null ? null : State.Characters.Find(c => c.Alive && c.SettlementId == s.Id && c.Role == role);
         }
 
+        public int StructureTier(string structureId) => HomeSystem.TierOf(State, structureId);
+
+        /// <summary>A homestead total, from built structures and from people doing jobs.</summary>
+        public int HomeStatOf(HomeStat stat) => HomeSystem.Stat(NewContext(), stat);
+
         public bool HasGrudge(string factionId) => WorldSystem.HasGrudge(State, factionId);
 
         public bool HasFlag(string flag) => State.Flags.Contains(flag);
@@ -205,6 +212,7 @@ namespace Hearthline.Sim
         public static Simulation FromJson(string json, ContentDatabase content)
         {
             SimState state = SaveFormat.FromJson(json);
+            HomeSystem.EnsureHomestead(state, content);
             // A save made before content gained a settlement gets that settlement now.
             WorldSystem.EnsureSettlements(state, content, new SimRandom(SimRandom.Seed((ulong)state.NextCharacterId, 77)));
             return new Simulation(state, content);

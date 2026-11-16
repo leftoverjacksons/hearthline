@@ -1,0 +1,7 @@
+id: hearth
+name: Hearth and kitchen
+starts_at: 1
+tiers:
+  - { name: Fire pit, provides: { morale: 1 } }
+  - { name: Kitchen, cost: { lumber: 6, copper_wire: 1 }, provides: { morale: 2, preserving: 1 } }
+  - { name: Smokehouse, cost: { lumber: 12 }, provides: { morale: 2, preserving: 2 } }

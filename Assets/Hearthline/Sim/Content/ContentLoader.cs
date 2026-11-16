@@ -70,6 +70,8 @@ namespace Hearthline.Sim.Content
                 else if (folder == "factions") Register(db.Factions, EventReader.ReadFaction(root, file.Path), d => d.Id, "factions", file.Path, root);
                 else if (folder == "items") Register(db.Items, EventReader.ReadItem(root, file.Path), d => d.Id, "items", file.Path, root);
                 else if (folder == "loot") Register(db.LootTables, EventReader.ReadLoot(root, file.Path), d => d.Id, "loot", file.Path, root);
+                else if (folder == "structures") Register(db.Structures, EventReader.ReadStructure(root, file.Path), d => d.Id, "structures", file.Path, root);
+                else if (folder == "jobs") Register(db.Jobs, EventReader.ReadJob(root, file.Path), d => d.Id, "jobs", file.Path, root);
                 else if (folder == "settlements") Register(db.Settlements, EventReader.ReadSettlement(root, file.Path), d => d.Id, "settlements", file.Path, root);
                 else if (folder == "events") Register(db.Events, EventReader.ReadEvent(root, file.Path), d => d.Id, "events", file.Path, root);
                 else if (folder == "traits")

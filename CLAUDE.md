@@ -28,7 +28,7 @@ Assets/Hearthline/Tests/EditMode   sim + content validation tests (also run head
 Assets/Hearthline/Tests/PlayMode   smoke tests
 Assets/Plugins             managed libraries the sim needs (YamlDotNet)
 Assets/ThirdParty          purchased assets, untouched
-Content/                   YAML: vocab.yaml, names.yaml, events/, marks/, items/, loot/, traits/, factions/, settlements/
+Content/                   YAML: vocab.yaml, names.yaml, events/, marks/, items/, loot/, traits/, factions/, settlements/, structures/, jobs/
 tools/headless             .NET projects that compile and test the sim without Unity
 docs/DESIGN.md             design document
 docs/content-schema.md     what content YAML may contain
@@ -80,4 +80,4 @@ A change is done when:
 
 Keep the dev console and cheat panel working. At minimum: spawn event by id, add or remove mark, skip season, set age, kill head of household, give item.
 
-The cheat panel is `Assets/Hearthline/Game/CheatPanel.cs` (F1), with tabs for marks, events and items, the household, and the world (settlements, townsfolk, grudges). When a system lands, add its cheats there.
+The cheat panel is `Assets/Hearthline/Game/CheatPanel.cs` (F1), with tabs for marks, events and items, the household and homestead (structures, jobs, morale), and the world (settlements, townsfolk, grudges). When a system lands, add its cheats there.

@@ -31,6 +31,8 @@ namespace Hearthline.Tests.ContentValidation
                     foreach (EventChoice choice in beat.Choices) Walk(choice.Outcome);
             foreach (LootTableDef table in TestSupport.Content.LootTables.Values)
                 foreach (LootEntry e in table.Entries) items.Add(e.ItemId);
+            foreach (JobDef job in TestSupport.Content.Jobs.Values)
+                foreach (LootEntry e in job.Produces) items.Add(e.ItemId);
 
             foreach (string id in TestSupport.Content.LootTables.Keys) Assert.That(loot, Does.Contain(id));
             foreach (string id in TestSupport.Content.Factions.Keys) Assert.That(factions, Does.Contain(id));

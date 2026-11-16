@@ -1,4 +1,5 @@
 id: cartridges
 name: Rifle cartridges
 weight: 0.5
+value: 1
 tags: [ammo]
