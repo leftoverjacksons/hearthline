@@ -30,14 +30,23 @@ namespace Hearthline.Sim.Content
         public bool? AtHome;
         public readonly List<string> FlagsAll = new List<string>();
         public readonly List<string> FlagsNone = new List<string>();
+        /// <summary>Faction -> the household's reputation must be at least / at most this.</summary>
+        public readonly Dictionary<string, int> ReputationMin = new Dictionary<string, int>();
+        public readonly Dictionary<string, int> ReputationMax = new Dictionary<string, int>();
+        /// <summary>One of these factions must hold a grudge against the family.</summary>
+        public readonly List<string> GrudgeAny = new List<string>();
+        /// <summary>Conditions on the settlement the party is in (or the home settlement).</summary>
+        public readonly List<string> ServicesAny = new List<string>();
+        public readonly Dictionary<SettlementValue, int> SettlementMin = new Dictionary<SettlementValue, int>();
+        public readonly Dictionary<SettlementValue, int> SettlementMax = new Dictionary<SettlementValue, int>();
     }
 
     public sealed class CastSlot
     {
         public string Role;
-        /// <summary>"party" or "household" for an existing person; null when <see cref="Generate"/> is set.</summary>
+        /// <summary>"party", "household" or "settlement" for an existing person; null when <see cref="Generate"/> is set.</summary>
         public string From;
-        /// <summary>"head" or "any". Only with <see cref="From"/>.</summary>
+        /// <summary>"head" or "any"; for from: settlement, the resident's role (shopkeeper). Only with <see cref="From"/>.</summary>
         public string Pick = "any";
         /// <summary>Archetype of a new person to create for this event.</summary>
         public string Generate;
@@ -71,6 +80,10 @@ namespace Hearthline.Sim.Content
 
     public sealed class TraitOutcome { public string Target; public string Add; public string Remove; }
 
+    public sealed class GrudgeOutcome { public string FactionId; public string Reason; }
+
+    public sealed class MemoryOutcome { public string Target; public string Text; }
+
     public sealed class ChanceBranch { public double P; public EventOutcome Outcome; }
 
     /// <summary>What a choice does. Everything set is applied; then one chance branch, if any, is rolled.</summary>
@@ -92,6 +105,13 @@ namespace Hearthline.Sim.Content
         public string Ambush;
         /// <summary>A deed written into the head's chronicle.</summary>
         public string Chronicle;
+        /// <summary>Pushes on the event's settlement. Takes effect when the season turns.</summary>
+        public readonly Dictionary<SettlementValue, int> Settlement = new Dictionary<SettlementValue, int>();
+        public GrudgeOutcome Grudge;
+        /// <summary>Faction whose grudge against the family ends.</summary>
+        public string SettleGrudge;
+        /// <summary>Something a cast member will remember about the family.</summary>
+        public MemoryOutcome Memory;
         public string Goto;
         public readonly List<ChanceBranch> Chance = new List<ChanceBranch>();
 
@@ -109,13 +129,16 @@ namespace Hearthline.Sim.Content
             if (Recruit != null) kinds.Add("recruit");
             if (Ambush != null) kinds.Add("ambush");
             if (Chronicle != null) kinds.Add("chronicle");
+            if (Settlement.Count > 0) kinds.Add("settlement");
+            if (Grudge != null || SettleGrudge != null) kinds.Add("grudge");
+            if (Memory != null) kinds.Add("memory");
             if (Goto != null) kinds.Add("goto");
             if (Chance.Count > 0) kinds.Add("chance");
             foreach (ChanceBranch b in Chance) b.Outcome.CollectKinds(kinds);
         }
 
         public static readonly string[] AllKinds =
-            { "relationship", "reputation", "item", "mark", "hit", "trait", "loot_table", "flag", "recruit", "ambush", "chronicle", "goto", "chance" };
+            { "relationship", "reputation", "item", "mark", "hit", "trait", "loot_table", "flag", "recruit", "ambush", "chronicle", "settlement", "grudge", "memory", "goto", "chance" };
     }
 
     public sealed class EventChoice { public string Label; public ChoiceRequires Requires; public EventOutcome Outcome = new EventOutcome(); }

@@ -51,6 +51,11 @@ namespace Hearthline.Sim
         public List<string> Traits = new List<string>();
         /// <summary>For people the event engine generated: what kind of person they are (traveler, reaver).</summary>
         public string Archetype;
+        /// <summary>For townsfolk: where they live and what they do there (shopkeeper, doctor).</summary>
+        public string SettlementId;
+        public string Role;
+        /// <summary>Notable dealings with the family, oldest first. Passed on to whoever takes over their work.</summary>
+        public List<Memory> Memories = new List<Memory>();
         /// <summary>Latent heritable marks this person carries without showing. They can surface in a child.</summary>
         public List<string> CarriedLatent = new List<string>();
         public HouseholdBond Bond = HouseholdBond.Sworn;
@@ -64,6 +69,20 @@ namespace Hearthline.Sim
         public bool Downed;
         /// <summary>What this person thinks of others, by character id. -100..100.</summary>
         public Dictionary<int, int> Opinions = new Dictionary<int, int>();
+    }
+
+    public sealed class Memory { public int Day; public string Text; }
+
+    /// <summary>A faction's lasting grievance against the surname. Heirs inherit it.</summary>
+    public sealed class Grudge { public string FactionId; public string Reason; public int Day; }
+
+    public sealed class SettlementState
+    {
+        public string Id;
+        public Dictionary<SettlementValue, int> Values = new Dictionary<SettlementValue, int>();
+        /// <summary>What the family has done this season. Applied when the season turns.</summary>
+        public Dictionary<SettlementValue, int> Pending = new Dictionary<SettlementValue, int>();
+        public List<string> OpenServices = new List<string>();
     }
 
     /// <summary>One line of the family chronicle. Written by the sim as things happen; never edited.</summary>
@@ -89,6 +108,7 @@ namespace Hearthline.Sim
         public Dictionary<string, int> Inventory = new Dictionary<string, int>();
         /// <summary>Standing with each faction, -100..100. It belongs to the surname, so heirs inherit it.</summary>
         public Dictionary<string, int> Reputation = new Dictionary<string, int>();
+        public List<Grudge> Grudges = new List<Grudge>();
     }
 
     /// <summary>The event the player is in the middle of. Saved, so a game can be saved mid-event.</summary>
@@ -99,6 +119,8 @@ namespace Hearthline.Sim
         /// <summary>Cast role -> character id.</summary>
         public Dictionary<string, int> Cast = new Dictionary<string, int>();
         public string PlaceName;
+        /// <summary>The settlement the event's settlement outcomes and townsfolk refer to.</summary>
+        public string SettlementId;
     }
 
     public sealed class StorytellerState
@@ -125,6 +147,7 @@ namespace Hearthline.Sim
         public List<ChronicleEntry> Chronicle = new List<ChronicleEntry>();
         /// <summary>Story flags set by events. Kept sorted.</summary>
         public List<string> Flags = new List<string>();
+        public List<SettlementState> Settlements = new List<SettlementState>();
         public ActiveEvent ActiveEvent;
         public StorytellerState Storyteller = new StorytellerState();
     }

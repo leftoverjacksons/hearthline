@@ -40,6 +40,61 @@ namespace Hearthline.Sim.Content
             return def;
         }
 
+        public static SettlementDef ReadSettlement(YamlMap root, string path)
+        {
+            var def = new SettlementDef { SourceFile = path, Id = root.Str("id"), Name = root.Str("name"), FactionId = root.Str("faction"), Home = root.Bool("home") ?? false };
+            foreach (var kv in root.EnumIntMap<SettlementValue>("values")) def.Start[kv.Key] = kv.Value;
+            foreach (var kv in root.EnumIntMap<SettlementValue>("baseline")) def.Baseline[kv.Key] = kv.Value;
+            foreach (YamlMap s in root.MapList("services", "services"))
+            {
+                var service = new ServiceDef { Id = s.Str("id"), Name = s.Str("name") };
+                foreach (var kv in s.EnumIntMap<SettlementValue>("min")) service.Min[kv.Key] = kv.Value;
+                foreach (var kv in s.EnumIntMap<SettlementValue>("max")) service.Max[kv.Key] = kv.Value;
+                s.Done();
+                if (service.Id != null) def.Services.Add(service);
+            }
+            foreach (YamlMap r in root.MapList("residents", "residents"))
+            {
+                var slot = new ResidentSlot { Role = r.Str("role"), Archetype = r.Str("archetype") };
+                slot.AgeMin = r.Int("age_min") ?? slot.AgeMin;
+                slot.AgeMax = r.Int("age_max") ?? slot.AgeMax;
+                r.Done();
+                if (slot.Role != null) def.Residents.Add(slot);
+            }
+            root.Done();
+            return def;
+        }
+
+        private static void ValidateSettlement(ContentDatabase db, SettlementDef def, List<ContentError> errors)
+        {
+            void Err(string message) => errors.Add(new ContentError { File = def.SourceFile, Message = message });
+            if (!Naming.IsSnakeId(def.Id)) Err("id '" + def.Id + "' must be snake_case");
+            if (def.FactionId != null && !db.Factions.ContainsKey(def.FactionId)) Err("no faction '" + def.FactionId + "'");
+            foreach (SettlementValue v in (SettlementValue[])Enum.GetValues(typeof(SettlementValue)))
+            {
+                if (!def.Start.ContainsKey(v)) Err("values needs '" + Naming.ToSnake(v) + "'");
+                if (!def.Baseline.ContainsKey(v)) Err("baseline needs '" + Naming.ToSnake(v) + "'");
+            }
+            foreach (var map in new[] { def.Start, def.Baseline })
+                foreach (var kv in map) if (kv.Value < 0 || kv.Value > 100) Err(Naming.ToSnake(kv.Key) + " must be 0..100");
+            var seen = new HashSet<string>();
+            foreach (ServiceDef s in def.Services)
+            {
+                if (!Naming.IsSnakeId(s.Id)) Err("service id '" + s.Id + "' must be snake_case");
+                if (!seen.Add(s.Id)) Err("duplicate service '" + s.Id + "'");
+                foreach (var map in new[] { s.Min, s.Max })
+                    foreach (var kv in map) if (kv.Value < 0 || kv.Value > 100) Err("service '" + s.Id + "': thresholds must be 0..100");
+            }
+            seen.Clear();
+            foreach (ResidentSlot r in def.Residents)
+            {
+                if (!Naming.IsSnakeId(r.Role)) Err("resident role '" + r.Role + "' must be snake_case");
+                if (!seen.Add(r.Role)) Err("duplicate resident role '" + r.Role + "'");
+                if (r.Archetype != null && !db.Vocab.Archetypes.Contains(r.Archetype)) Err("resident '" + r.Role + "': no archetype '" + r.Archetype + "'");
+                if (r.AgeMin < LifeRules.AdultAge || r.AgeMax < r.AgeMin) Err("resident '" + r.Role + "': needs " + LifeRules.AdultAge + " <= age_min <= age_max");
+            }
+        }
+
         public static EventDef ReadEvent(YamlMap root, string path)
         {
             var def = new EventDef { SourceFile = path, Id = root.Str("id") };
@@ -59,6 +114,12 @@ namespace Hearthline.Sim.Content
                 def.When.AtHome = when.Bool("at_home");
                 def.When.FlagsAll.AddRange(when.StrList("flags_all"));
                 def.When.FlagsNone.AddRange(when.StrList("flags_none"));
+                ReadWholeNumbers(when, "reputation_min", def.When.ReputationMin);
+                ReadWholeNumbers(when, "reputation_max", def.When.ReputationMax);
+                def.When.GrudgeAny.AddRange(when.StrList("grudge_any"));
+                def.When.ServicesAny.AddRange(when.StrList("services_any"));
+                foreach (var kv in when.EnumIntMap<SettlementValue>("settlement_min")) def.When.SettlementMin[kv.Key] = kv.Value;
+                foreach (var kv in when.EnumIntMap<SettlementValue>("settlement_max")) def.When.SettlementMax[kv.Key] = kv.Value;
                 when.Done();
             }
 
@@ -114,6 +175,15 @@ namespace Hearthline.Sim.Content
             return def;
         }
 
+        private static void ReadWholeNumbers(YamlMap o, string key, Dictionary<string, int> target)
+        {
+            foreach (var kv in o.NumMap(key))
+            {
+                if (kv.Value != Math.Floor(kv.Value)) o.Error("'" + key + "." + kv.Key + "' must be a whole number");
+                target[kv.Key] = (int)kv.Value;
+            }
+        }
+
         private static void ReadInts(YamlMap o, string key, Dictionary<string, int> target)
         {
             foreach (var kv in o.NumMap(key))
@@ -163,6 +233,24 @@ namespace Hearthline.Sim.Content
             outcome.Recruit = o.Has("recruit") ? o.Str("recruit") : null;
             outcome.Ambush = o.Has("ambush") ? o.Str("ambush") : null;
             outcome.Chronicle = o.Has("chronicle") ? o.Str("chronicle") : null;
+            foreach (var kv in o.EnumIntMap<SettlementValue>("settlement"))
+            {
+                if (kv.Value == 0) o.Error("'settlement." + Naming.ToSnake(kv.Key) + "' must not be zero");
+                outcome.Settlement[kv.Key] = kv.Value;
+            }
+            YamlMap g = o.Map("grudge", "grudge");
+            if (g != null)
+            {
+                outcome.Grudge = new GrudgeOutcome { FactionId = g.Str("faction"), Reason = g.Str("reason") };
+                g.Done();
+            }
+            outcome.SettleGrudge = o.Has("settle_grudge") ? o.Str("settle_grudge") : null;
+            YamlMap mem = o.Map("memory", "memory");
+            if (mem != null)
+            {
+                outcome.Memory = new MemoryOutcome { Target = mem.Str("target"), Text = mem.Str("text") };
+                mem.Done();
+            }
             outcome.Goto = o.Has("goto") ? o.Str("goto") : null;
             if (o.Has("chance"))
             {
@@ -196,6 +284,14 @@ namespace Hearthline.Sim.Content
                 foreach (LootEntry e in l.Entries)
                     if (!db.Items.ContainsKey(e.ItemId)) errors.Add(new ContentError { File = l.SourceFile, Message = "no item '" + e.ItemId + "'" });
             }
+            int homes = 0;
+            foreach (SettlementDef s in Sorted(db.Settlements))
+            {
+                ValidateSettlement(db, s, errors);
+                if (s.Home) homes++;
+            }
+            if (db.Settlements.Count > 0 && homes != 1)
+                errors.Add(new ContentError { File = "settlements/", Message = "exactly one settlement must have 'home: true' (found " + homes + ")" });
             foreach (EventDef e in Sorted(db.Events)) ValidateEvent(db, e, errors);
         }
 
@@ -220,15 +316,23 @@ namespace Hearthline.Sim.Content
             foreach (string tag in def.When.AreaTagsAny) Known(db.Vocab.AreaTags.Contains(tag), "area tag", tag, "when");
             foreach (string tag in def.When.AreaTagsAll) Known(db.Vocab.AreaTags.Contains(tag), "area tag", tag, "when");
 
+            foreach (string f in def.When.ReputationMin.Keys) Known(db.Factions.ContainsKey(f), "faction", f, "when");
+            foreach (string f in def.When.ReputationMax.Keys) Known(db.Factions.ContainsKey(f), "faction", f, "when");
+            foreach (string f in def.When.GrudgeAny) Known(db.Factions.ContainsKey(f), "faction", f, "when");
+            bool ServiceExists(string id) { foreach (SettlementDef s in db.Settlements.Values) if (s.Services.Exists(x => x.Id == id)) return true; return false; }
+            bool ResidentExists(string role) { foreach (SettlementDef s in db.Settlements.Values) if (s.Residents.Exists(x => x.Role == role)) return true; return false; }
+            foreach (string s in def.When.ServicesAny) Known(ServiceExists(s), "service", s, "when");
+
             bool hasHead = false;
             foreach (CastSlot slot in def.Cast)
             {
                 string where = "cast." + slot.Role;
                 if (!Naming.IsSnakeId(slot.Role)) Err(where + ": role must be snake_case");
                 if ((slot.From == null) == (slot.Generate == null)) { Err(where + ": needs exactly one of 'from' or 'generate'"); continue; }
-                if (slot.From != null)
+                if (slot.From == "settlement") Known(ResidentExists(slot.Pick), "resident role", slot.Pick, where);
+                else if (slot.From != null)
                 {
-                    if (slot.From != "party" && slot.From != "household") Err(where + ": from must be 'party' or 'household'");
+                    if (slot.From != "party" && slot.From != "household") Err(where + ": from must be 'party', 'household' or 'settlement'");
                     if (slot.Pick != "head" && slot.Pick != "any") Err(where + ": role must be 'head' or 'any'");
                     if (slot.Pick == "head") hasHead = true;
                 }
@@ -308,6 +412,18 @@ namespace Hearthline.Sim.Content
                     if (o.Hit.Severity < 1 || o.Hit.Severity > 3) Err(where + ": hit severity must be 1..3");
                     if (o.Hit.Cause != null) CheckText(o.Hit.Cause, where + " hit cause");
                 }
+                if (o.Grudge != null)
+                {
+                    Known(db.Factions.ContainsKey(o.Grudge.FactionId ?? ""), "faction", o.Grudge.FactionId, where + " grudge");
+                    if (o.Grudge.Reason != null) CheckText(o.Grudge.Reason, where + " grudge reason");
+                }
+                if (o.SettleGrudge != null) Known(db.Factions.ContainsKey(o.SettleGrudge), "faction", o.SettleGrudge, where + " settle_grudge");
+                if (o.Memory != null)
+                {
+                    Role(o.Memory.Target, where + " memory");
+                    if (o.Memory.Text != null) CheckText(o.Memory.Text, where + " memory");
+                }
+                if (o.Settlement.Count > 0 && db.Settlements.Count == 0) Err(where + ": settlement outcome but no settlement is defined");
                 foreach (ChanceBranch b in o.Chance) CheckOutcome(b.Outcome, where + " chance");
             }
 

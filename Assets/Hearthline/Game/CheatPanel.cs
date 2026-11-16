@@ -10,14 +10,15 @@ namespace Hearthline.Game
     /// <summary>
     /// Debug panel (F1). Everything it does goes through simulation commands, like the rest of presentation.
     /// Tabs: Marks (add/remove marks, hits, treatment), Events (spawn by id, storyteller, items),
-    /// House (members, partners, births, heirs, chronicle).
+    /// House (members, partners, births, heirs, chronicle), World (settlement values, services, townsfolk, grudges).
     /// </summary>
     public sealed class CheatPanel : MonoBehaviour
     {
         [SerializeField] private KeyCode toggleKey = KeyCode.F1;
         [SerializeField] private bool openOnStart = true;
 
-        private static readonly string[] Tabs = { "Marks", "Events", "House" };
+        private static readonly string[] Tabs = { "Marks", "Events", "House", "World" };
+        private static readonly SettlementValue[] SettlementValues = (SettlementValue[])Enum.GetValues(typeof(SettlementValue));
         private static readonly string[] RegionNames = Enum.GetNames(typeof(BodyRegion));
         private static readonly string[] DamageNames = Enum.GetNames(typeof(DamageType));
         private static readonly string[] TimeNames = Enum.GetNames(typeof(TimeOfDay));
@@ -76,7 +77,8 @@ namespace Hearthline.Game
             GUILayout.EndHorizontal();
 
             _tab = GUILayout.Toolbar(_tab, Tabs);
-            if (head == null && _tab != 2)
+            if (_tab == 3) DrawWorld(sim);
+            else if (head == null && _tab != 2)
             {
                 GUILayout.Label(sim.State.Household.LineEnded ? "The line has ended. Start a new game or load." : "The head is dead. Choose an heir on the House tab.");
             }
@@ -243,6 +245,41 @@ namespace Hearthline.Game
             List<ChronicleEntry> chronicle = sim.State.Chronicle;
             for (int i = chronicle.Count - 1; i >= 0 && i >= chronicle.Count - 40; i--)
                 GUILayout.Label(new GameDate(chronicle[i].Day) + ": " + chronicle[i].Text);
+            GUILayout.EndScrollView();
+        }
+
+        private void DrawWorld(Simulation sim)
+        {
+            _scroll = GUILayout.BeginScrollView(_scroll);
+            foreach (SettlementState town in sim.State.Settlements)
+            {
+                GUILayout.Label(town.Id + "   (changes apply when the season turns)");
+                foreach (SettlementValue value in SettlementValues)
+                {
+                    GUILayout.BeginHorizontal();
+                    town.Pending.TryGetValue(value, out int pending);
+                    GUILayout.Label(value + ": " + town.Values[value] + (pending != 0 ? "  (pending " + pending.ToString("+0;-0") + ")" : ""), GUILayout.Width(260));
+                    if (GUILayout.Button("-10", GUILayout.Width(50))) Run(sim, new InfluenceSettlement { SettlementId = town.Id, Value = value, Delta = -10 });
+                    if (GUILayout.Button("+10", GUILayout.Width(50))) Run(sim, new InfluenceSettlement { SettlementId = town.Id, Value = value, Delta = 10 });
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.Label("Open: " + (town.OpenServices.Count > 0 ? string.Join(", ", town.OpenServices) : "nothing"));
+                foreach (Character c in sim.State.Characters)
+                {
+                    if (!c.Alive || c.SettlementId != town.Id) continue;
+                    GUILayout.Label("  " + c.Role + ": " + c.GivenName + " " + c.Surname + ", " + sim.AgeOf(c)
+                        + (c.Memories.Count > 0 ? "\n      remembers: " + c.Memories[c.Memories.Count - 1].Text : ""));
+                }
+                GUILayout.Space(8);
+            }
+            foreach (Grudge grudge in sim.State.Household.Grudges)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Grudge: " + grudge.FactionId + " — " + grudge.Reason);
+                if (GUILayout.Button("Settle", GUILayout.Width(60))) Run(sim, new SetGrudge { FactionId = grudge.FactionId, Held = false });
+                GUILayout.EndHorizontal();
+            }
+            foreach (KeyValuePair<string, int> kv in sim.State.Household.Reputation) GUILayout.Label("Reputation with " + kv.Key + ": " + kv.Value);
             GUILayout.EndScrollView();
         }
 

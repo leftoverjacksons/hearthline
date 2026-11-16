@@ -35,6 +35,7 @@ beats:
           loot_table: reaver_stash
           reputation: { reavers: -10 }
           chronicle: "{hero.name} robbed the Reaver camp on the ridge."
+          grudge: { faction: reavers, reason: "{hero.full_name} robbed the ridge camp" }
       - label: Leave it and mark the place
         outcome:
           reputation: { homesteaders: 3 }

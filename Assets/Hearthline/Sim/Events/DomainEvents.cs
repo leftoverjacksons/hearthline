@@ -16,6 +16,13 @@ namespace Hearthline.Sim
     public sealed class DateAdvanced : DomainEvent { public int FromDay; public int ToDay; }
     public sealed class SeasonPassed : DomainEvent { public Season Ended; public Season Began; }
     public sealed class CharacterAgeSet : DomainEvent { public int CharacterId; public int AgeYears; }
+    /// <summary>The family did something that will move a settlement value when the season turns.</summary>
+    public sealed class SettlementInfluenced : DomainEvent { public string SettlementId; public SettlementValue Value; public int Delta; }
+    public sealed class SettlementValueChanged : DomainEvent { public string SettlementId; public SettlementValue Value; public int OldValue; public int NewValue; }
+    public sealed class ServiceOpened : DomainEvent { public string SettlementId; public string ServiceId; }
+    public sealed class ServiceClosed : DomainEvent { public string SettlementId; public string ServiceId; }
+    public sealed class ResidentSucceeded : DomainEvent { public string SettlementId; public string Role; public int PreviousId; public int NewId; }
+    public sealed class GrudgeChanged : DomainEvent { public string FactionId; public bool Held; public string Reason; }
     public sealed class EventStarted : DomainEvent { public string EventId; }
     public sealed class EventBeatEntered : DomainEvent { public string EventId; public string BeatId; }
     public sealed class EventChoiceMade : DomainEvent { public string EventId; public string BeatId; public int ChoiceIndex; }

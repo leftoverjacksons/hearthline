@@ -1,0 +1,28 @@
+id: sermon_on_the_changed
+tags: [town, neighbors, moral]
+weight: 6
+cooldown_days: 80
+when:
+  area_tags_any: [town]
+  time_of_day: [day]
+  settlement_max: { openness: 45 }
+cast:
+  hero: { from: party, role: head }
+  preacher: { from: settlement, role: preacher }
+beats:
+  - text: "{preacher.name} is on the store steps. The word today is that what comes back from the green is not what went in. People are nodding."
+    choices:
+      - label: Speak against it
+        outcome:
+          settlement: { openness: 6 }
+          relationship: { preacher: -20 }
+          reputation: { the_open: 3, homesteaders: -3 }
+          memory: { target: preacher, text: "{hero.full_name} stood up for the Changed on my own steps." }
+      - label: Nod along
+        outcome:
+          settlement: { openness: -4 }
+          relationship: { preacher: 10 }
+          reputation: { homesteaders: 2 }
+      - label: Leave before it ends
+        outcome:
+          settlement: { openness: -1 }

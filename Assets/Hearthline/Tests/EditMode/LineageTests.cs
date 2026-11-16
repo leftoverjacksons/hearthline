@@ -234,14 +234,14 @@ namespace Hearthline.Tests
             Simulation sim = TestSupport.NewSim(3);
             Character partner = Join(sim, "Levi", 30, HouseholdBond.Partner);
             TestSupport.Ok(sim.Execute(new SetPartners { CharacterAId = sim.Head.Id, CharacterBId = partner.Id }));
-            int before = sim.State.Characters.Count;
+            int before = sim.State.Household.MemberIds.Count;
             for (int i = 0; i < 40; i++) TestSupport.Ok(sim.Execute(new PassSeason()));
-            int children = sim.State.Characters.Count - before;
+            int children = sim.State.Household.MemberIds.Count - before;
             Assert.That(children, Is.InRange(2, 12), "0.15 per season over 40 seasons");
 
             Simulation alone = TestSupport.NewSim(3);
             for (int i = 0; i < 40; i++) alone.Execute(new PassSeason());
-            Assert.That(alone.State.Characters.Count, Is.EqualTo(1), "no partner, no children");
+            Assert.That(alone.State.Household.MemberIds.Count, Is.EqualTo(1), "no partner, no children");
         }
 
         [Test]

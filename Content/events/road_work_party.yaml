@@ -1,0 +1,28 @@
+id: road_work_party
+tags: [encounter, town, work]
+weight: 7
+cooldown_days: 60
+when:
+  area_tags_any: [road, town]
+  time_of_day: [dawn, day]
+cast:
+  hero: { from: party, role: head }
+  constable: { from: settlement, role: constable }
+beats:
+  - text: "A washout has taken half the road below the ford. {constable.name} is there with six men and four shovels, looking at who comes by."
+    choices:
+      - label: Take a shovel for the day
+        outcome:
+          settlement: { prosperity: 5, safety: 2 }
+          reputation: { homesteaders: 5 }
+          relationship: { constable: 15 }
+          memory: { target: constable, text: "{hero.full_name} dug out the ford road with us." }
+      - label: Lend them copper for the culvert
+        requires: { item_any: [copper_wire] }
+        outcome:
+          item: { copper_wire: -1 }
+          settlement: { prosperity: 8 }
+          reputation: { homesteaders: 3 }
+      - label: Ride around
+        outcome:
+          relationship: { constable: -5 }

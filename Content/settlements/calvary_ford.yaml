@@ -1,0 +1,19 @@
+id: calvary_ford
+name: Calvary Ford
+home: true
+faction: homesteaders
+values: { prosperity: 35, safety: 40, strangeness: 10, openness: 30 }
+# Left alone, the town settles back toward these.
+baseline: { prosperity: 30, safety: 35, strangeness: 10, openness: 30 }
+services:
+  - { id: general_store, name: General store, min: { prosperity: 10 } }
+  - { id: doctor, name: Doctor, min: { prosperity: 45, safety: 30 } }
+  - { id: gunsmith, name: Gunsmith, min: { prosperity: 55 } }
+  - { id: saloon, name: Saloon, min: { prosperity: 40, safety: 35 } }
+  - { id: shrine, name: Shrine, min: { strangeness: 30 } }
+  - { id: school, name: School, min: { prosperity: 60, safety: 50 } }
+  - { id: telegraph, name: Telegraph, min: { prosperity: 75, safety: 60 }, max: { strangeness: 50 } }
+residents:
+  - { role: shopkeeper, archetype: homesteader, age_min: 35, age_max: 55 }
+  - { role: preacher, archetype: homesteader, age_min: 40, age_max: 60 }
+  - { role: constable, archetype: homesteader, age_min: 28, age_max: 45 }

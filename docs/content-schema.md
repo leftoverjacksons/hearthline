@@ -214,3 +214,46 @@ Rules:
 - Without `region`, a mark lands on a random allowed region and a hit on a random region.
 - The place in a mark's name comes from where the event happened, not from the event file.
 - `chance` cannot be nested.
+
+## settlements/<id>.yaml
+
+```yaml
+id: calvary_ford
+name: Calvary Ford
+home: true                       # exactly one settlement is home: the default for events that do not say where
+faction: homesteaders
+values: { prosperity: 35, safety: 40, strangeness: 10, openness: 30 }     # all four, each 0..100
+baseline: { prosperity: 30, safety: 35, strangeness: 10, openness: 30 }   # where the town drifts when left alone
+services:                        # open while every min and max holds
+  - { id: doctor, name: Doctor, min: { prosperity: 45, safety: 30 } }
+  - { id: telegraph, name: Telegraph, min: { prosperity: 75 }, max: { strangeness: 50 } }
+residents:                       # one named, persistent person per role; a child takes over when they die
+  - { role: shopkeeper, archetype: homesteader, age_min: 35, age_max: 55 }
+```
+
+## Events and the world
+
+Additional `when` conditions:
+
+```yaml
+when:
+  reputation_min: { homesteaders: 10 }
+  reputation_max: { reavers: -20 }
+  grudge_any: [reavers]                 # one of these factions holds a grudge against the family
+  services_any: [saloon]                # open in the settlement the party is in (default: the home settlement)
+  settlement_min: { safety: 30 }
+  settlement_max: { openness: 45 }
+```
+
+Casting a townsperson: `shopkeeper: { from: settlement, role: shopkeeper }`. The event cannot start if
+nobody holds that role.
+
+Additional outcomes:
+
+```yaml
+outcome:
+  settlement: { prosperity: 5, safety: -2 }      # pushes on the town; applied when the season turns
+  grudge: { faction: reavers, reason: "{hero.full_name} robbed the ridge camp" }
+  settle_grudge: reavers
+  memory: { target: shopkeeper, text: "{hero.full_name} called me a cheat in my own store." }
+```

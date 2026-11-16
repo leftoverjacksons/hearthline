@@ -43,6 +43,7 @@ namespace Hearthline.Sim
         public TreatmentRules Treatment { get; } = new TreatmentRules();
         public LifeRules Life { get; } = new LifeRules();
         public StorytellerRules Storyteller { get; } = new StorytellerRules();
+        public WorldRules World { get; } = new WorldRules();
         private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
@@ -59,7 +60,7 @@ namespace Hearthline.Sim
         }
 
         private SimContext NewContext() =>
-            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, AgeMarks = _ageMarks };
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -77,6 +78,8 @@ namespace Hearthline.Sim
             state.Household.HeadId = head.Id;
             state.Household.MemberIds.Add(head.Id);
             state.Household.PastHeadIds.Add(head.Id);
+            // A separate stream, so that adding townsfolk to content does not reshuffle everything else in a seed.
+            WorldSystem.EnsureSettlements(state, content, new SimRandom(SimRandom.Seed(options.Seed, 77)));
             return new Simulation(state, content);
         }
 
@@ -123,6 +126,24 @@ namespace Hearthline.Sim
 
         public int ItemCount(string itemId) =>
             State.Household.Inventory.TryGetValue(itemId, out int count) ? count : 0;
+
+        /// <summary>The named settlement, or the home settlement when id is null.</summary>
+        public SettlementState FindSettlement(string id = null) => WorldSystem.Resolve(State, Content, id);
+
+        public bool ServiceIsOpen(string serviceId, string settlementId = null)
+        {
+            SettlementState s = FindSettlement(settlementId);
+            return s != null && s.OpenServices.Contains(serviceId);
+        }
+
+        /// <summary>The living person doing this work in the settlement, or null.</summary>
+        public Character FindResident(string role, string settlementId = null)
+        {
+            SettlementState s = FindSettlement(settlementId);
+            return s == null ? null : State.Characters.Find(c => c.Alive && c.SettlementId == s.Id && c.Role == role);
+        }
+
+        public bool HasGrudge(string factionId) => WorldSystem.HasGrudge(State, factionId);
 
         public bool HasFlag(string flag) => State.Flags.Contains(flag);
 
@@ -181,8 +202,13 @@ namespace Hearthline.Sim
 
         public string ToJson() => SaveFormat.ToJson(State);
 
-        public static Simulation FromJson(string json, ContentDatabase content) =>
-            new Simulation(SaveFormat.FromJson(json), content);
+        public static Simulation FromJson(string json, ContentDatabase content)
+        {
+            SimState state = SaveFormat.FromJson(json);
+            // A save made before content gained a settlement gets that settlement now.
+            WorldSystem.EnsureSettlements(state, content, new SimRandom(SimRandom.Seed((ulong)state.NextCharacterId, 77)));
+            return new Simulation(state, content);
+        }
     }
 
     public static class LifeStages

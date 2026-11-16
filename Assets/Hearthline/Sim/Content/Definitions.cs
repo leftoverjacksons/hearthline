@@ -125,6 +125,7 @@ namespace Hearthline.Sim.Content
         public readonly Dictionary<string, ItemDef> Items = new Dictionary<string, ItemDef>();
         public readonly Dictionary<string, LootTableDef> LootTables = new Dictionary<string, LootTableDef>();
         public readonly Dictionary<string, EventDef> Events = new Dictionary<string, EventDef>();
+        public readonly Dictionary<string, SettlementDef> Settlements = new Dictionary<string, SettlementDef>();
 
         public TraitDef FindTrait(string id)
         {

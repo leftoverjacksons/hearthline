@@ -65,7 +65,45 @@ namespace Hearthline.Sim
         {
             if (FactionId == null || !ctx.Content.Factions.ContainsKey(FactionId)) return "no faction '" + FactionId + "'";
             if (Delta == 0) return "delta must not be zero";
-            EventSystem.ChangeReputation(ctx, FactionId, Delta);
+            WorldSystem.ChangeReputation(ctx, FactionId, Delta);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// The family did something a town will feel: sold a season's pelts, drove off raiders, reported a neighbour.
+    /// The push is stored and takes effect when the season turns. You shape the town; you do not set it.
+    /// </summary>
+    public sealed class InfluenceSettlement : Command
+    {
+        /// <summary>Null means the home settlement.</summary>
+        public string SettlementId;
+        public SettlementValue Value;
+        public int Delta;
+
+        internal override string Apply(SimContext ctx)
+        {
+            SettlementState town = WorldSystem.Resolve(ctx.State, ctx.Content, SettlementId);
+            if (town == null) return "no settlement '" + SettlementId + "'";
+            if (Delta == 0) return "delta must not be zero";
+            WorldSystem.Influence(ctx, town, Value, Delta);
+            return null;
+        }
+    }
+
+    public sealed class SetGrudge : Command
+    {
+        public string FactionId;
+        /// <summary>True starts a grudge (needs a reason); false settles it.</summary>
+        public bool Held = true;
+        public string Reason;
+
+        internal override string Apply(SimContext ctx)
+        {
+            if (FactionId == null || !ctx.Content.Factions.ContainsKey(FactionId)) return "no faction '" + FactionId + "'";
+            if (WorldSystem.HasGrudge(ctx.State, FactionId) == Held) return Held ? "that grudge already exists" : "there is no such grudge";
+            if (Held && string.IsNullOrWhiteSpace(Reason)) return "a grudge needs a reason";
+            if (Held) WorldSystem.AddGrudge(ctx, FactionId, Reason); else WorldSystem.SettleGrudge(ctx, FactionId);
             return null;
         }
     }

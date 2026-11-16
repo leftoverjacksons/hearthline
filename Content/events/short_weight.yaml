@@ -1,0 +1,28 @@
+id: short_weight
+tags: [encounter, town]
+weight: 8
+cooldown_days: 40
+when:
+  area_tags_any: [town]
+  time_of_day: [dawn, day]
+  services_any: [general_store]
+cast:
+  hero: { from: party, role: head }
+  shopkeeper: { from: settlement, role: shopkeeper }
+beats:
+  - text: "{shopkeeper.name} has a thumb on the scale. Not much. Enough that the flour will run out a week early."
+    choices:
+      - label: Say so, in front of the others
+        outcome:
+          relationship: { shopkeeper: -20 }
+          reputation: { homesteaders: 2 }
+          settlement: { prosperity: 2 }
+          memory: { target: shopkeeper, text: "{hero.full_name} called me a cheat in my own store." }
+      - label: Say so, quietly
+        outcome:
+          relationship: { shopkeeper: 10 }
+          memory: { target: shopkeeper, text: "{hero.full_name} caught my thumb on the scale and kept it between us." }
+      - label: Pay and say nothing
+        outcome:
+          relationship: { shopkeeper: -5 }
+          settlement: { prosperity: -1 }

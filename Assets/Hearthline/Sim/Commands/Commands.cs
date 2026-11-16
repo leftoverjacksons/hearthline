@@ -230,6 +230,7 @@ namespace Hearthline.Sim
             GameDate next = now.NextSeasonStart;
             AdvanceDays.Run(ctx, next.TotalDays - now.TotalDays);
             LifeSystem.RunInterlude(ctx);
+            WorldSystem.RunSeason(ctx);
             ctx.Emit(new SeasonPassed { Day = ctx.State.Day, Ended = now.Season, Began = next.Season });
             return null;
         }

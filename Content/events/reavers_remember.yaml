@@ -1,0 +1,32 @@
+id: reavers_remember
+tags: [encounter, danger, reavers]
+weight: 12
+cooldown_days: 30
+intensity: 2
+when:
+  area_tags_any: [road, river_crossing, woods]
+  grudge_any: [reavers]
+cast:
+  hero: { from: party, role: head }
+  reaver: { generate: reaver, age_min: 20, age_max: 45 }
+beats:
+  - text: "Riders on the road ahead, not moving. {reaver.name} says the name {hero.surname} out loud, like reading it off a list."
+    choices:
+      - label: Pay what they say is owed
+        requires: { item_any: [old_coin] }
+        outcome:
+          item: { old_coin: -6 }
+          settle_grudge: reavers
+          chronicle: "{hero.name} paid off the Reavers' claim against the {hero.surname} name."
+      - label: Stand
+        outcome:
+          ambush: reavers_road
+          settlement: { safety: 3 }
+          reputation: { homesteaders: 3 }
+      - label: Run for the trees
+        outcome:
+          chance:
+            - p: 0.4
+              hit: { target: hero, damage: gunshot, severity: 1, cause: "a Reaver" }
+            - p: 0.6
+              flag_set: [fled_the_reavers]

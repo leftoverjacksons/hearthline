@@ -158,6 +158,18 @@ namespace Hearthline.Sim.Content
             return result;
         }
 
+        public Dictionary<T, int> EnumIntMap<T>(string key) where T : struct, System.Enum
+        {
+            var result = new Dictionary<T, int>();
+            foreach (var kv in NumMap(key))
+            {
+                if (!Naming.TryParseSnake(kv.Key, out T k)) Error("'" + key + "' has unknown entry '" + kv.Key + "' (allowed: " + Naming.AllSnake<T>() + ")");
+                else if (kv.Value != System.Math.Floor(kv.Value)) Error("'" + key + "." + kv.Key + "' must be a whole number");
+                else result[k] = (int)kv.Value;
+            }
+            return result;
+        }
+
         /// <summary>Reports any field that was present but never read.</summary>
         public void Done()
         {

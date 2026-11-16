@@ -31,6 +31,7 @@ beats:
         outcome:
           ambush: reavers_road
           reputation: { reavers: -10, homesteaders: 3 }
+          settlement: { safety: 4 }
       - label: Turn back and find another way
         outcome:
           relationship: { reaver: -10 }

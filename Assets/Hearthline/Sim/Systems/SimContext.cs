@@ -12,6 +12,7 @@ namespace Hearthline.Sim
         public TreatmentRules Treatment;
         public LifeRules Life;
         public StorytellerRules Storyteller;
+        public WorldRules World;
         /// <summary>Age marks that arrive on their own (gained_at_age), sorted by id.</summary>
         public List<MarkDef> AgeMarks;
         public readonly List<DomainEvent> Events = new List<DomainEvent>();

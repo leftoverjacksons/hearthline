@@ -1,0 +1,34 @@
+id: cards_at_the_saloon
+tags: [town, downtime]
+weight: 6
+cooldown_days: 20
+when:
+  area_tags_any: [town]
+  time_of_day: [dusk, night]
+  services_any: [saloon]
+cast:
+  hero: { from: party, role: head }
+  dealer: { generate: traveler, age_min: 25, age_max: 60 }
+beats:
+  - text: "One table, one lamp. {dealer.name} deals without looking at the cards. There is an empty chair."
+    choices:
+      - label: Sit in
+        requires: { item_any: [old_coin] }
+        outcome:
+          chance:
+            - p: 0.45
+              item: { old_coin: 3 }
+              relationship: { dealer: -10 }
+            - p: 0.55
+              item: { old_coin: -2 }
+              relationship: { dealer: 5 }
+      - label: Stand a round and listen
+        requires: { item_any: [old_coin] }
+        outcome:
+          item: { old_coin: -1 }
+          reputation: { homesteaders: 2 }
+          settlement: { prosperity: 1 }
+          flag_set: [heard_saloon_talk]
+      - label: Watch from the door
+        outcome:
+          flag_set: [heard_saloon_talk]

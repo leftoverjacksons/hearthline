@@ -16,6 +16,8 @@ namespace Hearthline.Sim
         public double DistanceFromHome;
         /// <summary>Used in the names of marks gained here: "at Miller's Ford". Optional.</summary>
         public string PlaceName;
+        /// <summary>The settlement the party is in or nearest to. Null means the home settlement.</summary>
+        public string SettlementId;
         /// <summary>Who is on the trip. Empty means the head alone. The head is always included.</summary>
         public List<int> PartyIds = new List<int>();
     }
@@ -75,10 +77,18 @@ namespace Hearthline.Sim
         {
             var cast = new Dictionary<string, Character>();
             List<Character> party = Party(ctx, where);
+            SettlementState town = WorldSystem.Resolve(ctx.State, ctx.Content, where.SettlementId);
             foreach (CastSlot slot in def.Cast)
             {
                 if (slot.Generate != null) continue;
                 var candidates = new List<Character>();
+                if (slot.From == "settlement")
+                {
+                    Character resident = town == null ? null : ctx.State.Characters.Find(c => c.Alive && c.SettlementId == town.Id && c.Role == slot.Pick);
+                    if (resident == null) return null;
+                    cast[slot.Role] = resident;
+                    continue;
+                }
                 IEnumerable<Character> pool = slot.From == "party" ? party : (IEnumerable<Character>)ctx.State.Characters;
                 foreach (Character c in pool)
                 {
@@ -105,6 +115,18 @@ namespace Hearthline.Sim
             if (w.AtHome.HasValue && w.AtHome.Value != where.AtHome) return false;
             if (!w.FlagsAll.TrueForAll(ctx.State.Flags.Contains)) return false;
             if (w.FlagsNone.Exists(ctx.State.Flags.Contains)) return false;
+            Dictionary<string, int> rep = ctx.State.Household.Reputation;
+            foreach (var kv in w.ReputationMin) { rep.TryGetValue(kv.Key, out int r); if (r < kv.Value) return false; }
+            foreach (var kv in w.ReputationMax) { rep.TryGetValue(kv.Key, out int r); if (r > kv.Value) return false; }
+            if (w.GrudgeAny.Count > 0 && !w.GrudgeAny.Exists(f => WorldSystem.HasGrudge(ctx.State, f))) return false;
+            if (w.ServicesAny.Count > 0 || w.SettlementMin.Count > 0 || w.SettlementMax.Count > 0)
+            {
+                SettlementState town = WorldSystem.Resolve(ctx.State, ctx.Content, where.SettlementId);
+                if (town == null) return false;
+                if (w.ServicesAny.Count > 0 && !w.ServicesAny.Exists(town.OpenServices.Contains)) return false;
+                foreach (var kv in w.SettlementMin) if (town.Values[kv.Key] < kv.Value) return false;
+                foreach (var kv in w.SettlementMax) if (town.Values[kv.Key] > kv.Value) return false;
+            }
             if (ctx.State.Storyteller.LastFiredDay.TryGetValue(def.Id, out int last) && ctx.State.Day < last + def.CooldownDays) return false;
             return true;
         }
@@ -117,7 +139,11 @@ namespace Hearthline.Sim
             Dictionary<string, Character> cast = CastExisting(ctx, def, where);
             if (cast == null) return "nobody fits the cast of '" + def.Id + "'";
 
-            var active = new ActiveEvent { EventId = def.Id, BeatId = def.Beats[0].Id, PlaceName = where.PlaceName };
+            var active = new ActiveEvent
+            {
+                EventId = def.Id, BeatId = def.Beats[0].Id, PlaceName = where.PlaceName,
+                SettlementId = WorldSystem.Resolve(ctx.State, ctx.Content, where.SettlementId)?.Id,
+            };
             foreach (CastSlot slot in def.Cast)
             {
                 Character c;
@@ -303,7 +329,21 @@ namespace Hearthline.Sim
                 c.Opinions[head.Id] = value;
                 ctx.Emit(new OpinionChanged { Day = day, CharacterId = c.Id, AboutCharacterId = head.Id, Delta = kv.Value, NewValue = value });
             }
-            foreach (var kv in Ordered(o.Reputation)) ChangeReputation(ctx, kv.Key, kv.Value);
+            foreach (var kv in Ordered(o.Reputation)) WorldSystem.ChangeReputation(ctx, kv.Key, kv.Value);
+            if (o.Grudge != null) WorldSystem.AddGrudge(ctx, o.Grudge.FactionId, Render(ctx, active, o.Grudge.Reason));
+            if (o.SettleGrudge != null) WorldSystem.SettleGrudge(ctx, o.SettleGrudge);
+            if (o.Settlement.Count > 0)
+            {
+                SettlementState town = WorldSystem.Find(ctx.State, active.SettlementId);
+                if (town != null)
+                    foreach (SettlementValue v in (SettlementValue[])Enum.GetValues(typeof(SettlementValue)))
+                        if (o.Settlement.TryGetValue(v, out int push)) WorldSystem.Influence(ctx, town, v, push);
+            }
+            if (o.Memory != null)
+            {
+                Character who = Who(ctx, active, o.Memory.Target);
+                if (who != null && who.Alive) WorldSystem.Remember(ctx, who, Render(ctx, active, o.Memory.Text));
+            }
 
             if (o.Mark != null && ctx.Rng.Chance(o.Mark.Chance))
             {
@@ -384,16 +424,6 @@ namespace Hearthline.Sim
             if (count == old) return;
             if (count == 0) inv.Remove(itemId); else inv[itemId] = count;
             ctx.Emit(new InventoryChanged { Day = ctx.State.Day, ItemId = itemId, Delta = count - old, NewCount = count });
-        }
-
-        public static void ChangeReputation(SimContext ctx, string factionId, int delta)
-        {
-            Dictionary<string, int> rep = ctx.State.Household.Reputation;
-            rep.TryGetValue(factionId, out int old);
-            int value = Math.Max(-100, Math.Min(100, old + delta));
-            if (value == old) return;
-            rep[factionId] = value;
-            ctx.Emit(new ReputationChanged { Day = ctx.State.Day, FactionId = factionId, Delta = value - old, NewValue = value });
         }
 
         public static void SetFlag(SimContext ctx, string flag, bool set)
