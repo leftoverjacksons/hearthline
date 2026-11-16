@@ -1,0 +1,32 @@
+id: wolves_at_dusk
+tags: [encounter, danger, animal]
+weight: 7
+cooldown_days: 20
+intensity: 2
+when:
+  area_tags_any: [woods, deep_woods]
+  time_of_day: [dusk, night]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "Something keeps pace in the brush, left side. Then right side too. They are not hurrying."
+    choices:
+      - label: Put your back to a tree and wait for them
+        outcome:
+          ambush: wolves_pack
+          chance:
+            - p: 0.5
+              item: { pelt_wolf: 1 }
+            - p: 0.3
+              hit: { target: hero, damage: claw, severity: 1, cause: "a wolf" }
+      - label: Drop the meat and go
+        requires: { item_any: [boar_meat, jerky] }
+        outcome:
+          item: { boar_meat: -1, jerky: -1 }
+      - label: Run for open ground
+        outcome:
+          chance:
+            - p: 0.4
+              hit: { target: hero, damage: claw, severity: 2, region: leg_r, cause: "a wolf" }
+            - p: 0.6
+              flag_set: [outran_the_wolves]

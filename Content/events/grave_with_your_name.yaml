@@ -1,0 +1,25 @@
+id: grave_with_your_name
+tags: [strange, lineage]
+weight: 4
+cooldown_days: 200
+when:
+  area_tags_any: [woods, ridge, deep_woods]
+  flags_none: [found_the_family_grave]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "A fieldstone, squared by hand. Moss in the letters. The name cut into it is {hero.surname}. Nobody in the family ever said they had been this far out."
+    choices:
+      - label: Clear the moss and say something
+        outcome:
+          flag_set: [found_the_family_grave]
+          chronicle: "{hero.name} found a {hero.surname} grave in the woods and tended it."
+          reputation: { homesteaders: 1 }
+      - label: Dig
+        outcome:
+          flag_set: [found_the_family_grave, dug_the_family_grave]
+          item: { old_coin: 3 }
+          mark: { target: hero, def: rite_guilt_shadow, cause: "digging up a {hero.surname} grave" }
+      - label: Leave it be
+        outcome:
+          flag_set: [found_the_family_grave]

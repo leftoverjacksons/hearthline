@@ -1,0 +1,40 @@
+id: smoke_on_the_ridge
+tags: [encounter, danger, reavers]
+weight: 8
+cooldown_days: 20
+intensity: 2
+when:
+  area_tags_any: [ridge, woods]
+  time_of_day: [day, dusk]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "Thin smoke on the ridge. One fire, kept small. Somebody up there does not want to be seen from the road."
+    choices:
+      - label: Creep up and look
+        requires: { stat_min: { stealth: 1 } }
+        outcome:
+          flag_set: [knows_ridge_camp]
+          goto: camp
+      - label: Go up openly
+        outcome:
+          chance:
+            - p: 0.5
+              ambush: reavers_small
+              reputation: { reavers: -5 }
+            - p: 0.5
+              goto: camp
+      - label: Keep to the trees and go around
+        outcome:
+          flag_set: [knows_ridge_camp]
+  - id: camp
+    text: "Three bedrolls. A pot gone cold. A sack hung from a branch, out of reach of dogs. Whoever sleeps here is out working the road."
+    choices:
+      - label: Take the sack
+        outcome:
+          loot_table: reaver_stash
+          reputation: { reavers: -10 }
+          chronicle: "{hero.name} robbed the Reaver camp on the ridge."
+      - label: Leave it and mark the place
+        outcome:
+          reputation: { homesteaders: 3 }

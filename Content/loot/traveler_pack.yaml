@@ -1,0 +1,7 @@
+id: traveler_pack
+rolls: 2
+entries:
+  - { item: jerky, count_min: 1, count_max: 3, weight: 3 }
+  - { item: old_coin, count_min: 1, count_max: 4, weight: 2 }
+  - { item: bandage, weight: 2 }
+  - { item: whiskey, weight: 1 }

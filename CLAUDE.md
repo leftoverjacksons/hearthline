@@ -28,7 +28,7 @@ Assets/Hearthline/Tests/EditMode   sim + content validation tests (also run head
 Assets/Hearthline/Tests/PlayMode   smoke tests
 Assets/Plugins             managed libraries the sim needs (YamlDotNet)
 Assets/ThirdParty          purchased assets, untouched
-Content/                   YAML: vocab.yaml, events/, marks/, items/, traits/, factions/
+Content/                   YAML: vocab.yaml, names.yaml, events/, marks/, items/, loot/, traits/, factions/
 tools/headless             .NET projects that compile and test the sim without Unity
 docs/DESIGN.md             design document
 docs/content-schema.md     what content YAML may contain
@@ -41,7 +41,8 @@ Tests live under `Assets/` because Unity only compiles there (ADR 0001). The des
 
 - Events, marks, items, traits and factions are YAML in `Content/`, not C#.
 - Every content file must pass the schema tests in `Assets/Hearthline/Tests/EditMode/ContentValidation`. The schema is described in `docs/content-schema.md`.
-- Content may only reference stats, reaction tags and abilities listed in `Content/vocab.yaml`. Add to the vocab first.
+- Content may only reference stats, reaction tags, abilities, area tags, archetypes and encounters listed in `Content/vocab.yaml`. Add to the vocab first.
+- Every event must change state and must cast the head of household; every beat needs one choice without requirements.
 - Every Mark has a mechanical effect AND an origin text. No cosmetic-only marks.
 - Event text uses casting tokens (`{hero.name}`, `{stranger.name}`) and references marks when relevant.
 
@@ -79,4 +80,4 @@ A change is done when:
 
 Keep the dev console and cheat panel working. At minimum: spawn event by id, add or remove mark, skip season, set age, kill head of household, give item.
 
-The cheat panel is `Assets/Hearthline/Game/CheatPanel.cs` (F1). It does not yet have "spawn event by id" or "give item": the event engine and items do not exist. Add each when its system lands.
+The cheat panel is `Assets/Hearthline/Game/CheatPanel.cs` (F1), with tabs for marks, events and items, and the household. When a system lands, add its cheats there.

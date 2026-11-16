@@ -1,0 +1,33 @@
+id: continuity_patrol
+tags: [encounter, continuity]
+weight: 6
+cooldown_days: 45
+when:
+  area_tags_any: [road, river_crossing, town]
+  time_of_day: [day]
+cast:
+  hero: { from: party, role: head }
+  officer: { generate: continuity_agent, age_min: 25, age_max: 50 }
+beats:
+  - text: "Four in grey coats, all the same cut. {officer.full_name} has a ledger. They want to know who lives up the creek, and whether any of them have changed."
+    choices:
+      - label: Answer plainly
+        outcome:
+          reputation: { continuity: 5, the_open: -3 }
+          relationship: { officer: 10 }
+          flag_set: [continuity_knows_the_homestead]
+      - label: Say there is nobody up the creek
+        outcome:
+          chance:
+            - p: 0.6
+              reputation: { homesteaders: 2 }
+            - p: 0.4
+              reputation: { continuity: -10 }
+              relationship: { officer: -20 }
+              flag_set: [continuity_knows_the_homestead]
+      - label: Hand over the stone
+        requires: { item_any: [humming_stone] }
+        outcome:
+          item: { humming_stone: -1, medkit: 1 }
+          reputation: { continuity: 15, the_open: -10 }
+          chronicle: "{hero.name} gave the humming stone to Continuity."

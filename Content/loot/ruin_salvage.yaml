@@ -1,0 +1,7 @@
+id: ruin_salvage
+rolls: 2
+entries:
+  - { item: copper_wire, count_min: 1, count_max: 3, weight: 4 }
+  - { item: lamp_oil, weight: 2 }
+  - { item: cartridges, count_min: 1, count_max: 3, weight: 2 }
+  - { item: medkit, weight: 1 }

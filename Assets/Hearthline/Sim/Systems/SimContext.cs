@@ -11,6 +11,7 @@ namespace Hearthline.Sim
         public SimRandom Rng;
         public TreatmentRules Treatment;
         public LifeRules Life;
+        public StorytellerRules Storyteller;
         /// <summary>Age marks that arrive on their own (gained_at_age), sorted by id.</summary>
         public List<MarkDef> AgeMarks;
         public readonly List<DomainEvent> Events = new List<DomainEvent>();

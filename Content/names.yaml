@@ -2,3 +2,6 @@
 given_names: [Ada, Amos, Beulah, Caleb, Clara, Dell, Eli, Esther, Ezra, Flora, Gideon, Hattie, Ira, Jesse,
   Josiah, June, Lettie, Levi, Mabel, Micah, Naomi, Opal, Otis, Pearl, Rufus, Ruth, Silas, Tamsin, Thea,
   Virgil, Wade, Willa, Zeke]
+
+# Surnames for people met on the road. The household's own surname is chosen at new game.
+surnames: [Pruitt, Calloway, Hale, Mercer, Tolliver, Finch, Boone, Hargrove, Lyle, Suggs, Tate, Vance, Whitlow, Yancey]

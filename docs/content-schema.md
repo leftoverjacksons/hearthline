@@ -4,8 +4,8 @@ What the YAML in `Content/` may contain. The loader (`Assets/Hearthline/Sim/Cont
 unknown field, a bad reference or a broken rule is an error, and all errors are reported in one run.
 Check with `tools/test.sh content`.
 
-Only `vocab.yaml` and `marks/` have a schema so far. YAML placed in `events/`, `items/`, `traits/` or
-`factions/` is rejected until its schema exists.
+Covered: `vocab.yaml`, `names.yaml`, `marks/`, `traits/`, `factions/`, `items/`, `loot/`, `events/`.
+YAML anywhere else is rejected.
 
 ## vocab.yaml
 
@@ -93,3 +93,124 @@ outcomes:
 - When a wound resolves, the mark keeps its id, origin and date. Its name is rebuilt from the new
   definition's `origin_text`.
 - (stage effects and visuals are omitted above for brevity; they are required as for any stage.)
+
+## Marks: inheritance and age
+
+```yaml
+heritable: echo                                   # or latent
+inherited_origin_text: "Born pale-eyed, like {cause}, {season} of year {year}"   # {cause} is the parent's name
+```
+
+`inherited_origin_text` is required when `heritable` is not `none`, and not allowed otherwise.
+
+```yaml
+category: age
+gained_at_age: 50          # everyone gains this mark on reaching the age; origin_text must not need {cause}
+```
+
+## traits/<id>.yaml
+
+```yaml
+id: steady_hands
+name: Steady Hands
+description: "Hands that do not shake, whatever else does."
+inherit_chance: 0.4        # chance a child gets it from a parent who has it
+innate: true               # can also appear in a newborn by mutation
+effects:
+  - { stat: aim_steadiness, mul: 1.1 }     # same effects as marks, without regions
+```
+
+## names.yaml
+
+`given_names` (children and generated people) and `surnames` (generated people).
+
+## vocab.yaml, continued
+
+`area_tags`, `archetypes` and `encounters` are the lists events may use in `when`, `generate` and `ambush`.
+
+## factions/<id>.yaml, items/<id>.yaml, loot/<id>.yaml
+
+```yaml
+id: reavers
+name: Reavers
+description: "Raiders working the roads and the river crossings."
+```
+
+```yaml
+id: bandage
+name: Bandage
+weight: 0.1
+tags: [medicine]           # free-form for now
+```
+
+```yaml
+id: traveler_pack
+rolls: 2                   # how many entries are drawn (with replacement)
+entries:
+  - { item: jerky, count_min: 1, count_max: 3, weight: 3 }
+  - { item: bandage }      # count 1, weight 1
+```
+
+## events/<id>.yaml
+
+```yaml
+id: wounded_stranger_creek
+tags: [encounter, roadside, moral]     # "danger" makes the storyteller hold back while the party is hurt
+weight: 10                              # relative chance among events that fit (default 10)
+cooldown_days: 30
+intensity: 1                            # 1..3; bigger events are followed by a longer quiet
+when:                                   # all optional; every condition given must hold
+  area_tags_any: [creek, road]
+  area_tags_all: []
+  thin_level_min: 0
+  thin_level_max: 1
+  time_of_day: [dusk, night]            # dawn | day | dusk | night
+  at_home: false
+  flags_all: []
+  flags_none: []
+cast:
+  hero: { from: party, role: head }     # required: every event casts the head
+  friend: { from: household, role: any, traits_any: [haunted], marks_any: [scar_burn] }
+  stranger: { generate: traveler, age_min: 20, age_max: 50, traits: [haunted] }
+beats:                                  # the first beat is where the event starts
+  - id: start                           # optional; needed only as a goto target
+    text: "{stranger.name} is slumped against a cairn."     # tokens: {role.name} {role.surname} {role.full_name}
+    choices:
+      - label: Bind the wound
+        requires:                       # optional; checked on the head unless `who` names a cast role
+          who: hero
+          item_any: [bandage, medkit]
+          trait_any: []
+          mark_any: []
+          stat_min: { medicine: 1 }
+          flags_all: []
+        outcome:
+          item: { bandage: -1 }                         # give (+) or take (-)
+          loot_table: traveler_pack
+          relationship: { stranger: 30 }                # that person's opinion of the head
+          reputation: { homesteaders: -5 }
+          mark: { target: hero, def: rite_guilt_shadow, chance: 0.2, region: head, severity: 1, cause: "robbing {stranger.full_name}" }
+          hit: { target: hero, damage: claw, severity: 2, region: arm_l, cause: "the boar" }   # a wound, and lost health
+          trait: { target: hero, add: haunted }         # or remove:
+          flag_set: [saw_the_light]
+          flag_clear: []
+          recruit: stranger                             # a generated person joins the household
+          ambush: reavers_small                         # asks presentation to stage a fight
+          chronicle: "{hero.name} bound up {stranger.full_name}."    # a deed in the head's chronicle
+          goto: start                                   # next beat; without it the event ends
+          chance:                                       # one branch at most is rolled; p may total less than 1
+            - p: 0.7
+              recruit: stranger
+            - p: 0.3
+              ambush: reavers_small
+```
+
+Rules:
+
+- An event must change something. `goto` and `chance` alone do not count.
+- Every beat needs at least one choice without `requires`, so the player is never stuck.
+- Every beat must be reachable from the first.
+- A `mark` outcome needs `cause` when the mark's `origin_text` needs one. Use `hit`, not `mark`, for wounds.
+- Without `region`, a mark lands on a random allowed region and a hit on a random region.
+- The place in a mark's name comes from where the event happened, not from the event file.
+- `chance` cannot be nested.

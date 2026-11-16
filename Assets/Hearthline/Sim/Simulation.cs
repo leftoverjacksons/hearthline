@@ -42,6 +42,7 @@ namespace Hearthline.Sim
         public ContentDatabase Content { get; }
         public TreatmentRules Treatment { get; } = new TreatmentRules();
         public LifeRules Life { get; } = new LifeRules();
+        public StorytellerRules Storyteller { get; } = new StorytellerRules();
         private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
@@ -58,7 +59,7 @@ namespace Hearthline.Sim
         }
 
         private SimContext NewContext() =>
-            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, AgeMarks = _ageMarks };
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -113,6 +114,17 @@ namespace Hearthline.Sim
 
         /// <summary>Who the player may pick as the next head, in order of precedence.</summary>
         public List<Character> EligibleHeirs() => LifeSystem.EligibleHeirs(NewContext());
+
+        /// <summary>The event in progress as the player should see it, or null.</summary>
+        public ActiveEventView GetActiveEvent() => EventSystem.View(NewContext());
+
+        public int ReputationWith(string factionId) =>
+            State.Household.Reputation.TryGetValue(factionId, out int value) ? value : 0;
+
+        public int ItemCount(string itemId) =>
+            State.Household.Inventory.TryGetValue(itemId, out int count) ? count : 0;
+
+        public bool HasFlag(string flag) => State.Flags.Contains(flag);
 
         public List<ChronicleEntry> ChronicleOf(Character character)
         {

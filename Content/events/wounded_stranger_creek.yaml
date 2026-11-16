@@ -1,0 +1,34 @@
+id: wounded_stranger_creek
+tags: [encounter, roadside, moral]
+weight: 10
+cooldown_days: 30
+when:
+  area_tags_any: [creek, road]
+  thin_level_max: 1
+  time_of_day: [dusk, night]
+cast:
+  hero: { from: party, role: head }
+  stranger: { generate: traveler }
+beats:
+  - text: "{stranger.name} is slumped against a cairn, holding their side. The blood is fresh. Their pack is not far off."
+    choices:
+      - label: Bind the wound
+        requires: { item_any: [bandage, medkit] }
+        outcome:
+          item: { bandage: -1 }
+          relationship: { stranger: 30 }
+          chance:
+            - p: 0.7
+              recruit: stranger
+              chronicle: "{hero.name} bound up {stranger.full_name} at the creek and brought them home."
+            - p: 0.3
+              ambush: reavers_small
+      - label: Take their pack
+        outcome:
+          loot_table: traveler_pack
+          relationship: { stranger: -60 }
+          reputation: { homesteaders: -5 }
+          mark: { target: hero, def: rite_guilt_shadow, chance: 0.2, cause: "robbing {stranger.full_name}" }
+      - label: Walk on
+        outcome:
+          relationship: { stranger: -10 }

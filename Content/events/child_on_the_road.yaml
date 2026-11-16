@@ -1,0 +1,31 @@
+id: child_on_the_road
+tags: [encounter, roadside, moral]
+weight: 4
+cooldown_days: 150
+when:
+  area_tags_any: [road]
+  time_of_day: [dawn, day, dusk]
+cast:
+  hero: { from: party, role: head }
+  child: { generate: child, age_min: 6, age_max: 11 }
+beats:
+  - text: "A child sitting in the wheel rut, shoes on the wrong feet. Says the name is {child.name}. Says the others went into the green and told them to wait here. That was two nights ago."
+    choices:
+      - label: Bring them home
+        outcome:
+          recruit: child
+          relationship: { child: 40 }
+          chronicle: "{hero.name} took in {child.name}, found alone on the road."
+      - label: Walk them to Calvary Ford
+        outcome:
+          relationship: { child: 15 }
+          reputation: { homesteaders: 5 }
+      - label: Leave food and go on
+        requires: { item_any: [jerky] }
+        outcome:
+          item: { jerky: -1 }
+          relationship: { child: -5 }
+      - label: Go on
+        outcome:
+          mark: { target: hero, def: rite_guilt_shadow, chance: 0.5, cause: "leaving a child on the road" }
+          relationship: { child: -30 }

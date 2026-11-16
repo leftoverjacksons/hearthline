@@ -1,0 +1,30 @@
+id: light_in_the_trees
+tags: [strange, neighbors]
+weight: 6
+cooldown_days: 40
+intensity: 2
+when:
+  area_tags_any: [deep_woods, hollow]
+  thin_level_min: 1
+  time_of_day: [night]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "A light between the trunks, low and steady. Not a lantern. It does not flicker. The crickets have stopped."
+    choices:
+      - label: Walk toward it
+        outcome:
+          flag_set: [saw_the_light]
+          chance:
+            - p: 0.5
+              mark: { target: hero, def: exposure_pale_eyes, cause: "the light in the trees" }
+              chronicle: "{hero.name} walked up to the light in the trees. {hero.name} does not talk about it."
+            - p: 0.3
+              mark: { target: hero, def: knack_dowsing, cause: "the light in the trees" }
+      - label: Stand still until it goes
+        outcome:
+          flag_set: [saw_the_light]
+          trait: { target: hero, add: haunted }
+      - label: Look at the ground and keep walking
+        outcome:
+          flag_set: [turned_from_the_light]

@@ -13,6 +13,8 @@ namespace Hearthline.Sim
     /// <summary>How someone belongs to the household. Decides whether and when they can inherit it.</summary>
     public enum HouseholdBond { Founder, Blood, Partner, Ward, Sworn }
 
+    public enum TimeOfDay { Dawn, Day, Dusk, Night }
+
     public enum ChronicleKind { Joined, Born, Mark, Partnered, Died, Succeeded, Retired, LineEnded, Deed }
 
     /// <summary>Stage ids every wound definition must provide. The wound state machine is driven by the engine.</summary>

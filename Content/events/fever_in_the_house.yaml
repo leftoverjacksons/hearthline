@@ -1,0 +1,29 @@
+id: fever_in_the_house
+tags: [home, sickness]
+weight: 6
+cooldown_days: 50
+when:
+  at_home: true
+cast:
+  hero: { from: party, role: head }
+  sick: { from: household, role: any }
+beats:
+  - text: "{sick.name} did not come to breakfast. By noon the fever has them talking to someone who is not in the room."
+    choices:
+      - label: Use the medkit
+        requires: { item_any: [medkit] }
+        outcome:
+          item: { medkit: -1 }
+          relationship: { sick: 25 }
+      - label: Sit up with them
+        outcome:
+          relationship: { sick: 15 }
+          chance:
+            - p: 0.2
+              trait: { target: sick, add: haunted }
+      - label: Leave them to sweat it out
+        outcome:
+          relationship: { sick: -15 }
+          chance:
+            - p: 0.3
+              trait: { target: sick, add: haunted }

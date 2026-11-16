@@ -61,7 +61,7 @@ namespace Hearthline.Bridge
             ContentLoadResult result = ContentLoader.LoadDirectory(ContentRoot);
             foreach (ContentError error in result.Errors) Debug.LogError("Content: " + error);
             Content = result.Database;
-            Debug.Log("Hearthline content loaded from " + ContentRoot + ": " + Content.Marks.Count + " marks, " + result.Errors.Count + " errors.");
+            Debug.Log("Hearthline content loaded from " + ContentRoot + ": " + Content.Marks.Count + " marks, " + Content.Events.Count + " events, " + result.Errors.Count + " errors.");
             NewGame();
         }
 

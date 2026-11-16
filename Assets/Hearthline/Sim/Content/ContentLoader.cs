@@ -13,7 +13,6 @@ namespace Hearthline.Sim.Content
     {
         public const string VocabFile = "vocab.yaml";
         /// <summary>Folders that will hold content later but have no schema yet. YAML found there is an error.</summary>
-        private static readonly string[] FoldersWithoutSchema = { "events", "items", "factions" };
         public const string NamesFile = "names.yaml";
 
         public static ContentLoadResult LoadDirectory(string contentRoot)
@@ -61,8 +60,17 @@ namespace Hearthline.Sim.Content
                         if (db.GivenNames.Contains(name)) root.Error("given_names lists '" + name + "' twice");
                         else db.GivenNames.Add(name);
                     }
+                    foreach (string name in root.StrList("surnames"))
+                    {
+                        if (db.Surnames.Contains(name)) root.Error("surnames lists '" + name + "' twice");
+                        else db.Surnames.Add(name);
+                    }
                     root.Done();
                 }
+                else if (folder == "factions") Register(db.Factions, EventReader.ReadFaction(root, file.Path), d => d.Id, "factions", file.Path, root);
+                else if (folder == "items") Register(db.Items, EventReader.ReadItem(root, file.Path), d => d.Id, "items", file.Path, root);
+                else if (folder == "loot") Register(db.LootTables, EventReader.ReadLoot(root, file.Path), d => d.Id, "loot", file.Path, root);
+                else if (folder == "events") Register(db.Events, EventReader.ReadEvent(root, file.Path), d => d.Id, "events", file.Path, root);
                 else if (folder == "traits")
                 {
                     TraitDef def = ReadTrait(root, file.Path);
@@ -81,10 +89,6 @@ namespace Hearthline.Sim.Content
                     if (db.Marks.ContainsKey(def.Id)) root.Error("duplicate mark id '" + def.Id + "'");
                     else db.Marks[def.Id] = def;
                 }
-                else if (Array.IndexOf(FoldersWithoutSchema, folder) >= 0)
-                {
-                    root.Error("no schema exists yet for '" + folder + "/'; content there cannot be validated");
-                }
                 else
                 {
                     root.Error("unexpected content file location");
@@ -93,7 +97,18 @@ namespace Hearthline.Sim.Content
 
             if (!sawVocab) result.Errors.Add(new ContentError { File = VocabFile, Message = "file is missing" });
             ContentValidator.Validate(db, result.Errors);
+            EventReader.Validate(db, result.Errors);
             return result;
+        }
+
+        private static void Register<T>(Dictionary<string, T> target, T def, Func<T, string> idOf, string folder, string path, YamlMap root)
+        {
+            string id = idOf(def);
+            if (id == null) return;
+            string expected = folder + "/" + id + ".yaml";
+            if (path != expected) root.Error("file must be named " + expected + " to match its id");
+            if (target.ContainsKey(id)) root.Error("duplicate id '" + id + "'");
+            else target[id] = def;
         }
 
         private static YamlMap ParseRoot(ContentFile file, List<ContentError> errors)
@@ -131,12 +146,15 @@ namespace Hearthline.Sim.Content
             }
             AddIds(root, "reaction_tags", vocab.ReactionTags);
             AddIds(root, "abilities", vocab.Abilities);
+            AddIds(root, "area_tags", vocab.AreaTags, false);
+            AddIds(root, "archetypes", vocab.Archetypes, false);
+            AddIds(root, "encounters", vocab.Encounters, false);
             root.Done();
         }
 
-        private static void AddIds(YamlMap root, string key, HashSet<string> target)
+        private static void AddIds(YamlMap root, string key, HashSet<string> target, bool required = true)
         {
-            foreach (string id in root.StrList(key, true))
+            foreach (string id in root.StrList(key, required))
             {
                 if (!Naming.IsSnakeId(id)) root.Error(key + " entry '" + id + "' must be snake_case");
                 if (!target.Add(id)) root.Error(key + " lists '" + id + "' twice");

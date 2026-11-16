@@ -16,6 +16,16 @@ namespace Hearthline.Sim
     public sealed class DateAdvanced : DomainEvent { public int FromDay; public int ToDay; }
     public sealed class SeasonPassed : DomainEvent { public Season Ended; public Season Began; }
     public sealed class CharacterAgeSet : DomainEvent { public int CharacterId; public int AgeYears; }
+    public sealed class EventStarted : DomainEvent { public string EventId; }
+    public sealed class EventBeatEntered : DomainEvent { public string EventId; public string BeatId; }
+    public sealed class EventChoiceMade : DomainEvent { public string EventId; public string BeatId; public int ChoiceIndex; }
+    public sealed class EventEnded : DomainEvent { public string EventId; }
+    /// <summary>Presentation should stage this fight. The sim does not resolve combat.</summary>
+    public sealed class AmbushRequested : DomainEvent { public string EncounterId; public string EventId; }
+    public sealed class ReputationChanged : DomainEvent { public string FactionId; public int Delta; public int NewValue; }
+    public sealed class InventoryChanged : DomainEvent { public string ItemId; public int Delta; public int NewCount; }
+    public sealed class OpinionChanged : DomainEvent { public int CharacterId; public int AboutCharacterId; public int Delta; public int NewValue; }
+    public sealed class FlagChanged : DomainEvent { public string Flag; public bool Set; }
     public sealed class CharacterDowned : DomainEvent { public int CharacterId; }
     public sealed class CharacterRevived : DomainEvent { public int CharacterId; }
     public sealed class CharacterJoined : DomainEvent { public int CharacterId; }

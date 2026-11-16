@@ -36,3 +36,12 @@ abilities:
   - night_sight    # sees in the dark
   - dowse_thin     # senses Thin places
   - numb_skin      # does not feel pain or cold in the marked place
+
+# Tags a place can carry. Events ask for them in `when`.
+area_tags: [homestead, town, road, creek, river_crossing, field, woods, deep_woods, ridge, ruin, elder_works, hollow]
+
+# Kinds of people an event can generate.
+archetypes: [traveler, peddler, homesteader, reaver, continuity_agent, open_seeker, child]
+
+# Fights presentation can stage when an event asks for an ambush.
+encounters: [reavers_small, reavers_road, wolves_pack]

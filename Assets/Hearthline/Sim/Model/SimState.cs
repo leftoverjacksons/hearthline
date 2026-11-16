@@ -49,6 +49,8 @@ namespace Hearthline.Sim
         public Dictionary<string, double> BaseStats = new Dictionary<string, double>();
         public List<Mark> Marks = new List<Mark>();
         public List<string> Traits = new List<string>();
+        /// <summary>For people the event engine generated: what kind of person they are (traveler, reaver).</summary>
+        public string Archetype;
         /// <summary>Latent heritable marks this person carries without showing. They can surface in a child.</summary>
         public List<string> CarriedLatent = new List<string>();
         public HouseholdBond Bond = HouseholdBond.Sworn;
@@ -83,6 +85,28 @@ namespace Hearthline.Sim
         public List<int> PastHeadIds = new List<int>();
         /// <summary>True once the head died with nobody eligible to follow. The campaign is over.</summary>
         public bool LineEnded;
+        /// <summary>What the household owns, by item id.</summary>
+        public Dictionary<string, int> Inventory = new Dictionary<string, int>();
+        /// <summary>Standing with each faction, -100..100. It belongs to the surname, so heirs inherit it.</summary>
+        public Dictionary<string, int> Reputation = new Dictionary<string, int>();
+    }
+
+    /// <summary>The event the player is in the middle of. Saved, so a game can be saved mid-event.</summary>
+    public sealed class ActiveEvent
+    {
+        public string EventId;
+        public string BeatId;
+        /// <summary>Cast role -> character id.</summary>
+        public Dictionary<string, int> Cast = new Dictionary<string, int>();
+        public string PlaceName;
+    }
+
+    public sealed class StorytellerState
+    {
+        /// <summary>Builds up while nothing happens; an event spends it.</summary>
+        public double Budget;
+        /// <summary>Event id -> the day it last fired, for cooldowns.</summary>
+        public Dictionary<string, int> LastFiredDay = new Dictionary<string, int>();
     }
 
     /// <summary>
@@ -99,5 +123,9 @@ namespace Hearthline.Sim
         public Household Household = new Household();
         public List<Character> Characters = new List<Character>();
         public List<ChronicleEntry> Chronicle = new List<ChronicleEntry>();
+        /// <summary>Story flags set by events. Kept sorted.</summary>
+        public List<string> Flags = new List<string>();
+        public ActiveEvent ActiveEvent;
+        public StorytellerState Storyteller = new StorytellerState();
     }
 }

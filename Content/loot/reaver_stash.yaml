@@ -1,0 +1,7 @@
+id: reaver_stash
+rolls: 3
+entries:
+  - { item: cartridges, count_min: 2, count_max: 6, weight: 3 }
+  - { item: old_coin, count_min: 2, count_max: 8, weight: 3 }
+  - { item: whiskey, weight: 2 }
+  - { item: medkit, weight: 1 }

@@ -1,0 +1,27 @@
+id: the_humming_stone
+tags: [strange, elder_works]
+weight: 5
+cooldown_days: 90
+intensity: 3
+when:
+  area_tags_any: [elder_works, ruin]
+  thin_level_min: 1
+  flags_none: [took_the_humming_stone]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "In the dry part of the hall there is a stone the size of a loaf. It is warm. Held close, it hums a note that {hero.name} almost knows."
+    choices:
+      - label: Carry it home
+        outcome:
+          item: { humming_stone: 1 }
+          flag_set: [took_the_humming_stone]
+          mark: { target: hero, def: exposure_glass_skin, region: hand_r, chance: 0.5, cause: "carrying the humming stone" }
+          chronicle: "{hero.name} carried a humming stone out of the Elder Works."
+      - label: Listen a while, then leave it
+        outcome:
+          mark: { target: hero, def: knack_dowsing, chance: 0.25, cause: "listening to the humming stone" }
+          flag_set: [heard_the_humming_stone]
+      - label: Take what else is here and go
+        outcome:
+          loot_table: ruin_salvage

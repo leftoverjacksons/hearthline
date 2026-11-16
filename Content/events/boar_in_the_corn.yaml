@@ -1,0 +1,31 @@
+id: boar_in_the_corn
+tags: [encounter, danger, animal]
+weight: 8
+cooldown_days: 25
+when:
+  area_tags_any: [field, woods]
+  time_of_day: [dawn, day, dusk]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The stalks are down in a wide swath. In the middle of it a boar is rooting, big as a calf. It has not winded {hero.name} yet."
+    choices:
+      - label: Shoot it
+        outcome:
+          chance:
+            - p: 0.6
+              item: { boar_meat: 2 }
+              chronicle: "{hero.name} killed the boar in the corn."
+            - p: 0.4
+              hit: { target: hero, damage: claw, severity: 2, cause: "the boar" }
+              item: { boar_meat: 2 }
+      - label: Drive it off with noise
+        outcome:
+          chance:
+            - p: 0.3
+              hit: { target: hero, damage: blunt, severity: 1, region: leg_l, cause: "the boar" }
+            - p: 0.7
+              reputation: { homesteaders: 1 }
+      - label: Back away
+        outcome:
+          flag_set: [boar_still_in_the_corn]

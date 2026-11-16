@@ -1,0 +1,22 @@
+id: brand_night
+tags: [home, rite]
+weight: 3
+cooldown_days: 400
+when:
+  at_home: true
+  time_of_day: [night]
+  flags_none: [house_brand_taken]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The iron has been in the coals since supper. It is the mark the first of the family cut over the door. Nobody says {hero.name} has to."
+    choices:
+      - label: Take the brand
+        outcome:
+          mark: { target: hero, def: rite_house_brand, region: arm_l, cause: "by the household on brand night" }
+          flag_set: [house_brand_taken]
+          reputation: { homesteaders: 5 }
+          chronicle: "{hero.name} took the house brand."
+      - label: Put the iron away
+        outcome:
+          flag_set: [house_brand_refused]

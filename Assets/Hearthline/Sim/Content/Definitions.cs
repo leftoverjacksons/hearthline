@@ -15,6 +15,12 @@ namespace Hearthline.Sim.Content
         public readonly Dictionary<string, StatDef> Stats = new Dictionary<string, StatDef>();
         public readonly HashSet<string> ReactionTags = new HashSet<string>();
         public readonly HashSet<string> Abilities = new HashSet<string>();
+        /// <summary>Tags a place can carry and events can ask for (creek, road, deep_woods).</summary>
+        public readonly HashSet<string> AreaTags = new HashSet<string>();
+        /// <summary>Kinds of people events can generate (traveler, reaver).</summary>
+        public readonly HashSet<string> Archetypes = new HashSet<string>();
+        /// <summary>Fights presentation knows how to stage, requested by an event's ambush outcome.</summary>
+        public readonly HashSet<string> Encounters = new HashSet<string>();
     }
 
     public enum EffectKind { Stat, Reaction, Ability }
@@ -114,6 +120,11 @@ namespace Hearthline.Sim.Content
         public readonly Dictionary<string, MarkDef> Marks = new Dictionary<string, MarkDef>();
         public readonly Dictionary<string, TraitDef> Traits = new Dictionary<string, TraitDef>();
         public readonly List<string> GivenNames = new List<string>();
+        public readonly List<string> Surnames = new List<string>();
+        public readonly Dictionary<string, FactionDef> Factions = new Dictionary<string, FactionDef>();
+        public readonly Dictionary<string, ItemDef> Items = new Dictionary<string, ItemDef>();
+        public readonly Dictionary<string, LootTableDef> LootTables = new Dictionary<string, LootTableDef>();
+        public readonly Dictionary<string, EventDef> Events = new Dictionary<string, EventDef>();
 
         public TraitDef FindTrait(string id)
         {

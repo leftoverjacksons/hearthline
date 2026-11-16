@@ -1,0 +1,30 @@
+id: seeker_at_the_gate
+tags: [home, the_open]
+weight: 6
+cooldown_days: 60
+when:
+  at_home: true
+  time_of_day: [dusk, night]
+cast:
+  hero: { from: party, role: head }
+  seeker: { generate: open_seeker, age_min: 18, age_max: 60, traits: [haunted] }
+beats:
+  - text: "Someone at the gate, barefoot, coat too thin for the night. {seeker.name} says they are walking to the hollow and only want the barn until morning."
+    choices:
+      - label: Give them the barn
+        outcome:
+          relationship: { seeker: 20 }
+          reputation: { the_open: 5 }
+          chance:
+            - p: 0.35
+              recruit: seeker
+      - label: Give them supper and send them on
+        requires: { item_any: [jerky, boar_meat] }
+        outcome:
+          item: { jerky: -1 }
+          relationship: { seeker: 10 }
+          reputation: { the_open: 2 }
+      - label: Bar the gate
+        outcome:
+          relationship: { seeker: -15 }
+          reputation: { the_open: -5, homesteaders: 1 }

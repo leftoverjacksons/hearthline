@@ -1,0 +1,37 @@
+id: reaver_toll
+tags: [encounter, danger, reavers]
+weight: 7
+cooldown_days: 30
+intensity: 2
+when:
+  area_tags_any: [river_crossing]
+cast:
+  hero: { from: party, role: head }
+  reaver: { generate: reaver, age_min: 18, age_max: 40, traits: [hot_tempered] }
+beats:
+  - text: "A rope across the ford and a man sitting on it. {reaver.name} says the crossing costs two coins now. There are more of them in the willows."
+    choices:
+      - label: Pay
+        requires: { item_any: [old_coin] }
+        outcome:
+          item: { old_coin: -2 }
+          reputation: { reavers: 3 }
+      - label: Talk him down
+        requires: { stat_min: { persuasion: 1 } }
+        outcome:
+          relationship: { reaver: 10 }
+          reputation: { reavers: 2 }
+      - label: Refuse
+        outcome:
+          goto: refused
+  - id: refused
+    text: "{reaver.name} stands up slowly. The willows move."
+    choices:
+      - label: Draw
+        outcome:
+          ambush: reavers_road
+          reputation: { reavers: -10, homesteaders: 3 }
+      - label: Turn back and find another way
+        outcome:
+          relationship: { reaver: -10 }
+          flag_set: [ford_is_tolled]

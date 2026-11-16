@@ -199,6 +199,7 @@ namespace Hearthline.Sim
         internal override string Apply(SimContext ctx)
         {
             if (Days < 1) return "days must be at least 1";
+            if (ctx.State.ActiveEvent != null) return "finish the event in progress first";
             Run(ctx, Days);
             return null;
         }
@@ -224,6 +225,7 @@ namespace Hearthline.Sim
     {
         internal override string Apply(SimContext ctx)
         {
+            if (ctx.State.ActiveEvent != null) return "finish the event in progress first";
             var now = new GameDate(ctx.State.Day);
             GameDate next = now.NextSeasonStart;
             AdvanceDays.Run(ctx, next.TotalDays - now.TotalDays);

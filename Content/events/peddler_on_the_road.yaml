@@ -1,0 +1,36 @@
+id: peddler_on_the_road
+tags: [encounter, roadside, trade]
+weight: 10
+cooldown_days: 15
+when:
+  area_tags_any: [road, town]
+  time_of_day: [dawn, day]
+cast:
+  hero: { from: party, role: head }
+  peddler: { generate: peddler, age_min: 30, age_max: 65 }
+beats:
+  - text: "A handcart with a squealing wheel. {peddler.full_name} sets it down and starts talking before {hero.name} is close enough to hear."
+    choices:
+      - label: See what they have
+        outcome:
+          goto: wares
+      - label: Nod and pass
+        outcome:
+          relationship: { peddler: -5 }
+  - id: wares
+    text: "Clean linen torn to strips. A jar of something brown. {peddler.name} wants coin, and says so twice."
+    choices:
+      - label: Buy bandages
+        requires: { item_any: [old_coin] }
+        outcome:
+          item: { old_coin: -1, bandage: 2 }
+          relationship: { peddler: 10 }
+      - label: Buy the jar
+        requires: { item_any: [old_coin] }
+        outcome:
+          item: { old_coin: -2, whiskey: 1 }
+          relationship: { peddler: 10 }
+      - label: Trade news instead
+        outcome:
+          relationship: { peddler: 5 }
+          reputation: { homesteaders: 1 }

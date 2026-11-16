@@ -180,7 +180,7 @@ outcomes:
 
         [Test]
         public void ContentInAFolderWithoutASchemaIsRejected() =>
-            AssertError(Load(extraPath: "events/some_event.yaml", extraText: "id: some_event\n"), "no schema exists yet");
+            AssertError(Load(extraPath: "quests/some_quest.yaml", extraText: "id: some_quest\n"), "unexpected content file location");
 
         [Test]
         public void MissingVocabIsRejected()
