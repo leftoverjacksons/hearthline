@@ -32,6 +32,9 @@ namespace Hearthline.Bridge
             new StartingItem { itemId = "lumber", count = 12 },
         };
 
+        [Tooltip("Gear the head starts with, worn or wielded. Guns start loaded.")]
+        [SerializeField] private string[] startingGear = { "lever_rifle" };
+
         [Serializable]
         public struct StartingItem
         {
@@ -103,6 +106,7 @@ namespace Hearthline.Bridge
                 HeadGivenName = headGivenName,
                 HeadAgeYears = headAgeYears,
                 StartingStores = StartingStoresMap(),
+                StartingGear = new System.Collections.Generic.List<string>(startingGear ?? new string[0]),
             }));
         }
 

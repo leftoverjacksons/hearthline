@@ -44,3 +44,18 @@ The architecture rules say the simulation owns persistent state and presentation
   everything else.
 - The weapon blocks hold both rule values (sim) and feel values (presentation) so each gun is described
   in one place. Travis tunes both.
+
+## Step 2 notes (player aim, fire, reload)
+
+- **Aiming adjusts the Starter Assets follow camera** (distance, shoulder, field of view) instead of switching
+  to a second camera. That leaves the mirror camera's blends alone.
+- **Bullet spread is presentation randomness** (`UnityEngine.Random` in `PlayerWeapon`), not simulation state.
+  Where a bullet goes is decided in real time. The sim only rolls jams, with `SimRandom`.
+- **Guns are drawn on the body by `GunVisuals`** (Bridge), from the simulation's equipped gear: the long gun
+  on the back, the sidearm on the hip, the drawn one in hand. Placement is in the character's frame, not bone
+  axes. While aiming, the gun is placed from the shoulder along the aim line until real aim animations and
+  IK exist.
+- **A new game starts with a loaded lever rifle** (`NewGameOptions.StartingGear`, set on `SimHost`), plus 12
+  cartridges in the stores.
+- **The practice target** has real hit zones but no simulation character. `PracticeTarget` takes the hit and
+  shows the severity it would have had, using the simulation's own rule (`Simulation.ShotSeverity`).

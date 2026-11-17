@@ -26,7 +26,7 @@ Unity creates those; they then need to be committed. Nothing under `Assets/Heart
 `Assets/Scenes/M0_Greybox.unity` is set up for this: rolling greybox ground, **SimHost**, **CheatPanel**,
 and the Starter Assets third-person mannequin and follow camera (ADR 0010), with **CharacterMarksView**
 and a mark anchor on the bone for each body region. WASD moves, the mouse looks, Space jumps, Shift
-runs, C crouches; F1 toggles the cheat panel, which frees the mouse while it is open (it starts open).
+runs, C crouches. Guns (combat spec): 1 / 2 draw or holster the rifle and revolver, right mouse aims, left mouse fires, R reloads or clears a jam, V swaps shoulder. F1 toggles the cheat panel, which frees the mouse while it is open (it starts open).
 
 Starter Assets comes from the Asset Store, so a fresh clone needs it: add "Starter Assets – Third
 Person" to your Unity account, then Package Manager → My Assets → Download → Import. Move the imported
@@ -109,4 +109,5 @@ Wind values are on each foliage material, water values on `Scenes/Generated/Regi
 
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
 `unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();"`.
+A practice target stands in the yard in front of the spawn: hits show where they landed and how bad they'd be on a person, and never reach the simulation. `WeaponTests` (PlayMode) covers aiming, firing, reloading and jams.
 `TripFlowTests` (PlayMode) covers places, leaving, setting out, staying home, coming home and the clock.

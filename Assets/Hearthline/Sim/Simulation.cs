@@ -13,6 +13,8 @@ namespace Hearthline.Sim
         public int HeadAgeYears = 28;
         /// <summary>What the stores hold on day one: item id -> count. Unknown items and gear are skipped.</summary>
         public Dictionary<string, int> StartingStores = new Dictionary<string, int>();
+        /// <summary>Gear the head starts with, worn or wielded. Firearms start loaded. Unknown ids are skipped.</summary>
+        public List<string> StartingGear = new List<string>();
     }
 
     /// <summary>A mark as presentation needs it: instance data joined with its definition and current stage.</summary>
@@ -96,7 +98,16 @@ namespace Hearthline.Sim
                     state.Household.Inventory[item.Key] = item.Value;
             // A separate stream, so that adding townsfolk to content does not reshuffle everything else in a seed.
             WorldSystem.EnsureSettlements(state, content, new SimRandom(SimRandom.Seed(options.Seed, 77)));
-            return new Simulation(state, content);
+            var sim = new Simulation(state, content);
+            foreach (string id in options.StartingGear)
+            {
+                if (!content.Items.TryGetValue(id ?? "", out ItemDef gearDef) || gearDef.Equip == null) continue;
+                if (!sim.Execute(new GiveGear { DefId = id, CharacterId = head.Id }).Ok) continue;
+                GearItem gear = head.Gear[head.Gear.Count - 1];
+                sim.Execute(new EquipGear { GearId = gear.Id });
+                if (gearDef.Weapon != null) gear.Loaded = gearDef.Weapon.Capacity;
+            }
+            return sim;
         }
 
         public CommandResult Execute(Command command)
@@ -194,6 +205,10 @@ namespace Hearthline.Sim
 
         /// <summary>Why the game cannot be saved right now, or null when it can.</summary>
         public string WhyCannotSave() => State.Encounter != null ? "You can't save during a fight." : null;
+
+        /// <summary>How severe a hit from this gun at this distance on this region would be (1..3).</summary>
+        public int ShotSeverity(string weaponItemId, BodyRegion region, double distance) =>
+            CombatSystem.ShotSeverity(NewContext(), WeaponOf(weaponItemId), region, distance);
 
         /// <summary>The firearm stats of an item, or null if it is not a firearm.</summary>
         public WeaponDef WeaponOf(string itemId) => itemId != null && Content.Items.TryGetValue(itemId, out ItemDef def) ? def.Weapon : null;

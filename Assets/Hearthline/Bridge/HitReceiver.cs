@@ -72,6 +72,33 @@ namespace Hearthline.Bridge
         }
 
         /// <summary>
+        /// A bullet hit this body (combat, ADR 0021): sends <see cref="ShotHit"/>, and the simulation decides
+        /// the severity from the gun, the region and the distance. Returns the outcome with that severity.
+        /// </summary>
+        public HitOutcome ReceiveShot(BodyRegion region, int? shooterId, int? gearId, double distance)
+        {
+            SimHost host = SimHost.Instance;
+            Character character = host == null ? null : GetComponent<SimCharacterLink>().Resolve(host.Sim);
+            string error = null;
+            int severity = 0;
+            if (character == null) error = "no simulation character for " + name;
+            else
+            {
+                int marksBefore = character.Marks.Count;
+                CommandResult result = host.Sim.Execute(new ShotHit
+                {
+                    TargetId = character.Id, Region = region, ShooterId = shooterId, GearId = gearId, Distance = distance,
+                });
+                if (!result.Ok) error = result.Error;
+                else if (character.Marks.Count > marksBefore) severity = character.Marks[character.Marks.Count - 1].Severity;
+            }
+            var outcome = new HitOutcome(region, DamageType.Gunshot, severity, error);
+            if (!outcome.Ok) Debug.LogWarning("Shot on " + name + " " + outcome, this);
+            Hit?.Invoke(outcome);
+            return outcome;
+        }
+
+        /// <summary>
         /// Casts against hit zones only (triggers included) and returns the nearest zone the ray strikes.
         /// </summary>
         public static bool Raycast(Ray ray, float maxDistance, out HitRegion zone, out RaycastHit hit)

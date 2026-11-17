@@ -1,6 +1,6 @@
 # Spec: ranged combat and the ambush (M2)
 
-Status: **approved 2026-11-17** with the default answers to the decisions below. Build step 1 (sim and content) is done: ADR 0021, `CombatTests`, `EncounterContentTests`. Next: step 2, player aim, fire and reload.
+Status: **approved 2026-11-17** with the default answers to the decisions below. Build step 1 (sim and content) is done: ADR 0021, `CombatTests`, `EncounterContentTests`. Step 2 (player aim, fire, reload against a practice target) is done: `WeaponTests`. Next: step 3, sticky cover.
 
 ## Goal
 

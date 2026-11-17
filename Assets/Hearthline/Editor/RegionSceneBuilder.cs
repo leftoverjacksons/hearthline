@@ -93,6 +93,7 @@ namespace Hearthline.EditorTools
             SceneBuildKit.SetRef(roadEvents, "location", location);
             SceneBuildKit.SetRef(roadEvents, "clock", clock);
             BuildHomeUse(clock, roadEvents);
+            BuildPracticeTarget(new Vector3(4f, 0f, -10f));
 
             BuildAtmosphere(sun, moon, clock, location);
 
@@ -290,6 +291,29 @@ namespace Hearthline.EditorTools
         }
 
         // What you press E on at each building, the job board, and the household figures.
+        // Combat step 2: a sacking-dressed figure with real hit zones to practise on. Hits on it never reach the sim.
+        private static void BuildPracticeTarget(Vector3 at)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/StarterAssets/Runtime/ThirdPersonController/Character/Models/Armature.fbx");
+            var dummy = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            dummy.name = "Practice Target";
+            dummy.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity); // zones are placed facing +Z at the origin
+            Animator animator = dummy.GetComponent<Animator>();
+            animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(PlayerAnimatorBuilder.StarterController);
+            SceneBuildKit.AddHitZones(dummy, SceneBuildKit.EnsureHitboxLayer());
+            dummy.AddComponent<PracticeTarget>();
+            Material sacking = GreyboxKit.Mat("HL_CanvasTan");
+            foreach (Renderer r in dummy.GetComponentsInChildren<Renderer>())
+            {
+                var mats = new Material[r.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++) mats[i] = sacking;
+                r.sharedMaterials = mats;
+            }
+            dummy.transform.SetPositionAndRotation(new Vector3(at.x, HeightAt(at.x, at.z), at.z), Quaternion.Euler(0f, 0f, 0f));
+            // A post behind it, so it reads as a target and not a person.
+            GreyboxKit.Place("Fence_Rail", dummy.transform.position + new Vector3(0f, 0f, -0.35f), 90f, 0.6f, dummy.transform, collider: false);
+        }
+
         private static void BuildHomeUse(TravelClock clock, RoadEvents roadEvents)
         {
             Transform root = GameObject.Find("Homestead").transform;

@@ -48,6 +48,7 @@ namespace Hearthline.EditorTools
             public HitReceiver Receiver;
             public PlayerInputRelease InputRelease;
             public Crouch Crouch;
+            public PlayerWeapon Weapon;
             public int HitZones;
         }
 
@@ -101,7 +102,57 @@ namespace Hearthline.EditorTools
             SetRef(rig.Mirror, "character", player.GetComponent<CharacterMarksView>());
             SetRef(rig.Mirror, "mirrorCamera", mirrorCamera);
             mirrorCamera.gameObject.SetActive(false);
+
+            AddGuns(rig, followCamera.GetComponent<CinemachineCamera>());
             return rig;
+        }
+
+        // Combat step 2: guns on the body, the over-the-shoulder aim, firing with recoil, a tracer and a flash.
+        private static void AddGuns(PlayerRig rig, CinemachineCamera followCamera)
+        {
+            GameObject player = rig.Player;
+            GreyboxKit.Mat("HL_Steel"); // makes sure the kit (and the gun models' materials) are set up
+            var guns = player.AddComponent<GunVisuals>();
+            guns.Configure(new List<GunVisuals.Model>
+            {
+                new GunVisuals.Model { visual = "rifle_lever", prefab = GreyboxKit.Model("Gun_Rifle_Lever") },
+                new GunVisuals.Model { visual = "revolver", prefab = GreyboxKit.Model("Gun_Revolver") },
+            });
+            player.AddComponent<AimController>().Configure(followCamera);
+            followCamera.gameObject.AddComponent<CinemachineImpulseListener>();
+            player.AddComponent<CinemachineImpulseSource>();
+
+            var tracer = new GameObject("Tracer").AddComponent<LineRenderer>();
+            tracer.transform.SetParent(player.transform, false);
+            tracer.useWorldSpace = true;
+            tracer.positionCount = 2;
+            tracer.widthMultiplier = 0.012f;
+            tracer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            tracer.sharedMaterial = TracerMaterial();
+            var flash = new GameObject("Muzzle Flash").AddComponent<Light>();
+            flash.transform.SetParent(player.transform, false);
+            flash.type = LightType.Point;
+            flash.range = 5f;
+            flash.intensity = 4f;
+            flash.color = new Color(1f, 0.75f, 0.45f);
+            flash.shadows = LightShadows.None;
+            rig.Weapon = player.AddComponent<PlayerWeapon>();
+            rig.Weapon.Configure(tracer, flash);
+        }
+
+        private static Material TracerMaterial()
+        {
+            const string folder = "Assets/Hearthline/Art/Effects", path = folder + "/Tracer.mat";
+            EnsureFolder(folder);
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetColor("_BaseColor", new Color(1f, 0.85f, 0.55f));
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         /// <summary>Sets a serialized object reference on a component (private [SerializeField]s included).</summary>
@@ -268,7 +319,7 @@ namespace Hearthline.EditorTools
 
         // Puts "Hitbox" on the first free user layer (or finds it) and stops it colliding with anything:
         // hit zones are only for raycasts, never for movement or physics contacts.
-        private static int EnsureHitboxLayer()
+        public static int EnsureHitboxLayer()
         {
             var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
             SerializedProperty layers = tagManager.FindProperty("layers");
@@ -301,7 +352,7 @@ namespace Hearthline.EditorTools
 
         // Trigger zones on the humanoid bones (ADR 0011). Capsules run from one bone towards the next, so each
         // zone follows its bone when the body animates. The face is a thin box in front of the head.
-        private static int AddHitZones(GameObject player, int layer)
+        public static int AddHitZones(GameObject player, int layer)
         {
             Animator a = player.GetComponent<Animator>();
             Transform B(HumanBodyBones bone) => a.GetBoneTransform(bone);

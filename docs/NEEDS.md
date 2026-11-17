@@ -28,6 +28,8 @@ Search terms are given where the exact Mixamo name varies.
   - leaning out from the edge to aim, left and right (search "cover peek", "lean", "cover to aim")
   - rising over low cover to aim (search "crouch to aim", "pop up")
   - entering and leaving cover (search "to cover", "cover to stand")
+- [ ] 🟡 **Rifle aiming idle** and **pistol aiming idle** (search "rifle aiming idle", "pistol idle"): the
+  aim layer uses Rifle Idle and Pistol Aim as stand-ins, so the arms don't hold the shouldered gun yet
 - [ ] 🟡 Rifle aimed walk in all directions (search "rifle strafe", or a rifle 8-way pack)
 - [ ] 🟡 Rifle run
 - [ ] ⚪ Vault over a low obstacle (search "vault", "jump over")

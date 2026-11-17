@@ -385,6 +385,18 @@ namespace Hearthline.Tests
         }
 
         [Test]
+        public void ANewGameCanStartWithALoadedRifleInHand()
+        {
+            Simulation sim = Simulation.NewGame(TestSupport.Content, new NewGameOptions { StartingGear = { "lever_rifle", "no_such_thing" } });
+            GearItem rifle = sim.Head.Gear.Single();
+            Assert.That(rifle.DefId, Is.EqualTo("lever_rifle"));
+            Assert.That(rifle.Equipped, Is.True);
+            Assert.That(rifle.Loaded, Is.EqualTo(sim.WeaponOf("lever_rifle").Capacity));
+            Assert.That(sim.ShotSeverity("lever_rifle", BodyRegion.Head, 10), Is.EqualTo(3));
+            Assert.That(sim.ShotSeverity("lever_rifle", BodyRegion.HandR, 10), Is.EqualTo(1));
+        }
+
+        [Test]
         public void EveryAmbushInTheEventsIsAnEncounterWithAFile()
         {
             foreach (string id in TestSupport.Content.Vocab.Encounters)

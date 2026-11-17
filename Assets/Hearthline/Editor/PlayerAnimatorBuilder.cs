@@ -71,9 +71,60 @@ namespace Hearthline.EditorTools
             Instant(fall, 0.05f);
             fall.AddCondition(AnimatorConditionMode.If, 0f, "FreeFall");
 
+            AddAimLayer(controller);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
+        }
+
+        // Combat step 2: an upper-body layer holding the drawn gun (int Weapon: 0 none, 1 long gun, 2 sidearm).
+        // PlayerWeapon sets its weight. Stand-in poses until the aim clips in docs/NEEDS.md arrive.
+        private static void AddAimLayer(AnimatorController controller)
+        {
+            AnimationClip rifle = Mixamo("Rifle Idle"), pistol = Mixamo("Pistol Aim");
+            if (rifle == null && pistol == null) return;
+            controller.AddParameter("Weapon", AnimatorControllerParameterType.Int);
+            controller.AddLayer("Aim");
+            AnimatorControllerLayer[] layers = controller.layers;
+            AnimatorControllerLayer aim = layers[layers.Length - 1];
+            aim.avatarMask = UpperBodyMask();
+            aim.defaultWeight = 0f;
+            layers[layers.Length - 1] = aim;
+            controller.layers = layers;
+
+            AnimatorStateMachine machine = aim.stateMachine;
+            AnimatorState empty = machine.AddState("Empty", new Vector3(300f, 0f, 0f));
+            machine.defaultState = empty;
+            AnimatorState longGun = machine.AddState("LongGun", new Vector3(300f, 100f, 0f));
+            longGun.motion = rifle ?? pistol;
+            AnimatorState sidearm = machine.AddState("Sidearm", new Vector3(300f, 200f, 0f));
+            sidearm.motion = pistol ?? rifle;
+            void To(AnimatorState state, int weapon)
+            {
+                AnimatorStateTransition t = machine.AddAnyStateTransition(state);
+                Instant(t, 0.15f);
+                t.canTransitionToSelf = false;
+                t.AddCondition(AnimatorConditionMode.Equals, weapon, "Weapon");
+            }
+            To(empty, 0);
+            To(longGun, 1);
+            To(sidearm, 2);
+        }
+
+        private static AvatarMask UpperBodyMask()
+        {
+            string path = Folder + "/UpperBody.mask";
+            AssetDatabase.DeleteAsset(path);
+            var mask = new AvatarMask();
+            var upper = new[]
+            {
+                AvatarMaskBodyPart.Body, AvatarMaskBodyPart.Head, AvatarMaskBodyPart.LeftArm, AvatarMaskBodyPart.RightArm,
+                AvatarMaskBodyPart.LeftFingers, AvatarMaskBodyPart.RightFingers, AvatarMaskBodyPart.LeftHandIK, AvatarMaskBodyPart.RightHandIK,
+            };
+            for (var part = AvatarMaskBodyPart.Root; part < AvatarMaskBodyPart.LastBodyPart; part++)
+                mask.SetHumanoidBodyPartActive(part, System.Array.IndexOf(upper, part) >= 0);
+            AssetDatabase.CreateAsset(mask, path);
+            return mask;
         }
 
         private static AnimationClip Mixamo(string name)
