@@ -42,5 +42,9 @@ New game, then Load. The marker should be back on the face.
 Automatically: `MarkPersistenceSmokeTest` (PlayMode) does the same steps against a throwaway save file:
 `unity command test run --mode playmode --async-tests`, then `unity command test status --detail failures`.
 
+Hits through the body: the cheat panel's "Shoot me at a random spot" button (or F2 in play) fires a real
+ray at the player; the hit zone it strikes picks the body region of the wound (ADR 0011).
+`HitRegionTests` (PlayMode) covers this.
+
 That proves persistence through the sim with greybox markers on the mannequin's bones. Drawing the scar
 into the character's skin needs a real character model and the M1 decal layer.

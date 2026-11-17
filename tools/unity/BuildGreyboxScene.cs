@@ -62,6 +62,14 @@ public static class BuildGreyboxScene
         release.FindProperty("panel").objectReferenceValue = panel;
         release.ApplyModifiedPropertiesWithoutUndo();
         AddMarksView(player);
+        int hitboxLayer = EnsureHitboxLayer();
+        HitReceiver receiver = player.AddComponent<HitReceiver>();
+        int zones = AddHitZones(player, hitboxLayer);
+
+        var hitter = new GameObject("DebugHitter").AddComponent<DebugHitter>();
+        var hitterSerialized = new SerializedObject(hitter);
+        hitterSerialized.FindProperty("target").objectReferenceValue = receiver;
+        hitterSerialized.ApplyModifiedPropertiesWithoutUndo();
 
         Spawn("MainCamera");
         GameObject followCamera = Spawn("PlayerFollowCamera");
@@ -77,7 +85,116 @@ public static class BuildGreyboxScene
             EditorBuildSettings.scenes = buildScenes.ToArray();
         }
         AssetDatabase.SaveAssets();
-        return "Saved " + ScenePath + ": Starter Assets player, follow camera, " + TerrainSize + " m terrain, " + Anchors.Length + " mark anchors on bones.";
+        return "Saved " + ScenePath + ": Starter Assets player, follow camera, " + TerrainSize + " m terrain, " + Anchors.Length + " mark anchors and " + zones + " hit zones on bones.";
+    }
+
+    // Puts "Hitbox" on the first free user layer (or finds it) and stops it colliding with anything:
+    // hit zones are only for raycasts, never for movement or physics contacts.
+    // Layer 8 is taken: the Starter Assets player prefabs sit on it (as "Player"), so it is named that and
+    // left colliding normally.
+    private const int StarterAssetsPlayerLayer = 8;
+
+    private static int EnsureHitboxLayer()
+    {
+        var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+        SerializedProperty layers = tagManager.FindProperty("layers");
+        SerializedProperty playerSlot = layers.GetArrayElementAtIndex(StarterAssetsPlayerLayer);
+        if (string.IsNullOrEmpty(playerSlot.stringValue) || playerSlot.stringValue == HitReceiver.LayerName)
+        {
+            playerSlot.stringValue = "Player";
+            tagManager.ApplyModifiedPropertiesWithoutUndo();
+        }
+        for (int other = 0; other < 32; other++) Physics.IgnoreLayerCollision(StarterAssetsPlayerLayer, other, false);
+
+        int layer = LayerMask.NameToLayer(HitReceiver.LayerName);
+        if (layer < 0)
+        {
+            for (int i = StarterAssetsPlayerLayer + 1; i < 32 && layer < 0; i++)
+            {
+                SerializedProperty slot = layers.GetArrayElementAtIndex(i);
+                if (string.IsNullOrEmpty(slot.stringValue))
+                {
+                    slot.stringValue = HitReceiver.LayerName;
+                    layer = i;
+                }
+            }
+            if (layer < 0) throw new System.InvalidOperationException("No free user layer for " + HitReceiver.LayerName);
+            tagManager.ApplyModifiedPropertiesWithoutUndo();
+        }
+        for (int other = 0; other < 32; other++) Physics.IgnoreLayerCollision(layer, other, true);
+        return layer;
+    }
+
+    // Trigger zones on the humanoid bones. Capsules run from one bone towards the next, so each zone
+    // follows its bone when the body animates. The face is a thin box in front of the head, so a shot
+    // from the front lands on the face and one from behind on the head.
+    private static int AddHitZones(GameObject player, int layer)
+    {
+        Animator a = player.GetComponent<Animator>();
+        Transform B(HumanBodyBones bone) => a.GetBoneTransform(bone);
+        int count = 0;
+
+        void Capsule(BodyRegion region, HumanBodyBones from, Vector3 to, float radius)
+        {
+            Transform bone = B(from);
+            Vector3 start = bone.position;
+            var capsule = NewZone<CapsuleCollider>(region, bone, layer, (start + to) / 2f, Quaternion.FromToRotation(Vector3.up, to - start));
+            capsule.isTrigger = true;
+            capsule.direction = 1;
+            capsule.radius = radius;
+            capsule.height = Vector3.Distance(start, to) + radius * 2f;
+            count++;
+        }
+
+        Transform head = B(HumanBodyBones.Head);
+        var skull = NewZone<SphereCollider>(BodyRegion.Head, head, layer, head.position + new Vector3(0f, 0.1f, -0.01f), Quaternion.identity);
+        skull.isTrigger = true;
+        skull.radius = 0.12f;
+        count++;
+        var face = NewZone<BoxCollider>(BodyRegion.Face, head, layer, head.position + new Vector3(0f, 0.08f, 0.1f), Quaternion.identity);
+        face.isTrigger = true;
+        face.size = new Vector3(0.17f, 0.2f, 0.06f);
+        count++;
+
+        Capsule(BodyRegion.Torso, HumanBodyBones.Hips, B(HumanBodyBones.Chest).position, 0.15f);
+        Capsule(BodyRegion.Torso, HumanBodyBones.Chest, B(HumanBodyBones.Neck).position, 0.16f);
+
+        foreach (bool left in new[] { true, false })
+        {
+            BodyRegion arm = left ? BodyRegion.ArmL : BodyRegion.ArmR;
+            BodyRegion hand = left ? BodyRegion.HandL : BodyRegion.HandR;
+            BodyRegion leg = left ? BodyRegion.LegL : BodyRegion.LegR;
+            HumanBodyBones upperArm = left ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm;
+            HumanBodyBones lowerArm = left ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm;
+            HumanBodyBones handBone = left ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand;
+            HumanBodyBones finger = left ? HumanBodyBones.LeftMiddleProximal : HumanBodyBones.RightMiddleProximal;
+            HumanBodyBones upperLeg = left ? HumanBodyBones.LeftUpperLeg : HumanBodyBones.RightUpperLeg;
+            HumanBodyBones lowerLeg = left ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg;
+            HumanBodyBones foot = left ? HumanBodyBones.LeftFoot : HumanBodyBones.RightFoot;
+            HumanBodyBones toes = left ? HumanBodyBones.LeftToes : HumanBodyBones.RightToes;
+
+            Capsule(arm, upperArm, B(lowerArm).position, 0.06f);
+            Capsule(arm, lowerArm, B(handBone).position, 0.05f);
+            Transform fingerBone = B(finger);
+            Vector3 handEnd = fingerBone != null ? fingerBone.position : B(handBone).position + (B(handBone).position - B(lowerArm).position).normalized * 0.08f;
+            Capsule(hand, handBone, handEnd, 0.05f);
+            Capsule(leg, upperLeg, B(lowerLeg).position, 0.09f);
+            Capsule(leg, lowerLeg, B(foot).position, 0.07f);
+            Transform toeBone = B(toes);
+            if (toeBone != null) Capsule(leg, foot, toeBone.position, 0.06f);
+        }
+        return count;
+    }
+
+    private static T NewZone<T>(BodyRegion region, Transform bone, int layer, Vector3 position, Quaternion rotation) where T : Collider
+    {
+        var zone = new GameObject("HitZone_" + region);
+        zone.layer = layer;
+        zone.transform.SetParent(bone, false);
+        zone.transform.SetPositionAndRotation(position, rotation);
+        T collider = zone.AddComponent<T>(); // before HitRegion, which requires a collider
+        zone.AddComponent<HitRegion>().Configure(region);
+        return collider;
     }
 
     private static GameObject Spawn(string prefabName)

@@ -28,6 +28,7 @@ namespace Hearthline.Game
         private const int WindowId = 0x48454C4E; // any stable id; GUILayout only needs it unique among windows
         private Vector2 _scroll, _pickScroll;
         private bool _open;
+        private DebugHitter _hitter;
 
         /// <summary>Whether the panel is showing. Other presentation code (player input, cursor) follows it.</summary>
         public bool IsOpen => _open;
@@ -136,6 +137,10 @@ namespace Hearthline.Game
             _damageIndex = GUILayout.SelectionGrid(_damageIndex, DamageNames, 5);
             if (GUILayout.Button("Hit " + region + " with " + DamageNames[_damageIndex]))
                 Run(sim, new InflictHit { CharacterId = head.Id, Region = region, Damage = (DamageType)_damageIndex, Severity = severity, Origin = origin });
+            // Same hit, but through the body: a real ray at a random spot, and the zone it strikes picks the region.
+            if (_hitter == null) _hitter = FindAnyObjectByType<DebugHitter>();
+            if (_hitter != null && GUILayout.Button("Shoot me at a random spot with " + DamageNames[_damageIndex]))
+                _status = _hitter.Fire((DamageType)_damageIndex, severity, origin);
 
             // Gear: unique items the head carries. Click a kind to be given one; click one carried to wear it or take it off.
             GUILayout.BeginHorizontal();

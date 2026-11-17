@@ -10,6 +10,7 @@ namespace Hearthline.Bridge
     /// It holds no state of its own; it is rebuilt from the simulation whenever marks change, which is
     /// why marks are still there after a load. Replace with decals/materials/part swaps in M1.
     /// </summary>
+    [RequireComponent(typeof(SimCharacterLink))]
     public sealed class CharacterMarksView : MonoBehaviour
     {
         [Serializable]
@@ -19,18 +20,17 @@ namespace Hearthline.Bridge
             public Transform anchor;
         }
 
-        [Tooltip("Show whoever is head of household. Turn off to show a fixed character id.")]
-        [SerializeField] private bool followHeadOfHousehold = true;
-        [SerializeField] private int characterId;
         [Tooltip("A bone or empty transform per body region. Regions without an anchor fall back to this object.")]
         [SerializeField] private RegionAnchor[] anchors = new RegionAnchor[0];
         [SerializeField] private float markerSize = 0.06f;
 
         private readonly List<GameObject> _markers = new List<GameObject>();
         private SimHost _host;
+        private SimCharacterLink _link;
 
         private void Start()
         {
+            _link = GetComponent<SimCharacterLink>();
             _host = SimHost.Instance;
             if (_host == null)
             {
@@ -62,7 +62,7 @@ namespace Hearthline.Bridge
             _markers.Clear();
 
             Simulation sim = _host.Sim;
-            Character character = followHeadOfHousehold ? sim.Head : sim.FindCharacter(characterId);
+            Character character = _link.Resolve(sim);
             if (character == null) return;
 
             var countPerRegion = new Dictionary<BodyRegion, int>();
