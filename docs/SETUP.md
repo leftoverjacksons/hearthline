@@ -71,6 +71,13 @@ the HUD at the bottom shows where you are, the time, the day and the pack.
 - Walk back into the clearing to come home: the pack is unloaded and the **Home** panel shows what came
   back and any season reports from while you were away.
 
+It is dressed with a stand-in low-poly kit (ADR 0014): models made in Blender
+(`ArtSource/Greybox/region_kit.blend`, exported to `Assets/Hearthline/Art/Greybox`), a painted ground
+map, instanced trees and ground cover, and sky, fog and post-processing that follow the clock. Look values
+(sun, ambient, fog, sky exposure) are curves on the `Atmosphere` object; the grade is the
+`Post-processing` volume's profile. To change a model: edit it in Blender, re-export to the same FBX name
+(and `palette.json` if colours changed), then rebuild the scene.
+
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
 `unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();"`.
 `TripFlowTests` (PlayMode) covers places, leaving, setting out, staying home, coming home and the clock.

@@ -133,7 +133,7 @@ namespace Hearthline.EditorTools
         /// collider. A plain mesh rather than a Unity Terrain: the project does not include the terrain
         /// modules, and without them Terrain and TerrainCollider are stripped in Play Mode (ADR 0010).
         /// </summary>
-        public static GameObject BuildGround(string name, string assetPath, float size, int cells, Func<float, float, float> height, Material material)
+        public static GameObject BuildGround(string name, string assetPath, float size, int cells, Func<float, float, float> height, Material material, bool mapUv = false)
         {
             int res = cells + 1;
             var vertices = new Vector3[res * res];
@@ -144,7 +144,8 @@ namespace Hearthline.EditorTools
                 float wx = (x / (float)cells - 0.5f) * size;
                 float wz = (z / (float)cells - 0.5f) * size;
                 vertices[z * res + x] = new Vector3(wx, height(wx, wz), wz);
-                uvs[z * res + x] = new Vector2(wx, wz) * 0.25f;
+                // mapUv: one texture stretched over the whole ground (a painted colour map); otherwise tiling.
+                uvs[z * res + x] = mapUv ? new Vector2(x / (float)cells, z / (float)cells) : new Vector2(wx, wz) * 0.25f;
             }
             var triangles = new int[cells * cells * 6];
             int t = 0;

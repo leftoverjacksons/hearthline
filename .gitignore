@@ -58,3 +58,6 @@ Thumbs.db
 # Reference images (mostly other people's work); only the README is committed. See ArtReference/README.md.
 /ArtReference/*
 !/ArtReference/README.md
+
+# Blender backup files
+*.blend1
