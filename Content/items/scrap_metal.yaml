@@ -1,0 +1,6 @@
+id: scrap_metal
+name: Scrap metal
+weight: 2.5
+value: 2
+tags: [salvage, trade]
+gather: { count: [1, 3], regrow_days: 60 }

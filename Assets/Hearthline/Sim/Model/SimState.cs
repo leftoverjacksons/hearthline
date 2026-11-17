@@ -194,5 +194,7 @@ namespace Hearthline.Sim
         public ActiveEvent ActiveEvent;
         public Trip Trip;
         public StorytellerState Storyteller = new StorytellerState();
+        /// <summary>Gathering spot id -> the day it was last gathered. Spots regrow after the item's regrow_days.</summary>
+        public SortedDictionary<string, int> Gathered = new SortedDictionary<string, int>();
     }
 }

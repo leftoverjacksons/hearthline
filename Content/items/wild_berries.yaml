@@ -1,0 +1,6 @@
+id: wild_berries
+name: Wild berries
+weight: 0.3
+value: 1
+tags: [food, perishable]
+gather: { count: [2, 5], regrow_days: 10 }

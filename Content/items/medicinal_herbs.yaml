@@ -1,0 +1,6 @@
+id: medicinal_herbs
+name: Medicinal herbs
+weight: 0.2
+value: 2
+tags: [medicine]
+gather: { count: [1, 3], regrow_days: 14 }

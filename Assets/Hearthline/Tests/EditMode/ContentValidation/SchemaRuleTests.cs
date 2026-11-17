@@ -199,6 +199,31 @@ outcomes:
         }
 
         [Test]
+        public void GatherCountMustBeAnOrderedPairOfAtLeastOne()
+        {
+            const string item = @"
+id: odd_berries
+name: Odd berries
+weight: 0.1
+gather: { count: [3, 1], regrow_days: 5 }
+";
+            AssertError(Load(extraPath: "items/odd_berries.yaml", extraText: item), "gather 'count' must be at least 1 and min <= max");
+        }
+
+        [Test]
+        public void GearCannotBeGathered()
+        {
+            const string item = @"
+id: odd_hat
+name: Odd hat
+weight: 0.5
+equip: { slot: head, visual: hat_brimmed }
+gather: { count: [1, 1] }
+";
+            AssertError(Load(extraPath: "items/odd_hat.yaml", extraText: item), "gear cannot be gathered");
+        }
+
+        [Test]
         public void MissingVocabIsRejected()
         {
             ContentLoadResult result = ContentLoader.Load(new[] { new ContentFile { Path = "marks/scar_test.yaml", Text = Scar } });

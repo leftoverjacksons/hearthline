@@ -84,6 +84,11 @@ choices; a summary of what changed follows (ADR 0015). Pacing values are on the 
 In the cheat panel's Events tab, "Start … here" runs any event at your spot and "Storyteller turn here"
 forces a turn. `RoadEventTests` (PlayMode) covers this.
 
+Gathering and hauling (ADR 0016): walk up to a berry bush, herb patch, deadfall or salvage pile and press
+**E**. What you gather goes into the pack on a trip (or the stores at home); the spot is picked over until it
+regrows. The pack on your back grows with the load, and a heavy pack slows you. Coming home unloads it,
+and the stores shed in the yard shows what the household has. `GatherHaulTests` (PlayMode) covers it.
+
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
 `unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();"`.
 `TripFlowTests` (PlayMode) covers places, leaving, setting out, staying home, coming home and the clock.

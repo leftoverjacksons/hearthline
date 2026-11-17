@@ -148,6 +148,16 @@ weight: 0.1
 tags: [medicine]           # free-form for now
 ```
 
+An item can be gathered from spots in the world (berry bushes, deadfall, salvage piles). Gear cannot.
+
+```yaml
+id: wild_berries
+name: Wild berries
+weight: 0.3
+tags: [food, perishable]
+gather: { count: [2, 5], regrow_days: 10 }   # yield per visit; days before the same spot yields again
+```
+
 ```yaml
 id: traveler_pack
 rolls: 2                   # how many entries are drawn (with replacement)

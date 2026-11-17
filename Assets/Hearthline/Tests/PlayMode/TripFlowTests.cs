@@ -106,6 +106,7 @@ namespace Hearthline.Tests.PlayMode
         public IEnumerator SettingOutMovesThePackOutOfTheStores()
         {
             Assert.That(_host.Sim.Execute(new GiveItem { ItemId = "jerky", Count = 5 }).Ok, Is.True);
+            int inStores = _host.Sim.ItemCount("jerky"); // the starting supplies include some
             yield return MoveTo(0f, -92f);
             yield return null;
 
@@ -115,7 +116,7 @@ namespace Hearthline.Tests.PlayMode
 
             Assert.That(_host.Sim.OnTrip, Is.True);
             Assert.That(_host.Sim.PackCount("jerky"), Is.EqualTo(3));
-            Assert.That(_host.Sim.ItemCount("jerky"), Is.EqualTo(2));
+            Assert.That(_host.Sim.ItemCount("jerky"), Is.EqualTo(inStores - 3));
             Assert.That(_trip.Current, Is.EqualTo(TripController.Phase.Away));
             Assert.That(_trip.PausesPlayer, Is.False);
         }

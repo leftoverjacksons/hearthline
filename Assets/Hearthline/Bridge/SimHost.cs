@@ -21,6 +21,22 @@ namespace Hearthline.Bridge
         [SerializeField] private string surname = "Ward";
         [SerializeField] private string headGivenName = "Ada";
         [SerializeField] private int headAgeYears = 28;
+        [Tooltip("What the stores hold when a new game starts.")]
+        [SerializeField] private StartingItem[] startingStores =
+        {
+            new StartingItem { itemId = "jerky", count = 6 },
+            new StartingItem { itemId = "cornmeal", count = 4 },
+            new StartingItem { itemId = "cartridges", count = 20 },
+            new StartingItem { itemId = "bandage", count = 3 },
+            new StartingItem { itemId = "firewood", count = 6 },
+        };
+
+        [Serializable]
+        public struct StartingItem
+        {
+            public string itemId;
+            public int count;
+        }
 
         [Header("Save")]
         [SerializeField] private string saveFileName = "save.json";
@@ -85,7 +101,16 @@ namespace Hearthline.Bridge
                 Surname = surname,
                 HeadGivenName = headGivenName,
                 HeadAgeYears = headAgeYears,
+                StartingStores = StartingStoresMap(),
             }));
+        }
+
+        private System.Collections.Generic.Dictionary<string, int> StartingStoresMap()
+        {
+            var map = new System.Collections.Generic.Dictionary<string, int>();
+            foreach (StartingItem item in startingStores)
+                if (!string.IsNullOrEmpty(item.itemId) && item.count > 0) map[item.itemId] = item.count;
+            return map;
         }
 
         public void Save()

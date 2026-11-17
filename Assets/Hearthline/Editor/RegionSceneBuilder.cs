@@ -71,9 +71,12 @@ namespace Hearthline.EditorTools
             BuildHomestead(props);
             BuildCrossings(props);
             ScatterNature(trees, cover, props);
+            BuildGathering(props);
+            BuildStores(props);
             Transform home = BuildAreas();
 
             SceneBuildKit.PlayerRig rig = SceneBuildKit.BuildPlayerRig(new Vector3(0f, HeightAt(0f, 4f) + 0.1f, 4f), yaw: 180f);
+            AddHauling(rig);
             var location = rig.Player.AddComponent<PlayerLocation>();
             SceneBuildKit.SetRef(location, "home", home);
             SceneBuildKit.SetFloat(location, "regionRadius", RegionRadius);
@@ -422,6 +425,119 @@ namespace Hearthline.EditorTools
                 else
                     GreyboxKit.Place(rnd.NextDouble() < 0.6 ? "Rock_A" : "Rock_B", OnGround(x, z) - Vector3.up * 0.3f, R(0, 360), R(0.6, ridge ? 2.2 : 1.3), solid, collider: true);
             }
+        }
+
+        // ---- Gathering and hauling --------------------------------------------------------------------
+
+        // Spots to gather from, each with a stable id the simulation remembers ("berries_007").
+        private static void BuildGathering(Transform props)
+        {
+            var root = new GameObject("Gather Spots").transform;
+            root.SetParent(props, false);
+            var rnd = new Random(2024);
+            float R(double a, double b) => (float)(a + rnd.NextDouble() * (b - a));
+            var counts = new Dictionary<string, int>();
+            int Count(string kind) => counts.TryGetValue(kind, out int n) ? n : 0;
+
+            void Spot(string kind, string item, string verb, string model, float x, float z, float yaw, string pickedModel = null)
+            {
+                int n = Count(kind);
+                counts[kind] = n + 1;
+                var spot = new GameObject("Gather " + kind + " " + n);
+                spot.transform.SetParent(root, false);
+                spot.transform.position = OnGround(x, z);
+                GameObject visual = GreyboxKit.Place(model, spot.transform.position - Vector3.up * 0.05f, yaw, 1f, spot.transform, collider: false);
+                GameObject picked = pickedModel == null ? null : GreyboxKit.Place(pickedModel, spot.transform.position - Vector3.up * 0.1f, yaw, 0.8f, spot.transform, collider: false);
+                if (picked != null) picked.SetActive(false);
+                spot.AddComponent<GatherSpot>().Configure(kind + "_" + n.ToString("000"), item, verb, visual, picked);
+            }
+
+            // Berries along the woods' edge and round the meadow; herbs in the woods and on the creek banks;
+            // deadfall under the trees; salvage on the highway and at the overpass.
+            for (int i = 0; i < 2000 && Count("berries") < 22; i++)
+            {
+                float x = R(-120, 280), z = R(-80, 160);
+                bool edge = Mathf.Abs(x - WoodsEdgeX) < 20f || (x > 40f && Mathf.Abs(z - 40f) > 60f);
+                if (edge && Clear(x, z, 4f)) Spot("berries", "wild_berries", "Pick", "Berry_Bush", x, z, R(0, 360), "Bush_A");
+            }
+            for (int i = 0; i < 2000 && Count("herbs") < 16; i++)
+            {
+                float x = R(-280, 280), z = R(-280, 280);
+                float creekOff = Mathf.Abs(z - CreekCentre(x));
+                bool bank = creekOff > 6f && creekOff < 12f && Mathf.Abs(x) > 20f;
+                bool woods = x < WoodsEdgeX && Clear(x, z, 2f);
+                if (bank || (woods && rnd.NextDouble() < 0.5)) Spot("herbs", "medicinal_herbs", "Gather", "Herb_Patch", x, z, R(0, 360));
+            }
+            for (int i = 0; i < 2000 && Count("deadfall") < 18; i++)
+            {
+                float x = R(-280, WoodsEdgeX + 10f), z = R(-280, 280);
+                if (Clear(x, z, 3f)) Spot("deadfall", "firewood", "Gather", "Deadfall", x, z, R(0, 360));
+            }
+            Spot("deadfall", "firewood", "Gather", "Deadfall", -22f, -20f, 40f); // one just outside the yard
+            Vector3 o = OverpassAt;
+            Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", o.x - 9f, o.z - 6f, 20f);
+            Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", o.x + 8f, o.z + 4f, 160f);
+            Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", o.x - 3f, o.z + 30f, 95f);
+            for (float x = -260f; x < 260f; x += 70f)
+                if (Mathf.Abs(x) > 20f && Mathf.Abs(x - o.x) > 30f)
+                    Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", x + R(-10, 10), RoadZ + (rnd.NextDouble() < 0.5 ? -6.5f : 6.5f), R(0, 360));
+        }
+
+        // The stores shed: an open lean-to in the yard whose shelves and floor fill with what is in the stores.
+        private static void BuildStores(Transform props)
+        {
+            GameObject shed = GreyboxKit.Place("Stores_Shed", OnGround(-15f, -10f), 90f, 1f, props, collider: true);
+            shed.name = "Stores Shed";
+            var slots = new List<Transform>();
+            // Model space: floor spans x -2.5..2.5, back wall at -Z (open side +Z); shelves at 0.9 m and 1.7 m.
+            void Slot(float x, float y, float z, float scale)
+            {
+                var t = new GameObject("Slot").transform;
+                t.SetParent(shed.transform, false);
+                t.localPosition = new Vector3(x, y, z);
+                t.localRotation = Quaternion.Euler(0f, (slots.Count * 37) % 30 - 15, 0f);
+                t.localScale = Vector3.one * scale;
+                slots.Add(t);
+            }
+            for (int i = 0; i < 5; i++) Slot(-2f + i, 0.16f, -0.55f, 1f);   // floor, back row
+            for (int i = 0; i < 5; i++) Slot(-2f + i, 0.16f, 0.45f, 1f);    // floor, front row
+            for (int i = 0; i < 5; i++) Slot(-2f + i, 0.93f, -1.1f, 0.6f);  // lower shelf
+            for (int i = 0; i < 5; i++) Slot(-2f + i, 1.73f, -1.1f, 0.6f);  // upper shelf
+
+            StoresDisplay.Rule Rule(string itemOrTag, string model, int units, int max) =>
+                new StoresDisplay.Rule { itemOrTag = itemOrTag, prop = GreyboxKit.Model(model), unitsPerProp = units, maxProps = max };
+            shed.AddComponent<StoresDisplay>().Configure(new[]
+            {
+                Rule("firewood", "Stock_Firewood", 4, 4),
+                Rule("wild_berries", "Stock_Basket", 4, 3),
+                Rule("medicine", "Stock_Herbs", 3, 3),
+                Rule("salvage", "Stock_Scrap", 3, 3),
+                Rule("food", "Stock_Sack", 5, 4),
+                Rule("trade", "Stock_Crate", 5, 3),
+                Rule("building", "Stock_Crate", 5, 2),
+            }, slots.ToArray());
+        }
+
+        // The pack on the player's back, the interact prompt, and the load's effect on speed.
+        private static void AddHauling(SceneBuildKit.PlayerRig rig)
+        {
+            Transform chest = rig.Player.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.Chest);
+            GameObject Piece(string model, Vector3 local, float yaw)
+            {
+                // Placed in the player's own frame (facing +Z), then hung on the chest bone so it moves with the body.
+                Vector3 world = rig.Player.transform.TransformPoint(local);
+                Quaternion rot = rig.Player.transform.rotation * Quaternion.Euler(0f, yaw, 0f);
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(GreyboxKit.Model(model));
+                go.transform.SetPositionAndRotation(world, rot);
+                go.transform.SetParent(chest, true);
+                go.SetActive(false);
+                return go;
+            }
+            GameObject pack = Piece("Pack_Base", new Vector3(0f, 0.98f, -0.2f), 180f);
+            GameObject sack = Piece("Pack_Sack", new Vector3(0.2f, 1.08f, -0.24f), 0f);
+            GameObject bundle = Piece("Pack_Bundle", new Vector3(0f, 1.5f, -0.22f), 0f);
+            rig.Player.AddComponent<PackLoad>().Configure(pack, sack, bundle);
+            rig.Player.AddComponent<Interactor>();
         }
 
         private static void SetScatter(InstancedScatter scatter, float drawDistance, bool shadows)

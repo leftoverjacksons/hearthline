@@ -26,6 +26,18 @@ namespace Hearthline.Sim.Content
                 foreach (YamlMap e in equip.MapList("heirloom_effects", "equip heirloom_effects")) { MarkEffect fx = ContentLoader.ReadEffect(e); if (fx != null) def.Equip.HeirloomEffects.Add(fx); }
                 equip.Done();
             }
+            YamlMap gather = root.Map("gather", "gather");
+            if (gather != null)
+            {
+                def.Gather = new GatherDef { RegrowDays = gather.Int("regrow_days") ?? 7 };
+                List<string> count = gather.StrList("count", true);
+                if (count.Count == 2 && int.TryParse(count[0], out int lo) && int.TryParse(count[1], out int hi)) { def.Gather.CountMin = lo; def.Gather.CountMax = hi; }
+                else gather.Error("gather 'count' must be [min, max]");
+                if (def.Gather.CountMin < 1 || def.Gather.CountMax < def.Gather.CountMin) gather.Error("gather 'count' must be at least 1 and min <= max");
+                if (def.Gather.RegrowDays < 1) gather.Error("gather 'regrow_days' must be at least 1");
+                if (def.Equip != null) gather.Error("gear cannot be gathered; each piece is its own thing");
+                gather.Done();
+            }
             if (def.Weight < 0) root.Error("'weight' must not be negative");
             root.Done();
             return def;

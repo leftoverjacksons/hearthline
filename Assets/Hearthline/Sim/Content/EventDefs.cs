@@ -12,7 +12,17 @@ namespace Hearthline.Sim.Content
         public readonly List<string> Tags = new List<string>();
         /// <summary>Null for ordinary stackable goods.</summary>
         public EquipDef Equip;
+        /// <summary>Non-null when the item can be gathered from spots in the world (berries, deadfall, salvage).</summary>
+        public GatherDef Gather;
         public string SourceFile;
+    }
+
+    /// <summary>How much one gathering spot yields and how long it takes to come back.</summary>
+    public sealed class GatherDef
+    {
+        public int CountMin = 1, CountMax = 1;
+        /// <summary>Days before a picked-over spot can be gathered again.</summary>
+        public int RegrowDays = 7;
     }
 
     /// <summary>Makes an item gear: a unique thing that is worn or wielded, not a count in the stores.</summary>

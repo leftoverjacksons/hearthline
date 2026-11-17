@@ -11,6 +11,8 @@ namespace Hearthline.Sim
         public string Surname = "Ward";
         public string HeadGivenName = "Ada";
         public int HeadAgeYears = 28;
+        /// <summary>What the stores hold on day one: item id -> count. Unknown items and gear are skipped.</summary>
+        public Dictionary<string, int> StartingStores = new Dictionary<string, int>();
     }
 
     /// <summary>A mark as presentation needs it: instance data joined with its definition and current stage.</summary>
@@ -88,6 +90,9 @@ namespace Hearthline.Sim
             state.Household.MemberIds.Add(head.Id);
             state.Household.PastHeadIds.Add(head.Id);
             HomeSystem.EnsureHomestead(state, content);
+            foreach (KeyValuePair<string, int> item in options.StartingStores)
+                if (item.Value > 0 && content.Items.TryGetValue(item.Key, out ItemDef def) && def.Equip == null)
+                    state.Household.Inventory[item.Key] = item.Value;
             // A separate stream, so that adding townsfolk to content does not reshuffle everything else in a seed.
             WorldSystem.EnsureSettlements(state, content, new SimRandom(SimRandom.Seed(options.Seed, 77)));
             return new Simulation(state, content);
@@ -143,6 +148,9 @@ namespace Hearthline.Sim
             State.Trip != null && State.Trip.Pack.TryGetValue(itemId, out int count) ? count : 0;
 
         public bool OnTrip => State.Trip != null;
+
+        /// <summary>Days until a gathering spot yields again; 0 when it can be gathered now.</summary>
+        public int DaysUntilRegrown(string spotId, string itemId) => GatherSystem.DaysUntilRegrown(State, Content, spotId, itemId);
         public double PackWeight => State.Trip == null ? 0 : TripSystem.Weight(Content, State.Trip.Pack);
         /// <summary>What the current party can carry. Over this, travel is slower and draws trouble.</summary>
         public double CarryCapacity => State.Trip == null ? 0 : TripSystem.Capacity(NewContext(), State.Trip.PartyIds);

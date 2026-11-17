@@ -1,0 +1,6 @@
+id: firewood
+name: Firewood
+weight: 3
+value: 1
+tags: [fuel]
+gather: { count: [2, 4], regrow_days: 20 }
