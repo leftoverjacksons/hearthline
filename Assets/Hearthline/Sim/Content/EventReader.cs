@@ -199,6 +199,7 @@ namespace Hearthline.Sim.Content
                 def.When.ThinLevelMin = when.Int("thin_level_min");
                 def.When.ThinLevelMax = when.Int("thin_level_max");
                 def.When.TimeOfDay.AddRange(when.EnumList<TimeOfDay>("time_of_day"));
+                def.When.Weather.AddRange(when.EnumList<WeatherKind>("weather_any"));
                 def.When.AtHome = when.Bool("at_home");
                 def.When.FlagsAll.AddRange(when.StrList("flags_all"));
                 def.When.FlagsNone.AddRange(when.StrList("flags_none"));

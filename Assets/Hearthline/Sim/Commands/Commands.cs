@@ -211,6 +211,7 @@ namespace Hearthline.Sim
             {
                 Season ended = new GameDate(ctx.State.Day).Season;
                 ctx.State.Day++;
+                WeatherSystem.NewDay(ctx);
                 foreach (Character c in ctx.State.Characters.ToArray())
                 {
                     MarkSystem.Tick(ctx, c);

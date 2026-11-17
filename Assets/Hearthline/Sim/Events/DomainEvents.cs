@@ -15,6 +15,8 @@ namespace Hearthline.Sim
     public sealed class WoundTreated : DomainEvent { public int CharacterId; public int MarkId; public bool AtInfirmary; public string Outcome; }
     public sealed class DateAdvanced : DomainEvent { public int FromDay; public int ToDay; }
     public sealed class SeasonPassed : DomainEvent { public Season Ended; public Season Began; }
+    /// <summary>The weather turned: at dawn (hour 0) or by the cheat.</summary>
+    public sealed class WeatherChanged : DomainEvent { public WeatherKind From; public WeatherKind To; public double Hour; }
     public sealed class CharacterAgeSet : DomainEvent { public int CharacterId; public int AgeYears; }
     /// <summary>The family did something that will move a settlement value when the season turns.</summary>
     public sealed class SettlementInfluenced : DomainEvent { public string SettlementId; public SettlementValue Value; public int Delta; }

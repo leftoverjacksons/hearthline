@@ -170,6 +170,17 @@ namespace Hearthline.Sim.Content
             return result;
         }
 
+        public Dictionary<T, double> EnumNumMap<T>(string key) where T : struct, System.Enum
+        {
+            var result = new Dictionary<T, double>();
+            foreach (var kv in NumMap(key))
+            {
+                if (!Naming.TryParseSnake(kv.Key, out T k)) Error("'" + key + "' has unknown entry '" + kv.Key + "' (allowed: " + Naming.AllSnake<T>() + ")");
+                else result[k] = kv.Value;
+            }
+            return result;
+        }
+
         /// <summary>Reports any field that was present but never read.</summary>
         public void Done()
         {

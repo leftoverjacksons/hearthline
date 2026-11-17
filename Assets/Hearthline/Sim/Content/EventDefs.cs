@@ -54,6 +54,8 @@ namespace Hearthline.Sim.Content
         public readonly List<string> AreaTagsAll = new List<string>();
         public int? ThinLevelMin, ThinLevelMax;
         public readonly List<TimeOfDay> TimeOfDay = new List<TimeOfDay>();
+        /// <summary>The weather where the party is must be one of these.</summary>
+        public readonly List<WeatherKind> Weather = new List<WeatherKind>();
         public bool? AtHome;
         public readonly List<string> FlagsAll = new List<string>();
         public readonly List<string> FlagsNone = new List<string>();

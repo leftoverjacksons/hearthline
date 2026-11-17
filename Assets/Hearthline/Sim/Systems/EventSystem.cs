@@ -11,6 +11,8 @@ namespace Hearthline.Sim
         /// <summary>0 near home, rising in the Thin.</summary>
         public int ThinLevel;
         public TimeOfDay TimeOfDay = TimeOfDay.Day;
+        /// <summary>The hour (0 to 24), for the weather. Below 0: a typical hour for <see cref="TimeOfDay"/>.</summary>
+        public double Hour = -1;
         public bool AtHome;
         /// <summary>0 at the homestead, 1 at the far edge of the region.</summary>
         public double DistanceFromHome;
@@ -114,6 +116,7 @@ namespace Hearthline.Sim
             if (w.ThinLevelMin.HasValue && where.ThinLevel < w.ThinLevelMin.Value) return false;
             if (w.ThinLevelMax.HasValue && where.ThinLevel > w.ThinLevelMax.Value) return false;
             if (w.TimeOfDay.Count > 0 && !w.TimeOfDay.Contains(where.TimeOfDay)) return false;
+            if (w.Weather.Count > 0 && !w.Weather.Contains(WeatherSystem.At(ctx.State.Weather, where.Hour >= 0 ? where.Hour : WeatherSystem.HourOf(where.TimeOfDay)))) return false;
             if (w.AtHome.HasValue && w.AtHome.Value != where.AtHome) return false;
             if (!w.FlagsAll.TrueForAll(ctx.State.Flags.Contains)) return false;
             if (w.FlagsNone.Exists(ctx.State.Flags.Contains)) return false;

@@ -1,0 +1,32 @@
+# The climate (docs/specs/life-and-weather.md). For each season:
+#   morning:   weights for the day's first weather, when yesterday's doesn't carry over
+#   afternoon: weights for a change after noon (fog is never rolled here)
+#   persist:   chance yesterday's last weather carries into the morning (a storm never does)
+#   change:    chance of one change in the afternoon
+#   fog_lifts: chance morning fog burns off before noon
+# Weather kinds: clear, overcast, fog, rain, storm. A storm always blows over within about 7 hours.
+seasons:
+  spring:
+    morning:   { clear: 3, overcast: 3, fog: 2, rain: 4, storm: 0.5 }
+    afternoon: { clear: 3, overcast: 3, rain: 4, storm: 1 }
+    persist: 0.55
+    change: 0.4
+    fog_lifts: 0.8
+  summer:
+    morning:   { clear: 6, overcast: 2, fog: 1, rain: 1 }
+    afternoon: { clear: 3, overcast: 2, rain: 1, storm: 3 }
+    persist: 0.6
+    change: 0.35
+    fog_lifts: 0.9
+  autumn:
+    morning:   { clear: 3, overcast: 3, fog: 4, rain: 2, storm: 0.3 }
+    afternoon: { clear: 3, overcast: 3, rain: 3, storm: 0.5 }
+    persist: 0.55
+    change: 0.3
+    fog_lifts: 0.75
+  winter:
+    morning:   { clear: 2, overcast: 5, fog: 2, rain: 2 }
+    afternoon: { clear: 2, overcast: 4, rain: 3, storm: 0.3 }
+    persist: 0.65
+    change: 0.25
+    fog_lifts: 0.6

@@ -4,7 +4,7 @@ What the YAML in `Content/` may contain. The loader (`Assets/Hearthline/Sim/Cont
 unknown field, a bad reference or a broken rule is an error, and all errors are reported in one run.
 Check with `tools/test.sh content`.
 
-Covered: `vocab.yaml`, `names.yaml`, `marks/`, `traits/`, `factions/`, `items/`, `loot/`, `events/`.
+Covered: `vocab.yaml`, `names.yaml`, `weather.yaml`, `marks/`, `traits/`, `factions/`, `items/`, `loot/`, `events/`.
 YAML anywhere else is rejected.
 
 ## vocab.yaml
@@ -120,6 +120,24 @@ effects:
   - { stat: aim_steadiness, mul: 1.1 }     # same effects as marks, without regions
 ```
 
+## weather.yaml
+
+The climate (optional; built-in defaults are used without it). For each season (`spring`, `summer`,
+`autumn`, `winter`):
+
+```yaml
+seasons:
+  spring:
+    morning:   { clear: 3, overcast: 3, fog: 2, rain: 4, storm: 0.5 }   # weights for the day's first weather
+    afternoon: { clear: 3, overcast: 3, rain: 4, storm: 1 }             # weights for an afternoon change
+    persist: 0.55     # chance yesterday's last weather carries into the morning (never a storm)
+    change: 0.4       # chance of one change after noon
+    fog_lifts: 0.8    # chance morning fog burns off before noon
+```
+
+Weights are zero or more, each list needs one above zero, and chances run from 0 to 1. A storm always
+blows over within about seven hours.
+
 ## names.yaml
 
 `given_names` (children and generated people) and `surnames` (generated people).
@@ -180,6 +198,7 @@ when:                                   # all optional; every condition given mu
   thin_level_min: 0
   thin_level_max: 1
   time_of_day: [dusk, night]            # dawn | day | dusk | night
+  weather_any: [rain, storm]            # clear | overcast | fog | rain | storm
   at_home: false
   flags_all: []
   flags_none: []

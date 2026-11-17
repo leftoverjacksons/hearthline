@@ -24,6 +24,9 @@ namespace Hearthline.Sim
 
     public enum TimeOfDay { Dawn, Day, Dusk, Night }
 
+    /// <summary>The sky over the region (docs/specs/life-and-weather.md).</summary>
+    public enum WeatherKind { Clear, Overcast, Fog, Rain, Storm }
+
     public enum ChronicleKind { Joined, Born, Mark, Partnered, Died, Succeeded, Retired, LineEnded, Deed, Left, Bequest }
 
     /// <summary>Stage ids every wound definition must provide. The wound state machine is driven by the engine.</summary>

@@ -98,6 +98,7 @@ namespace Hearthline.Sim
                     state.Household.Inventory[item.Key] = item.Value;
             // A separate stream, so that adding townsfolk to content does not reshuffle everything else in a seed.
             WorldSystem.EnsureSettlements(state, content, new SimRandom(SimRandom.Seed(options.Seed, 77)));
+            WeatherSystem.Begin(state, content, options.Seed);
             var sim = new Simulation(state, content);
             foreach (string id in options.StartingGear)
             {
@@ -205,6 +206,24 @@ namespace Hearthline.Sim
 
         /// <summary>The hunt in progress, or null. Read it, never write it.</summary>
         public ActiveHunt Hunt => State.Hunt;
+
+        /// <summary>The weather at this hour today.</summary>
+        public WeatherKind WeatherAt(double hour) => WeatherSystem.At(State.Weather, hour);
+
+        /// <summary>
+        /// The next change in the weather after this hour today, if someone in the household can feel it coming
+        /// (the weather_sense ability); null otherwise, or if it holds till night.
+        /// </summary>
+        public WeatherSpell Forecast(double hour)
+        {
+            bool sense = false;
+            foreach (int id in State.Household.MemberIds)
+            {
+                Character c = FindCharacter(id);
+                if (c != null && c.Alive && System.Linq.Enumerable.Contains(AbilitiesOf(c), WeatherSystem.SenseAbility)) { sense = true; break; }
+            }
+            return sense ? WeatherSystem.NextChange(State.Weather, hour) : null;
+        }
 
         public HuntDef HuntDefOf(string huntId) => huntId != null && Content.Hunts.TryGetValue(huntId, out HuntDef def) ? def : null;
 

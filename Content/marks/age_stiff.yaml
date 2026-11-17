@@ -12,4 +12,5 @@ stages:
       - { stat: move_speed, mul: 0.9 }
       - { stat: carry_capacity, mul: 0.85 }
       - { stat: teaching, add: 1 }
+      - { ability: weather_sense }   # the joints ache before rain
     visual: { blendshapes: { posture_stoop: 0.5 } }

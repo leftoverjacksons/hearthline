@@ -37,6 +37,7 @@ abilities:
   - night_sight    # sees in the dark
   - dowse_thin     # senses Thin places
   - numb_skin      # does not feel pain or cold in the marked place
+  - weather_sense  # feels the weather turning before it does (the HUD gives a forecast)
 
 # Tags a place can carry. Events ask for them in `when`.
 area_tags: [homestead, town, road, creek, river_crossing, field, woods, deep_woods, ridge, ruin, elder_works, hollow]

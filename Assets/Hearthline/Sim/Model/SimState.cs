@@ -270,5 +270,7 @@ namespace Hearthline.Sim
         public ActiveHunt Hunt;
         /// <summary>Loot lying where a fight ended.</summary>
         public List<DroppedLoot> Dropped = new List<DroppedLoot>();
+        /// <summary>Today's weather. Null in saves from before weather (it starts with the next day).</summary>
+        public WeatherState Weather;
     }
 }

@@ -14,6 +14,7 @@ namespace Hearthline.Sim.Content
         public const string VocabFile = "vocab.yaml";
         /// <summary>Folders that will hold content later but have no schema yet. YAML found there is an error.</summary>
         public const string NamesFile = "names.yaml";
+        public const string WeatherFile = "weather.yaml";
 
         public static ContentLoadResult LoadDirectory(string contentRoot)
         {
@@ -67,6 +68,7 @@ namespace Hearthline.Sim.Content
                     }
                     root.Done();
                 }
+                else if (file.Path == WeatherFile) WeatherReader.Read(root, file.Path, db.Weather);
                 else if (folder == "factions") Register(db.Factions, EventReader.ReadFaction(root, file.Path), d => d.Id, "factions", file.Path, root);
                 else if (folder == "items") Register(db.Items, EventReader.ReadItem(root, file.Path), d => d.Id, "items", file.Path, root);
                 else if (folder == "loot") Register(db.LootTables, EventReader.ReadLoot(root, file.Path), d => d.Id, "loot", file.Path, root);
