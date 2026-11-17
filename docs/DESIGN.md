@@ -538,6 +538,7 @@ Several choices below are **defaults taken to keep the document concrete**. They
 - Should a lineage be able to end early, or is there a soft fallback (adoption, a sworn successor)?
 - How much on-screen romance and childbirth framing? A few dignified beats, or mostly off-screen during interludes?
 - Final name and tone of the phenomenon ("the Neighbors" is a placeholder).
+- How big is the world? The land is generated from a seed (ADR 0024). Could it extend without limit, generated in pieces as you travel and fixed once made, so you can always go further but may not make it home?
 - Commercial intent: a personal project, or a possible Steam release? This affects asset licensing and how polished the slice must be.
 
 ### Risks
