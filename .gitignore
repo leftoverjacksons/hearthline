@@ -69,3 +69,9 @@ Thumbs.db
 # Downloaded archives (e.g. the MakeHuman asset pack for MPFB): install them, don't commit them.
 /Assets/*.zip
 /Assets/*.zip.meta
+/Assets/ThirdParty/RockFREE/
+/Assets/ThirdParty/RockFREE.meta
+
+# Unity regenerates this when it upgrades the rocks pack terrain; derived from git-ignored files.
+/Assets/_TerrainAutoUpgrade/
+/Assets/_TerrainAutoUpgrade.meta
