@@ -1,7 +1,7 @@
 id: raid_turned_back
 tags: [home, reavers]
-weight: 6
-cooldown_days: 60
+weight: 3
+cooldown_days: 90
 when:
   at_home: true
   time_of_day: [dawn, day]

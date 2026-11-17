@@ -73,6 +73,7 @@ namespace Hearthline.Sim.Content
                 else if (folder == "structures") Register(db.Structures, EventReader.ReadStructure(root, file.Path), d => d.Id, "structures", file.Path, root);
                 else if (folder == "jobs") Register(db.Jobs, EventReader.ReadJob(root, file.Path), d => d.Id, "jobs", file.Path, root);
                 else if (folder == "settlements") Register(db.Settlements, EventReader.ReadSettlement(root, file.Path), d => d.Id, "settlements", file.Path, root);
+                else if (folder == "hunts") Register(db.Hunts, HuntReader.Read(root, file.Path), d => d.Id, "hunts", file.Path, root);
                 else if (folder == "encounters") Register(db.Encounters, CombatReader.ReadEncounter(root, file.Path), d => d.Id, "encounters", file.Path, root);
                 else if (folder == "events") Register(db.Events, EventReader.ReadEvent(root, file.Path), d => d.Id, "events", file.Path, root);
                 else if (folder == "traits")
@@ -103,6 +104,7 @@ namespace Hearthline.Sim.Content
             ContentValidator.Validate(db, result.Errors);
             EventReader.Validate(db, result.Errors);
             CombatReader.Validate(db, result.Errors);
+            HuntReader.Validate(db, result.Errors);
             return result;
         }
 

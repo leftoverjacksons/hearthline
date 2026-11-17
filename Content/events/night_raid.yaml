@@ -1,7 +1,7 @@
 id: night_raid
 tags: [home, danger, reavers]
-weight: 6
-cooldown_days: 60
+weight: 3
+cooldown_days: 90
 intensity: 3
 when:
   at_home: true

@@ -137,6 +137,7 @@ namespace Hearthline.Sim.Content
         public readonly Dictionary<string, StructureDef> Structures = new Dictionary<string, StructureDef>();
         public readonly Dictionary<string, JobDef> Jobs = new Dictionary<string, JobDef>();
         public readonly Dictionary<string, EncounterDef> Encounters = new Dictionary<string, EncounterDef>();
+        public readonly Dictionary<string, HuntDef> Hunts = new Dictionary<string, HuntDef>();
 
         public TraitDef FindTrait(string id)
         {

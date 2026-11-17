@@ -167,6 +167,7 @@ namespace Hearthline.Sim
         public static void AfterHit(SimContext ctx, Character target, Character shooter, GearItem gun)
         {
             if (!target.Downed) return;
+            if (ctx.State.Hunt != null && ctx.State.Hunt.AnimalId == target.Id && gun != null) ctx.State.Hunt.KillGearId = gun.Id;
             Combatant fighter = FindCombatant(ctx, target.Id);
             if (fighter != null && fighter.State == CombatantState.Fighting)
             {

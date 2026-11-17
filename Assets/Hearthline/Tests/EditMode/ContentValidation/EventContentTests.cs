@@ -37,6 +37,11 @@ namespace Hearthline.Tests.ContentValidation
                 foreach (EncounterLootDef l in encounter.Loot) items.Add(l.ItemId);
             foreach (ItemDef gun in TestSupport.Content.Items.Values)
                 if (gun.Weapon != null) items.Add(gun.Weapon.Ammo);
+            foreach (HuntDef hunt in TestSupport.Content.Hunts.Values)
+            {
+                if (hunt.MeatItem != null) items.Add(hunt.MeatItem);
+                items.UnionWith(hunt.Items.Keys);
+            }
 
             foreach (string id in TestSupport.Content.LootTables.Keys) Assert.That(loot, Does.Contain(id));
             foreach (string id in TestSupport.Content.Factions.Keys) Assert.That(factions, Does.Contain(id));

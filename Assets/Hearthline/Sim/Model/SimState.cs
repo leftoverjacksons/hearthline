@@ -210,6 +210,24 @@ namespace Hearthline.Sim
         public List<GearItem> Gear = new List<GearItem>();
     }
 
+    /// <summary>The hunt in progress (docs/specs/hunt.md). Sign positions follow from <see cref="Seed"/> and <see cref="Bolts"/>.</summary>
+    public sealed class ActiveHunt
+    {
+        public string HuntId;
+        /// <summary>The animal is a character, so wounds and death work on it.</summary>
+        public int AnimalId;
+        /// <summary>Signs read so far toward the hunt's sign count.</summary>
+        public int Progress;
+        /// <summary>True once the trail has led to the animal (it can be seen and approached).</summary>
+        public bool Revealed;
+        /// <summary>Times it has bolted; each bolt lays a fresh stretch of trail.</summary>
+        public int Bolts;
+        public int StartDay;
+        public int Seed;
+        /// <summary>The gun that brought it down, for its history.</summary>
+        public int? KillGearId;
+    }
+
     public sealed class StorytellerState
     {
         /// <summary>Builds up while nothing happens; an event spends it.</summary>
@@ -248,6 +266,8 @@ namespace Hearthline.Sim
         public SortedDictionary<string, int> Gathered = new SortedDictionary<string, int>();
         /// <summary>The fight in progress, or null.</summary>
         public ActiveEncounter Encounter;
+        /// <summary>The hunt in progress, or null.</summary>
+        public ActiveHunt Hunt;
         /// <summary>Loot lying where a fight ended.</summary>
         public List<DroppedLoot> Dropped = new List<DroppedLoot>();
     }

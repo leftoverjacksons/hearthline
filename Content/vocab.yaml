@@ -41,8 +41,8 @@ abilities:
 # Tags a place can carry. Events ask for them in `when`.
 area_tags: [homestead, town, road, creek, river_crossing, field, woods, deep_woods, ridge, ruin, elder_works, hollow]
 
-# Kinds of people an event can generate.
-archetypes: [traveler, peddler, homesteader, reaver, continuity_agent, open_seeker, child]
+# Kinds of people (and animals: deer) an event or a hunt can generate.
+archetypes: [traveler, peddler, homesteader, reaver, continuity_agent, open_seeker, child, deer]
 
 # Fights presentation can stage when an event asks for an ambush.
 encounters: [reavers_small, reavers_road, wolves_pack]

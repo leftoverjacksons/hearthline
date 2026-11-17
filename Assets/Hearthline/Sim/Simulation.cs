@@ -203,6 +203,14 @@ namespace Hearthline.Sim
 
         public bool InEncounter => State.Encounter != null;
 
+        /// <summary>The hunt in progress, or null. Read it, never write it.</summary>
+        public ActiveHunt Hunt => State.Hunt;
+
+        public HuntDef HuntDefOf(string huntId) => huntId != null && Content.Hunts.TryGetValue(huntId, out HuntDef def) ? def : null;
+
+        /// <summary>True once that hunt's animal has been brought down.</summary>
+        public bool HuntDone(string huntId) => State.Flags.Contains(HuntSystem.DoneFlag(huntId));
+
         /// <summary>Why the game cannot be saved right now, or null when it can.</summary>
         public string WhyCannotSave() => State.Encounter != null ? "You can't save during a fight." : null;
 

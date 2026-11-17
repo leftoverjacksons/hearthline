@@ -1,7 +1,7 @@
 id: smoke_on_the_ridge
 tags: [encounter, danger, reavers]
-weight: 8
-cooldown_days: 20
+weight: 3
+cooldown_days: 60
 intensity: 2
 when:
   area_tags_any: [ridge, woods]

@@ -1,94 +1,103 @@
 # Spec: one hunt goal (M2)
 
-Status: **draft, waiting for Travis's approval.** Nothing in it is built yet. It's the last missing piece of M2
-before the gate (DESIGN: *M2: one hunt goal*).
+Status: **approved 2026-11-17** (Travis): a deer first; hunts start from the job board. Fits the tone of the land
+(DESIGN, *Exploration*): a lonely landscape where most of the danger is patience, distance and your own noise.
 
 ## Goal
 
-You set out to hunt one particular animal, the kind people talk about:
+You take up a hunt for one particular animal, the kind people talk about: **Crookhorn**, an old whitetail
+buck with one antler grown crooked.
 
-1. **Choose it:** at the job board, pick a hunt goal (to start, "Splitfoot", an old boar that has been
-   tearing up the corn).
-2. **Find it:** go out into the region and look for sign (tracks, rooted ground, a rub on a tree). Each sign
-   points toward the next, and your Tracking skill decides how far along the trail one reading gets you.
-3. **Approach it:** it hears and sees you. Crouching, wind and cover matter, and spooked it runs.
-4. **Kill it:** a boar may charge instead of running. That's the Mark you might bring home: tusk wounds to the
-   legs.
-5. **Bring it home:** a heavy carcass or a unique pelt goes in the pack, and meat spoils on the way.
+1. **Choose it:** at the job board, *Take up the hunt for Crookhorn*.
+2. **Find him:** go out into the woods and look for sign (tracks, a rub on a sapling, droppings, a bed in the
+   grass). Each sign points toward the next. Your Tracking skill decides how far one reading gets you; a good
+   tracker skips ahead.
+3. **Get close:** he sees and hears you. Standing, walking and running carry far; crouching carries less, and
+   the long grass hides you. He raises his head first, then bolts. A bolted buck leaves the trail colder:
+   you need more sign to find him again.
+4. **Take the shot:** one clean shot, ideally to the chest or head. A wounded buck runs.
+5. **Bring him home:** butcher him for venison (better with a knife), his hide and his antlers. They are heavy,
+   and the venison spoils if the trip runs long.
 
-Legendary animals leave a unique pelt and a story: the chronicle and the gun's history remember it.
+He is a legend, so the hide is unique, the gun remembers him, and the chronicle records the day.
 
 ## Scope
 
 **In:**
-- one legendary animal, a boar (charges, so it uses the combat systems);
-- a trail of sign spots;
-- animal senses (sight, hearing with crouch, distance);
-- flee and charge behaviour;
-- hits through the existing hit zones and `ShotHit` (a Mark on the boar, the gun's ledger line);
-- butchering into pelt and meat;
+- one legendary deer (`Content/hunts/crookhorn.yaml`);
+- a trail of sign spots laid through the woods;
+- the deer's senses: sight cone, hearing by stance and speed, gunshots;
+- graze, alert and flee behaviour;
+- hits through hit zones and `ShotHit` (the deer is a character, so wounds work);
+- butchering with a knife bonus;
 - hauling with the existing pack weight and spoilage;
-- a hunt goal on the job board;
+- job board entry;
 - cheats.
 
 **Out:**
-- ordinary game animals wandering the region, deer and wolf fights;
-- horses and dragging carcasses (the salvage sled idea in `docs/IDEAS.md`);
-- wind direction (later; for now hearing is by distance and stance only).
+- herds and ordinary deer;
+- other animals (boar, wolves, bear);
+- wind direction;
+- blood trails;
+- horses;
+- the salvage sled.
 
 ## Simulation
 
-- **Content:** `Content/hunts/<id>.yaml`:
-  - the animal (an archetype `boar` in vocab, with health, flee/charge chances and damage);
-  - its unique items (`pelt_splitfoot`, `boar_meat` count);
-  - sign count;
-  - where it ranges (area tags);
-  - outcome text for the chronicle.
-- **State:** `SimState.Hunt` holds the hunt id, the animal's character id (the boar is a `Character`
-  with `Archetype: boar`, so wounds, Marks and memory work like on people), sign found so far, and whether the
-  animal knows about you.
+- **Content:** `Content/hunts/<id>.yaml` holds:
+  - the animal: archetype `deer` in vocab, and its name;
+  - sign count and the area tags it ranges in;
+  - yields: meat item and count, unique items, and how much a knife adds;
+  - how many signs a bolt costs;
+  - chronicle text;
+  - the senses (sight range and angle, hearing per stance). These are presentation values, kept with the animal.
+- **State:** `SimState.Hunt` holds the hunt id, the animal's character id, sign read so far (progress), whether
+  he's in sight (revealed), start day and a layout seed. Sign positions come from the seed, so they're the
+  same after a load.
 - **Commands:**
-  - `StartHunt` (job board);
-  - `ReadSign` (a sign spot: Tracking stat + `SimRandom` decide how far along the trail you get);
-  - `AnimalAlerted`;
-  - `ShotHit` (existing; a boar is a character);
-  - `ButcherAnimal` (gives the unique pelt and meat; needs a knife for full yield);
-  - `EndHunt` (won, lost the trail, gave up).
-- **Events out:** `HuntStarted`, `SignRead` (with the next sign's direction), `AnimalAlerted`,
-  `AnimalCharged`, `HuntEnded`.
+  - `StartHunt` (refused while one is on);
+  - `ReadSign` (the next sign: + 1, or + 2 with good Tracking and a seeded roll; reaching the count
+    reveals him);
+  - `AnimalBolted` (presentation saw him run off: progress drops, and he's hidden again);
+  - `ShotHit` (existing);
+  - `ButcherAnimal` (once he's down: yields into the pack or stores, the gun's ledger and the chronicle, the
+    animal dies, the hunt is won);
+  - `EndHunt` (give up).
+- **Events out:** `HuntStarted`, `SignRead` (index, remaining, revealed), `AnimalBolted`, `HuntEnded`.
 
 ## Presentation
 
-- **Sign spots** are interactables placed along the trail, inside the hunt's area tags. Reading one points the
-  way with a short line ("Fresh rooting, heading toward the creek").
-- **The boar** is a body like the reavers: hit zones, a nav agent, and its own small AI (graze, wander,
-  alert, flee or charge).
-  - A charge is a fast run at you; contact is a `ShotHit`-style tusk hit, a `Claw`-type wound on the legs.
-  - It needs a greybox boar model (Blender), animated procedurally (body bob, leg swing) until there's a
-    real one.
-- **Senses:** sight cone and distance, hearing by distance × (crouched 0.4, walking 1, running 2). An alert
-  meter shows when it has noticed you.
+- **Job board:** a Hunts section.
+- **Sign spots:** placed on the NavMesh in the hunt's area, spaced 25–40 m along a wandering line. Each is an
+  interactable ("Read the sign: fresh tracks") with small ground marks. Reading one shows a line pointing
+  toward the next.
+- **The deer:** a greybox buck (Blender) moved procedurally (legs swing, head down to graze) until real
+  animation exists. Hit zones: head, neck, chest (torso) and legs. When he's revealed, he grazes at the trail's
+  end.
+- **`DeerAI`:**
+  - **graze:** wanders slowly with the head down;
+  - **alert:** the head comes up and he stares; an alert meter fills from sight and sound;
+  - **flee:** runs away on the NavMesh, reports `AnimalBolted` once far, then settles elsewhere;
+  - **down:** lies down; butcher with E.
+
+  A missed shot within 60 m alerts him at once.
+- **HUD:** an unobtrusive meter while he's in sight: grazing, uneasy, watching you.
 
 ## Acceptance tests
 
 - **Sim:**
-  - reading sign advances the trail more with higher Tracking;
-  - a hunt can't start twice;
-  - the boar takes wounds like a person;
-  - butchering gives the unique pelt once;
-  - meat spoils on the way home (existing rule);
-  - the chronicle and gun ledger record the kill.
+  - starting creates the deer and refuses twice;
+  - sign advances, and further with high Tracking;
+  - reaching the count reveals him;
+  - a bolt cools the trail;
+  - butchering works once and needs him down;
+  - the knife adds yield;
+  - ledger and chronicle lines;
+  - state round-trips the save;
+  - content validation for hunts.
 - **PlayMode:**
-  - the hunt goal places sign spots;
-  - reading the last sign reveals the boar;
-  - walking up upright alerts it from further away than crouching;
-  - shooting it down lets you butcher it;
-  - the pelt is in the pack.
-
-## Decisions for Travis
-
-1. **The first animal:** a boar (charges, uses the combat systems), or a deer (pure stealth and tracking)?
-   My recommendation: the boar.
-2. **Where hunts start:** the job board, or a rumour event? My recommendation: the job board for M2.
-3. **Reference images** for the boar (`ArtReference/places/` or a new `animals/` folder), if you have a look
-   in mind. Otherwise it's a greybox stand-in.
+  - taking the hunt at the job board lays the trail;
+  - reading every sign brings him out;
+  - he notices someone standing further away than someone crouching;
+  - a head shot drops him;
+  - butchering puts the hide in the pack.

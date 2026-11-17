@@ -1,0 +1,18 @@
+# The first hunt (docs/specs/hunt.md): an old whitetail buck with one antler grown crooked.
+id: crookhorn
+name: The hunt for Crookhorn
+offer: "Old Crookhorn's been seen at the woods' edge again. Folk say he's never been touched."
+animal:
+  archetype: deer
+  name: Crookhorn
+sign: 6                    # signs to read before he can be found
+bolt_cost: 2               # signs lost when he bolts
+area_tags_any: [woods, deep_woods]
+yields:
+  meat: { item: venison, count: 6, with_knife: 4 }   # a knife adds 4
+  items: { crookhorn_hide: 1, crookhorn_antlers: 1 }
+chronicle: "{hero.name} brought down Crookhorn, the old buck with the crooked horn."
+senses:                    # presentation values (metres, degrees), for tuning by feel
+  sight_range: 45
+  sight_angle: 140
+  hearing: { crouched: 5, walking: 14, running: 28, gunshot: 70 }

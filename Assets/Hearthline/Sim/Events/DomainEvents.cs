@@ -59,6 +59,13 @@ namespace Hearthline.Sim
     public sealed class CombatantLeftFight : DomainEvent { public int CharacterId; public CombatantState State; }
     public sealed class EncounterEnded : DomainEvent { public string EncounterId; public string Outcome; public System.Collections.Generic.List<int> LootIds; }
     public sealed class LootPickedUp : DomainEvent { public int LootId; }
+    /// <summary>A hunt was taken up: lay its trail from the seed.</summary>
+    public sealed class HuntStarted : DomainEvent { public string HuntId; public int AnimalId; public int Seed; }
+    /// <summary>A sign was read. When <see cref="Revealed"/>, the animal is at the end of the trail.</summary>
+    public sealed class SignRead : DomainEvent { public string HuntId; public int Index; public int Progress; public int Remaining; public bool Revealed; }
+    /// <summary>The animal ran off: lay a fresh stretch of trail from <see cref="Progress"/>.</summary>
+    public sealed class AnimalBolted : DomainEvent { public string HuntId; public int Progress; public int Bolts; }
+    public sealed class HuntEnded : DomainEvent { public string HuntId; public string Outcome; public System.Collections.Generic.Dictionary<string, int> Yields; }
     public sealed class ReputationChanged : DomainEvent { public string FactionId; public int Delta; public int NewValue; }
     public sealed class InventoryChanged : DomainEvent { public string ItemId; public int Delta; public int NewCount; }
     public sealed class OpinionChanged : DomainEvent { public int CharacterId; public int AboutCharacterId; public int Delta; public int NewValue; }

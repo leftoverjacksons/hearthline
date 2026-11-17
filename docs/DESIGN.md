@@ -208,6 +208,8 @@ These are lightweight activities that make home feel lived in: bathing and shavi
 
 The world is a handful of dense, hand-built regions. A data-driven **storyteller** fills them with written events cast from whoever and whatever is present. Writing builds the events; the engine decides when they happen and who is involved.
 
+**Tone of the land** (Travis, 2026-11-17): exploring should feel like wandering a **lonely landscape** of nature and ruins. People who mean you harm are **rare**: most trips meet weather, animals, sign, salvage and strangeness, not gunmen. When danger does come it is **severe and sudden**: a fight is short, lethal and remembered. The storyteller weights and cooldowns for hostile encounters are tuned to this (reaver events weigh 3 to 4 against 6 to 8 for others, with 60 to 90 day cooldowns).
+
 ### World structure
 
 - **v1 / vertical slice:** one region of about 2 × 2 km: homestead, Calvary Ford, river crossing, deep woods, one Elder Works site, one Thin pocket.
