@@ -192,9 +192,19 @@ namespace Hearthline.Game
             if (Current == Phase.Arrived) GUILayout.Window(0x484F4D45, CenteredRect(460, 360), DrawArrival, "Home");
         }
 
+        private static string WeatherWord(WeatherKind kind) =>
+            kind == WeatherKind.Clear ? "clear" : kind == WeatherKind.Overcast ? "overcast" : kind == WeatherKind.Fog ? "fog" : kind == WeatherKind.Rain ? "rain" : "storm";
+
         private void DrawHud(Simulation sim)
         {
             string line = location.PlaceName + "   ·   " + (clock != null ? clock.HourText + " " + clock.TimeOfDay.ToString().ToLowerInvariant() + "   ·   " : "") + sim.Date;
+            if (clock != null)
+            {
+                line += "   ·   " + WeatherWord(sim.WeatherAt(clock.Hour));
+                // Stiff joints feel it coming (weather_sense).
+                WeatherSpell next = sim.Forecast(clock.Hour);
+                if (next != null) line += " (" + WeatherWord(next.Kind) + " by " + ((int)next.FromHour).ToString("00") + ":00, the joints say)";
+            }
             if (sim.OnTrip)
                 line += "   ·   pack " + sim.PackWeight.ToString("0.#") + " / " + sim.CarryCapacity.ToString("0.#") + (sim.Overloaded ? "  OVERLOADED" : "");
             line += "   ·   " + campKey + ": make camp";

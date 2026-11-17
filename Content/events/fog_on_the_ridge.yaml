@@ -1,0 +1,45 @@
+id: fog_on_the_ridge
+tags: [strange, weather, neighbors]
+weight: 5
+cooldown_days: 60
+intensity: 2
+when:
+  area_tags_any: [woods, deep_woods, ridge, hollow]
+  weather_any: [fog]
+  at_home: false
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The fog came up from the bottoms and stayed. Somewhere below, an axe. Then a second axe, same stroke. Then {hero.name}'s own footsteps, half a step behind. {hero.name} stops. The footsteps take two more."
+    choices:
+      - label: Stand still and listen
+        outcome:
+          flag_set: [heard_the_ridge_fog]
+          goto: still
+      - label: Let the Knack find the edge of it
+        requires: { mark_any: [knack_dowsing] }
+        outcome:
+          flag_set: [knows_thin_on_the_ridge]
+          chronicle: "{hero.name} felt a thin place on the ridge in the fog, and walked around it."
+      - label: Walk on, faster
+        outcome:
+          flag_set: [walked_out_of_the_fog]
+          chance:
+            - p: 0.3
+              hit: { target: hero, damage: blunt, severity: 1, region: leg_l, cause: "a fall in the fog" }
+  - id: still
+    text: "The axes stop. The birds stopped a while ago. In the quiet {hero.name} hears the homestead. The pump handle. The door. Someone calling the children in. Home is half a day's walk."
+    choices:
+      - label: Walk toward the sound
+        outcome:
+          flag_set: [followed_the_fog_home]
+          chance:
+            - p: 0.5
+              mark: { target: hero, def: exposure_pale_eyes, cause: "the fog on the ridge" }
+              chronicle: "{hero.name} followed the sound of home through the fog and came out on the wrong side of the ridge. {hero.name} does not talk about it."
+            - p: 0.3
+              trait: { target: hero, add: haunted }
+      - label: Shut your eyes and wait for the sun
+        outcome:
+          mark: { target: hero, def: knack_dowsing, chance: 0.2, cause: "waiting out the fog on the ridge" }
+          chronicle: "{hero.name} waited out the fog on the ridge with eyes shut."

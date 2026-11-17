@@ -42,6 +42,8 @@ Shader "Hearthline/Foliage"
             float _WindStrength, _WindSpeed, _WindScale, _GustStrength, _HeightStart, _Flutter, _Wrap, _Translucency, _Cull;
             float _AlphaClip, _Cutoff, _VertexAO, _AOStrength, _ShadowStrength;
         CBUFFER_END
+        // Set globally by the weather (WeatherView): extra wind (0 = calm day as authored) and wetness (0 to 1).
+        float _HL_WindBoost, _HL_Wetness;
         TEXTURE2D(_BaseMap);
         SAMPLER(sampler_BaseMap);
 
@@ -63,7 +65,7 @@ Shader "Hearthline/Foliage"
             float gust = 0.5 + 0.5 * sin(t * 0.37 - pivotWS.x * 0.021) * sin(t * 0.23 - pivotWS.z * 0.017);
             float sway = sin(t + phase) * 0.7 + sin(t * 2.3 + phase * 1.7) * 0.3;
             float flutter = sin(t * 7.0 + dot(posWS, float3(1.7, 1.3, 2.1))) * _Flutter;
-            float amount = height * _WindStrength * (1.0 + _GustStrength * gust);
+            float amount = height * _WindStrength * (1.0 + _HL_WindBoost) * (1.0 + _GustStrength * (1.0 + _HL_WindBoost * 0.5) * gust);
             float2 dir = normalize(float2(1.0, 0.4));
             posWS.xz += dir * (sway + 0.35) * amount + float2(flutter, -flutter * 0.6) * amount;
             posWS.y -= abs(sway) * amount * 0.12;
@@ -135,7 +137,7 @@ Shader "Hearthline/Foliage"
                 #if defined(_ALPHATEST_ON)
                 clip(texel.a - _Cutoff);
                 #endif
-                half3 albedo = texel.rgb * _BaseColor.rgb;
+                half3 albedo = texel.rgb * _BaseColor.rgb * (1.0 - 0.3 * _HL_Wetness); // wet leaves go darker
                 #if defined(_VERTEX_AO)
                 float3 normalWS = normalize(input.normalWS); // bent crown normals: both faces share them
                 #else

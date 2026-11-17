@@ -415,6 +415,7 @@ namespace Hearthline.Game
         private void DrawWorld(Simulation sim)
         {
             _scroll = GUILayout.BeginScrollView(_scroll);
+            DrawWeather(sim);
             foreach (SettlementState town in sim.State.Settlements)
             {
                 GUILayout.Label(town.Id + "   (changes apply when the season turns)");
@@ -445,6 +446,34 @@ namespace Hearthline.Game
             }
             foreach (KeyValuePair<string, int> kv in sim.State.Household.Reputation) GUILayout.Label("Reputation with " + kv.Key + ": " + kv.Value);
             GUILayout.EndScrollView();
+        }
+
+        // Weather and the hour (docs/specs/life-and-weather.md).
+        private void DrawWeather(Simulation sim)
+        {
+            var clock = FindAnyObjectByType<TravelClock>();
+            float hour = clock != null ? clock.Hour : 12f;
+            var view = FindAnyObjectByType<WeatherView>();
+            GUILayout.Label("Weather: " + sim.WeatherAt(hour) + (view != null ? "   wetness " + view.Wetness.ToString("0.00") : "")
+                + "   today: " + string.Join(", ", sim.State.Weather != null ? sim.State.Weather.Today.ConvertAll(s => s.FromHour.ToString("0.#") + "h " + s.Kind) : new System.Collections.Generic.List<string>()));
+            GUILayout.BeginHorizontal();
+            foreach (WeatherKind kind in (WeatherKind[])System.Enum.GetValues(typeof(WeatherKind)))
+                if (GUILayout.Button(kind.ToString())) Run(sim, new SetWeather { Kind = kind, FromHour = Mathf.Min(23.99f, hour) });
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (view != null && GUILayout.Button("Lightning")) view.Strike();
+            var life = FindAnyObjectByType<AmbientLife>();
+            if (life != null && GUILayout.Button("Send a flock")) life.SendFlock();
+            GUILayout.EndHorizontal();
+            if (clock != null)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Skip to", GUILayout.Width(60));
+                foreach (int h in new[] { 6, 9, 12, 16, 19, 21, 0 })
+                    if (GUILayout.Button(h.ToString("00") + ":00")) clock.AdvanceHours(Mathf.Repeat(h - clock.Hour, 24f));
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.Space(8);
         }
 
         private void Run(Simulation sim, Command command)

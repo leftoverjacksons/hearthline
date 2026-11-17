@@ -101,7 +101,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 
 ## Decisions waiting on you
 
-- [ ] 🔴 **Approve the life-and-weather spec** (`docs/specs/life-and-weather.md`): weather in the simulation,
+- [x] **Approve the life-and-weather spec** (`docs/specs/life-and-weather.md`): weather in the simulation,
   birds, insects and fireflies around you, and birds going silent in Thin places.
 - [ ] 🟡 **OK to download CC0 sounds?** Rain, wind, birdsong, insects and thunder from a free CC0 library
   (Freesound CC0 or the Sonniss GDC bundles). Until then, the audio sources are in place but silent.

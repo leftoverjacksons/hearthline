@@ -103,6 +103,10 @@ namespace Hearthline.EditorTools
             BuildPracticeTarget(new Vector3(4f, 0f, -10f));
 
             BuildAtmosphere(sun, moon, clock, location);
+            // Weather and the life around you (docs/specs/life-and-weather.md).
+            new GameObject("Weather").AddComponent<WeatherView>()
+                .Configure(clock, Object.FindAnyObjectByType<Atmosphere>(), new Renderer[] { GameObject.Find("Region Ground").GetComponent<Renderer>() });
+            new GameObject("Ambient Life").AddComponent<AmbientLife>().Configure(rig.Player.transform, clock, location);
             int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
             CombatSceneKit.BuildEnemyPrefab();
             CombatSceneKit.AddSpawner(rig.Player.transform);

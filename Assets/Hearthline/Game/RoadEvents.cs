@@ -59,8 +59,12 @@ namespace Hearthline.Game
         }
 
         /// <summary>Where the party is, as the simulation needs it for events.</summary>
-        public EventContext ContextHere() =>
-            location != null ? location.ToEventContext(clock != null ? clock.TimeOfDay : TimeOfDay.Day) : new EventContext();
+        public EventContext ContextHere()
+        {
+            EventContext context = location != null ? location.ToEventContext(clock != null ? clock.TimeOfDay : TimeOfDay.Day) : new EventContext();
+            if (clock != null) context.Hour = clock.Hour; // for the weather
+            return context;
+        }
 
         /// <summary>Gives the storyteller a turn now, here. Returns true if an event started.</summary>
         public bool StorytellerTurn()

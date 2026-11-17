@@ -1,0 +1,57 @@
+id: shelter_from_the_storm
+tags: [encounter, weather, moral]
+weight: 6
+cooldown_days: 45
+when:
+  area_tags_any: [road, woods, field]
+  weather_any: [storm]
+  at_home: false
+cast:
+  hero: { from: party, role: head }
+  stranger: { generate: traveler, age_min: 20, age_max: 60 }
+beats:
+  - text: "The storm comes down all at once. The only lee for a mile is an old overpass, half fallen, with a dry strip under the deck. {stranger.name} is already there, sitting on a pack, one hand inside their coat."
+    choices:
+      - label: Ask to share it
+        outcome:
+          relationship: { stranger: 10 }
+          goto: night
+      - label: Tell them to clear out
+        outcome:
+          relationship: { stranger: -50 }
+          reputation: { homesteaders: -5 }
+          mark: { target: hero, def: rite_guilt_shadow, chance: 0.4, cause: "turning {stranger.full_name} out into the storm" }
+          chance:
+            - p: 0.25
+              hit: { target: hero, damage: blade, severity: 2, cause: "{stranger.full_name}" }
+              chronicle: "{hero.name} tried to turn {stranger.full_name} out of the dry under the overpass. {stranger.name} had a knife."
+      - label: Nod and walk on into the storm
+        outcome:
+          flag_set: [walked_through_the_storm]
+          chance:
+            - p: 0.3
+              hit: { target: hero, damage: blunt, severity: 1, cause: "a limb torn loose in the storm" }
+  - id: night
+    text: "They share the dry strip. Rain comes sideways off the deck. Near midnight {stranger.name} says they have not eaten since the day before yesterday."
+    choices:
+      - label: Share your food
+        requires: { item_any: [jerky] }
+        outcome:
+          item: { jerky: -1, medicinal_herbs: 2 }
+          relationship: { stranger: 30 }
+          reputation: { homesteaders: 3 }
+          chronicle: "{hero.name} fed {stranger.full_name} under the overpass in a storm. In the morning {stranger.name} left a bundle of herbs by the pack."
+      - label: Show them the old scar and trade stories
+        requires: { mark_any: [scar_gunshot, scar_blade, scar_claw, scar_burn, scar_ragged] }
+        outcome:
+          relationship: { stranger: 25 }
+          reputation: { homesteaders: 2 }
+          flag_set: [heard_road_news]
+      - label: Sleep with a hand on your knife
+        outcome:
+          relationship: { stranger: 5 }
+          chance:
+            - p: 0.3
+              item: { old_coin: -3, jerky: -2 }
+              relationship: { stranger: -40 }
+              chronicle: "{hero.name} woke under the overpass to clear sky. {stranger.full_name} was gone, and so was some of the pack."

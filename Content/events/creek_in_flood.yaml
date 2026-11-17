@@ -1,0 +1,44 @@
+id: creek_in_flood
+tags: [weather, crossing, danger]
+weight: 7
+cooldown_days: 30
+intensity: 2
+when:
+  area_tags_any: [creek, river_crossing]
+  weather_any: [rain, storm]
+  at_home: false
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The crossing is gone under brown water. It is quiet in the middle and fast. A whole cedar goes by, roots up, turning slow."
+    choices:
+      - label: Wade it
+        outcome:
+          flag_set: [crossed_in_flood]
+          chance:
+            - p: 0.35
+              hit: { target: hero, damage: blunt, severity: 2, cause: "the rocks under the flood" }
+              chronicle: "{hero.name} waded the crossing in flood and was rolled against the rocks."
+            - p: 0.3
+              item: { cornmeal: -2, jerky: -2, cartridges: -6 }
+              chronicle: "{hero.name} waded the crossing in flood. The pack came out lighter."
+      - label: Ride it across
+        requires: { stat_min: { riding: 1 } }
+        outcome:
+          flag_set: [crossed_in_flood]
+          chance:
+            - p: 0.15
+              item: { cornmeal: -2, jerky: -2 }
+      - label: Make a cold camp and wait for the water to drop
+        outcome:
+          item: { jerky: -1 }
+          flag_set: [waited_out_the_flood]
+          chance:
+            - p: 0.3
+              item: { cornmeal: -2 }
+      - label: Walk the bank upstream for a narrower place
+        outcome:
+          flag_set: [knows_the_upper_ford]
+          chance:
+            - p: 0.2
+              hit: { target: hero, damage: blunt, severity: 1, region: hand_l, cause: "a fall on the slick bank" }

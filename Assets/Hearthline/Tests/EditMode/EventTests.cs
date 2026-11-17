@@ -260,7 +260,8 @@ namespace Hearthline.Tests
             var seen = new HashSet<string>();
             for (ulong seed = 1; seed <= 20; seed++) seen.UnionWith(Run(seed, Road, 60));
             seen.Remove("");
-            Assert.That(seen, Is.EquivalentTo(new[] { "peddler_on_the_road", "continuity_patrol", "child_on_the_road", "road_work_party", "rifle_in_the_wreck" }));
+            Assert.That(seen, Is.EquivalentTo(new[] { "peddler_on_the_road", "continuity_patrol", "child_on_the_road", "road_work_party", "rifle_in_the_wreck",
+                "shelter_from_the_storm" }));   // the sim's own weather runs here, and storms come
         }
 
         [Test]

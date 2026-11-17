@@ -1,6 +1,6 @@
 # Spec: life and weather (M2)
 
-Status: **draft, awaiting Travis's approval.**
+Status: **approved 2026-11-17** (Travis). **Built** (ADR 0025): `WeatherTests`, `WeatherPlayTests`, and three weather events (`creek_in_flood`, `shelter_from_the_storm`, `fog_on_the_ridge`).
 
 ## Goal
 

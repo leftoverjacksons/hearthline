@@ -47,6 +47,13 @@ namespace Hearthline.Game
         [SerializeField] private float fogBlendSpeed = 0.5f;
 
         private float _fogMultiplier = 1f;
+
+        /// <summary>Set by <see cref="WeatherView"/>: how much the weather dims the sun, the sky light, and thickens the fog.</summary>
+        public float WeatherSun { get; set; } = 1f;
+        public float WeatherAmbient { get; set; } = 1f;
+        public float WeatherFog { get; set; } = 1f;
+        /// <summary>A brief flash of light (lightning), 0 to 1.</summary>
+        public float Flash { get; set; }
         private static readonly int SunDirectionId = Shader.PropertyToID("_HL_SunDirection");
         private static readonly int SunColorId = Shader.PropertyToID("_HL_SunColor");
 
@@ -74,7 +81,7 @@ namespace Hearthline.Game
                 Color sc = sunColour.Evaluate(t);
                 Shader.SetGlobalVector(SunColorId, new Vector4(sc.r, sc.g, sc.b, 1f));
                 sun.color = sunColour.Evaluate(t);
-                sun.intensity = sunIntensity.Evaluate(hour);
+                sun.intensity = sunIntensity.Evaluate(hour) * WeatherSun + Flash * 2f;
                 sun.enabled = sun.intensity > 0.001f;
             }
             if (moon != null)
@@ -84,18 +91,23 @@ namespace Hearthline.Game
                 moon.enabled = moon.intensity > 0.001f;
             }
 
-            Color sky = skyAmbient.Evaluate(t), ground = groundAmbient.Evaluate(t);
+            Color sky = skyAmbient.Evaluate(t) * WeatherAmbient, ground = groundAmbient.Evaluate(t) * WeatherAmbient;
+            sky = Color.Lerp(sky, Color.white, Flash * 0.6f);
             RenderSettings.ambientSkyColor = sky;
             RenderSettings.ambientEquatorColor = Color.Lerp(sky, ground, 0.5f);
             RenderSettings.ambientGroundColor = ground;
             if (RenderSettings.skybox != null && RenderSettings.skybox.HasProperty("_Exposure"))
-                RenderSettings.skybox.SetFloat("_Exposure", skyExposure.Evaluate(hour));
+                RenderSettings.skybox.SetFloat("_Exposure", skyExposure.Evaluate(hour) * Mathf.Lerp(1f, WeatherAmbient, 0.7f) + Flash * 1.5f);
 
             float target = 1f;
             if (location != null && (location.ThinLevel > 0 || Contains(location, "deep_woods") || Contains(location, "hollow"))) target = hollowFog;
             _fogMultiplier = Mathf.MoveTowards(_fogMultiplier, target, fogBlendSpeed * deltaTime * hollowFog);
-            RenderSettings.fogColor = fogColour.Evaluate(t);
-            RenderSettings.fogDensity = fogDensity * fogByHour.Evaluate(hour) * _fogMultiplier;
+            Color fog = fogColour.Evaluate(t);
+            // Grey weather greys the air.
+            float grey = Mathf.Clamp01(1f - WeatherAmbient) * 0.8f;
+            fog = Color.Lerp(fog, new Color(fog.grayscale, fog.grayscale, fog.grayscale) * 0.9f, grey);
+            RenderSettings.fogColor = fog;
+            RenderSettings.fogDensity = fogDensity * fogByHour.Evaluate(hour) * _fogMultiplier * WeatherFog;
         }
 
         private static bool Contains(PlayerLocation l, string tag)

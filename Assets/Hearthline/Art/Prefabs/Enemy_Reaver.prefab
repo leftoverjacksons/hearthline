@@ -133,7 +133,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 288453149592764601}
-  - {fileID: 5907972659150963483}
+  - {fileID: 7560068544220516829}
   m_Father: {fileID: 3946755922202620187}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &299517778088681944
@@ -200,7 +200,7 @@ Transform:
   - {fileID: 1381410652487205260}
   - {fileID: 6111888307750715730}
   - {fileID: 2843745513898170698}
-  - {fileID: 1681032060155079981}
+  - {fileID: 7330793417037851598}
   m_Father: {fileID: 8989131868891335621}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &377727397284130063
@@ -235,75 +235,6 @@ Transform:
   - {fileID: 2763701386763040169}
   m_Father: {fileID: 2907810287101307688}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &419060891658837913
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 622543764030881732}
-  - component: {fileID: 5408769200232475009}
-  - component: {fileID: 6240564174742809285}
-  m_Layer: 9
-  m_Name: HitZone_ArmR
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &622543764030881732
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 419060891658837913}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.9999297, y: -0.000006515067, z: 0.011856645, w: 0.0000005532056}
-  m_LocalPosition: {x: 0.000001899898, y: -0.1425425, z: -0.00000018440187}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8077898759985615296}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &5408769200232475009
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 419060891658837913}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.06
-  m_Height: 0.40508497
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6240564174742809285
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 419060891658837913}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
-  region: 4
 --- !u!1 &502036781221319344
 GameObject:
   m_ObjectHideFlags: 0
@@ -365,7 +296,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3312336947385663604}
-  - {fileID: 1107848322141680675}
+  - {fileID: 1910122493322920419}
   m_Father: {fileID: 5667209643025540182}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1012109986718550955
@@ -630,75 +561,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1810006020374382035}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1233833622281518953
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1789284491624587327}
-  - component: {fileID: 3979731687664490459}
-  - component: {fileID: 6230449447998629354}
-  m_Layer: 9
-  m_Name: HitZone_LegR
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1789284491624587327
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1233833622281518953}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.900075, y: 0.0000008214265, z: -0.43573496, w: -0.00000015646219}
-  m_LocalPosition: {x: -0.0000003732298, y: -0.20701979, z: -0.000000016763806}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1004856580547769729}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &3979731687664490459
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1233833622281518953}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.07
-  m_Height: 0.5540397
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6230449447998629354
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1233833622281518953}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
-  region: 8
 --- !u!1 &1266873365269229362
 GameObject:
   m_ObjectHideFlags: 0
@@ -864,6 +726,75 @@ Transform:
   - {fileID: 23902928414469283}
   m_Father: {fileID: 5131581201329351766}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1523938992916650791
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5674670182689418984}
+  - component: {fileID: 992023441373028972}
+  - component: {fileID: 1313001760892258276}
+  m_Layer: 9
+  m_Name: HitZone_LegR
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5674670182689418984
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1523938992916650791}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.900075, y: 0.0000008214265, z: -0.43573496, w: -0.00000015646219}
+  m_LocalPosition: {x: -0.0000003732298, y: -0.20701979, z: -0.000000016763806}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1004856580547769729}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &992023441373028972
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1523938992916650791}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.07
+  m_Height: 0.5540397
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1313001760892258276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1523938992916650791}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
+  region: 8
 --- !u!1 &1841733782874808491
 GameObject:
   m_ObjectHideFlags: 0
@@ -958,10 +889,10 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2303696266217241767}
-  - {fileID: 8065630353329323686}
+  - {fileID: 3192077306642342057}
   m_Father: {fileID: 1381410652487205260}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2584286815472784875
+--- !u!1 &2423438600420618438
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -969,78 +900,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1107848322141680675}
-  - component: {fileID: 2344693334962281373}
-  - component: {fileID: 2952118568224068706}
-  m_Layer: 9
-  m_Name: HitZone_LegL
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1107848322141680675
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2584286815472784875}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.0000010970979, y: 0.9893859, z: -0.0000000015319868, w: -0.14531171}
-  m_LocalPosition: {x: -0.000000004656613, y: 0.2066722, z: 4.656613e-10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1381410652487205260}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &2344693334962281373
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2584286815472784875}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.09
-  m_Height: 0.5933444
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2952118568224068706
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2584286815472784875}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
-  region: 7
---- !u!1 &2620882395516090764
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1681032060155079981}
-  - component: {fileID: 5539871461558796407}
-  - component: {fileID: 1235648206268423987}
+  - component: {fileID: 7330793417037851598}
+  - component: {fileID: 7429416651851061104}
+  - component: {fileID: 135767791505837503}
   m_Layer: 9
   m_Name: HitZone_Torso
   m_TagString: Untagged
@@ -1048,13 +910,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1681032060155079981
+--- !u!4 &7330793417037851598
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2620882395516090764}
+  m_GameObject: {fileID: 2423438600420618438}
   serializedVersion: 2
   m_LocalRotation: {x: 0.003783026, y: -0, z: -0, w: 0.99999285}
   m_LocalPosition: {x: 0, y: 0.080816805, z: 0.00061147753}
@@ -1063,13 +925,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5667209643025540182}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &5539871461558796407
+--- !u!136 &7429416651851061104
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2620882395516090764}
+  m_GameObject: {fileID: 2423438600420618438}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -1086,13 +948,13 @@ CapsuleCollider:
   m_Height: 0.4616383
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1235648206268423987
+--- !u!114 &135767791505837503
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2620882395516090764}
+  m_GameObject: {fileID: 2423438600420618438}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
@@ -1131,75 +993,6 @@ Transform:
   - {fileID: 4397994960997618409}
   m_Father: {fileID: 2079887748479842907}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2793256116030160010
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8065630353329323686}
-  - component: {fileID: 1776687401105960500}
-  - component: {fileID: 3721016919790441904}
-  m_Layer: 9
-  m_Name: HitZone_LegL
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8065630353329323686
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2793256116030160010}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.00000022351742, y: 0.43575302, z: 0.000000004656613, w: -0.90006626}
-  m_LocalPosition: {x: 0.0000000018626454, y: 0.20701976, z: -0.0000000018626451}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3312336947385663604}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &1776687401105960500
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2793256116030160010}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.07
-  m_Height: 0.55403954
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3721016919790441904
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2793256116030160010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
-  region: 7
 --- !u!1 &2912920265959289465
 GameObject:
   m_ObjectHideFlags: 0
@@ -1391,6 +1184,75 @@ Transform:
   - {fileID: 661847047723160318}
   m_Father: {fileID: 8635291935884274853}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3454051595871766281
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1910122493322920419}
+  - component: {fileID: 5100520630912008482}
+  - component: {fileID: 9076417757660979096}
+  m_Layer: 9
+  m_Name: HitZone_LegL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1910122493322920419
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3454051595871766281}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.0000010970979, y: 0.9893859, z: -0.0000000015319868, w: -0.14531171}
+  m_LocalPosition: {x: -0.000000004656613, y: 0.2066722, z: 4.656613e-10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1381410652487205260}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &5100520630912008482
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3454051595871766281}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.09
+  m_Height: 0.5933444
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &9076417757660979096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3454051595871766281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
+  region: 7
 --- !u!1 &3506925152297398166
 GameObject:
   m_ObjectHideFlags: 0
@@ -1453,6 +1315,75 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2763701386763040169}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3825843595458494903
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1022232667865335860}
+  - component: {fileID: 8180264271756515581}
+  - component: {fileID: 6167777782953382872}
+  m_Layer: 9
+  m_Name: HitZone_LegR
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1022232667865335860
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3825843595458494903}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.14530574, y: -0.00000010977346, z: -0.9893868, w: 0.00000056438154}
+  m_LocalPosition: {x: 0.0000002249144, y: -0.20667207, z: 0.000000012922101}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6111888307750715730}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &8180264271756515581
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3825843595458494903}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.09
+  m_Height: 0.59334415
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &6167777782953382872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3825843595458494903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
+  region: 8
 --- !u!1 &4158939916255791155
 GameObject:
   m_ObjectHideFlags: 0
@@ -1503,7 +1434,7 @@ Animator:
   m_GameObject: {fileID: 4158939916255791155}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 36078ab0369161e49a29d349ae3e0739, type: 3}
-  m_Controller: {fileID: 9100000, guid: efa43e84cff903c46b781a5f56b61da5, type: 2}
+  m_Controller: {fileID: 9100000, guid: dd5f717aa07f0b74ab4abb6e9159c894, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1674,6 +1605,75 @@ Transform:
   m_Children: []
   m_Father: {fileID: 198826831448880842}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4253540459735498674
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6146334621137193746}
+  - component: {fileID: 8391668901616039924}
+  - component: {fileID: 408201405507713919}
+  m_Layer: 9
+  m_Name: HitZone_ArmR
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6146334621137193746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4253540459735498674}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.9999297, y: -0.000006515067, z: 0.011856645, w: 0.0000005532056}
+  m_LocalPosition: {x: 0.000001899898, y: -0.1425425, z: -0.00000018440187}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8077898759985615296}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &8391668901616039924
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4253540459735498674}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.06
+  m_Height: 0.40508497
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &408201405507713919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4253540459735498674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
+  region: 4
 --- !u!1 &4292481766067026363
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,7 +1704,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5732407509152345089}
-  - {fileID: 7560068544220516829}
+  - {fileID: 86032654240448659}
   m_Father: {fileID: 4931624162606261575}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4557595240975735885
@@ -2088,7 +2088,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 896178068332662341}
-  - {fileID: 1789284491624587327}
+  - {fileID: 5674670182689418984}
   m_Father: {fileID: 6111888307750715730}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5761761549840629438
@@ -2249,12 +2249,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5930802161669825132}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.0118568055, z: 0.00000012526289, w: 0.9999297}
-  m_LocalPosition: {x: -0.000000022351742, y: 0.1425403, z: 0.000000006519258}
+  m_LocalRotation: {x: -0.000000059604645, y: -0.7567495, z: -0.000000059604645, w: 0.653705}
+  m_LocalPosition: {x: -0.000000044703484, y: 0.12018108, z: 0.000000022351742}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3946755922202620187}
+  m_Father: {fileID: 5732407509152345089}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &1601242230534774906
 CapsuleCollider:
@@ -2275,8 +2275,8 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.06
-  m_Height: 0.40508074
+  m_Radius: 0.05
+  m_Height: 0.3403622
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1200023989317188613
@@ -2388,75 +2388,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5150676763568577927}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6620458163259958903
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 103163065186559088}
-  - component: {fileID: 135543725622530137}
-  - component: {fileID: 1462089474270827900}
-  m_Layer: 9
-  m_Name: HitZone_LegR
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &103163065186559088
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6620458163259958903}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.14530574, y: -0.00000010977346, z: -0.9893868, w: 0.00000056438154}
-  m_LocalPosition: {x: 0.0000002249144, y: -0.20667207, z: 0.000000012922101}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6111888307750715730}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &135543725622530137
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6620458163259958903}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.09
-  m_Height: 0.59334415
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1462089474270827900
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6620458163259958903}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
-  region: 8
 --- !u!1 &6775684584788612034
 GameObject:
   m_ObjectHideFlags: 0
@@ -2521,6 +2452,75 @@ Transform:
   - {fileID: 3917218064505297039}
   m_Father: {fileID: 8822040892083524602}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6819915687087510582
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 86032654240448659}
+  - component: {fileID: 3777756560736238988}
+  - component: {fileID: 1628606202541269102}
+  m_Layer: 9
+  m_Name: HitZone_ArmL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &86032654240448659
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6819915687087510582}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.0118568055, z: 0.00000012526289, w: 0.9999297}
+  m_LocalPosition: {x: -0.000000022351742, y: 0.1425403, z: 0.000000006519258}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3946755922202620187}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &3777756560736238988
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6819915687087510582}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.06
+  m_Height: 0.40508074
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1628606202541269102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6819915687087510582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
+  region: 3
 --- !u!1 &6842457269350446814
 GameObject:
   m_ObjectHideFlags: 0
@@ -2718,7 +2718,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1004856580547769729}
-  - {fileID: 103163065186559088}
+  - {fileID: 1022232667865335860}
   m_Father: {fileID: 5667209643025540182}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7042676160253651745
@@ -3180,7 +3180,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1323831854082420052}
-  - {fileID: 622543764030881732}
+  - {fileID: 6146334621137193746}
   m_Father: {fileID: 6268233009595240869}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7879444478157022576
@@ -3487,6 +3487,75 @@ Transform:
   - {fileID: 6268233009595240869}
   m_Father: {fileID: 951816524195715184}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8410768428146132667
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3192077306642342057}
+  - component: {fileID: 6516693981170575886}
+  - component: {fileID: 7626433624345176194}
+  m_Layer: 9
+  m_Name: HitZone_LegL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3192077306642342057
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8410768428146132667}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.00000022351742, y: 0.43575302, z: 0.000000004656613, w: -0.90006626}
+  m_LocalPosition: {x: 0.0000000018626454, y: 0.20701976, z: -0.0000000018626451}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3312336947385663604}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &6516693981170575886
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8410768428146132667}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.07
+  m_Height: 0.55403954
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7626433624345176194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8410768428146132667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
+  region: 7
 --- !u!1 &8424019433286225649
 GameObject:
   m_ObjectHideFlags: 0
@@ -3620,75 +3689,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
   region: 8
---- !u!1 &8830414829670172595
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5907972659150963483}
-  - component: {fileID: 5637317170938427634}
-  - component: {fileID: 6347281256878859182}
-  m_Layer: 9
-  m_Name: HitZone_ArmL
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5907972659150963483
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8830414829670172595}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.000000059604645, y: -0.7567495, z: -0.000000059604645, w: 0.653705}
-  m_LocalPosition: {x: -0.000000044703484, y: 0.12018108, z: 0.000000022351742}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5732407509152345089}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &5637317170938427634
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8830414829670172595}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.05
-  m_Height: 0.3403622
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6347281256878859182
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8830414829670172595}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 978d03b36b83c9c4aa757484581d57cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Hearthline.Bridge::Hearthline.Bridge.HitRegion
-  region: 3
 --- !u!1 &8864147854744599778
 GameObject:
   m_ObjectHideFlags: 0
