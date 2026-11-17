@@ -17,7 +17,7 @@ namespace Hearthline.Game
         [SerializeField] private KeyCode toggleKey = KeyCode.F1;
         [SerializeField] private bool openOnStart = true;
 
-        private static readonly string[] Tabs = { "Marks", "Events", "House", "World" };
+        private static readonly string[] Tabs = { "Marks", "Events", "House", "World", "Combat" };
         private static readonly SettlementValue[] SettlementValues = (SettlementValue[])Enum.GetValues(typeof(SettlementValue));
         private static readonly string[] RegionNames = Enum.GetNames(typeof(BodyRegion));
         private static readonly string[] DamageNames = Enum.GetNames(typeof(DamageType));
@@ -90,6 +90,7 @@ namespace Hearthline.Game
 
             _tab = GUILayout.Toolbar(_tab, Tabs);
             if (_tab == 3) DrawWorld(sim);
+            else if (_tab == 4) DrawCombat(sim, head);
             else if (head == null && _tab != 2)
             {
                 GUILayout.Label(sim.State.Household.LineEnded ? "The line has ended. Start a new game or load." : "The head is dead. Choose an heir on the House tab.");
@@ -320,6 +321,64 @@ namespace Hearthline.Game
             List<ChronicleEntry> chronicle = sim.State.Chronicle;
             for (int i = chronicle.Count - 1; i >= 0 && i >= chronicle.Count - 40; i--)
                 GUILayout.Label(new GameDate(chronicle[i].Day) + ": " + chronicle[i].Text);
+            GUILayout.EndScrollView();
+        }
+
+        // Combat (combat spec): start fights here, ammunition, gun state, and the fight in progress.
+        private void DrawCombat(Simulation sim, Character head)
+        {
+            _scroll = GUILayout.BeginScrollView(_scroll);
+            GUILayout.BeginHorizontal();
+            foreach (var kv in sim.Content.Encounters)
+            {
+                if (!kv.Value.Staged) continue;
+                if (GUILayout.Button("Start " + kv.Key + " here")) Run(sim, new StartEncounter { EncounterId = kv.Key, PlaceName = "here" });
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("+12 cartridges")) Run(sim, new GiveItem { ItemId = "cartridges", Count = 12 });
+            if (GUILayout.Button("+12 revolver rounds")) Run(sim, new GiveItem { ItemId = "revolver_rounds", Count = 12 });
+            if (head != null && GUILayout.Button("Give revolver"))
+            {
+                Run(sim, new GiveGear { DefId = "revolver", CharacterId = head.Id });
+                Run(sim, new EquipGear { GearId = head.Gear[head.Gear.Count - 1].Id });
+            }
+            if (head != null && head.Downed && GUILayout.Button("Revive head")) Run(sim, new ReviveCharacter { CharacterId = head.Id });
+            GUILayout.EndHorizontal();
+            if (head != null)
+                foreach (GearItem g in head.Gear)
+                {
+                    var weapon = sim.WeaponOf(g.DefId);
+                    if (weapon == null) continue;
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(sim.Content.Items[g.DefId].Name + ": " + g.Loaded + "/" + weapon.Capacity + ", condition " + g.Condition.ToString("0.00") + (g.Jammed ? ", JAMMED" : ""), GUILayout.Width(300));
+                    if (GUILayout.Button("Worn", GUILayout.Width(55))) Run(sim, new SetGunState { GearId = g.Id, Condition = 0.15 });
+                    if (GUILayout.Button("Clean", GUILayout.Width(55))) Run(sim, new SetGunState { GearId = g.Id, Condition = 1, Jammed = false });
+                    if (GUILayout.Button("Jam", GUILayout.Width(45))) Run(sim, new SetGunState { GearId = g.Id, Jammed = true });
+                    GUILayout.EndHorizontal();
+                }
+            EnemyAI.ShowDebug = GUILayout.Toggle(EnemyAI.ShowDebug, "Show enemy states over their heads");
+            if (sim.InEncounter && head != null)
+            {
+                GUILayout.Label("Fight: " + sim.Encounter.EncounterId + (sim.Encounter.Broke ? " (broken)" : ""));
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Down them all"))
+                    foreach (Combatant x in sim.Encounter.Combatants.ToArray())
+                        if (x.State == CombatantState.Fighting) Run(sim, new ShotHit { TargetId = x.CharacterId, Region = BodyRegion.Head, ShooterId = head.Id, Distance = 10 });
+                Combatant leader = sim.Encounter.Combatants.Find(x => x.Leader && x.State == CombatantState.Fighting);
+                if (leader != null && GUILayout.Button("Down the leader")) Run(sim, new ShotHit { TargetId = leader.CharacterId, Region = BodyRegion.Head, ShooterId = head.Id, Distance = 10 });
+                if (GUILayout.Button("Call it fled")) Run(sim, new EndEncounter { Outcome = EncounterOutcome.Fled });
+                GUILayout.EndHorizontal();
+                foreach (Combatant x in sim.Encounter.Combatants)
+                {
+                    Character c = sim.FindCharacter(x.CharacterId);
+                    GearItem gun = c?.Gear.Find(g => g.Id == x.GearId);
+                    GUILayout.Label("  " + (c != null ? c.GivenName + " " + c.Surname : "?") + (x.Leader ? " (leader)" : "") + ": " + x.State
+                        + (x.Intent != BreakIntent.None ? " -> " + x.Intent : "") + ", health " + (c?.Health ?? 0)
+                        + (gun != null ? ", " + gun.Loaded + " loaded + " + x.Ammo + (gun.Jammed ? ", jammed" : "") : ""));
+                }
+            }
+            GUILayout.Label(sim.State.Dropped.Count + " loot bundle(s) on the ground.");
             GUILayout.EndScrollView();
         }
 

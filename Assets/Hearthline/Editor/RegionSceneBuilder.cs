@@ -99,6 +99,7 @@ namespace Hearthline.EditorTools
             int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
             CombatSceneKit.BuildEnemyPrefab();
             CombatSceneKit.AddSpawner(rig.Player.transform);
+            new GameObject("Fight Director").AddComponent<FightDirector>().Configure(rig.Player.transform);
             CombatSceneKit.BakeNavMesh("Assets/Scenes/Generated/M2_Region_NavMesh.asset");
 
             EditorSceneManager.SaveScene(scene, ScenePath);

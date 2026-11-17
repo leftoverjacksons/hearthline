@@ -1,6 +1,6 @@
 # Spec: ranged combat and the ambush (M2)
 
-Status: **approved 2026-11-17** with the default answers to the decisions below. Build step 1 (sim and content) is done: ADR 0021, `CombatTests`, `EncounterContentTests`. Step 2 (player aim, fire, reload against a practice target) is done: `WeaponTests`. Step 3 (sticky cover for the player) is done: `CoverTests`. Step 4 (enemies spawn, take cover, shoot, go down, break) is done: `AmbushTests`. Next: step 5, outcomes, loot, quick-draw, HUD and cheats.
+Status: **approved 2026-11-17** with the default answers to the decisions below. Build step 1 (sim and content) is done: ADR 0021, `CombatTests`, `EncounterContentTests`. Step 2 (player aim, fire, reload against a practice target) is done: `WeaponTests`. Step 3 (sticky cover for the player) is done: `CoverTests`. Step 4 (enemies spawn, take cover, shoot, go down, break) is done: `AmbushTests`. Step 5 (fights end by themselves, loot, surrender choice, downed panel, quick-draw, HUD, Combat cheat tab) is done: `FightTests`. Next: step 6, staging the ambush events.
 
 ## Goal
 

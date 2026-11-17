@@ -66,6 +66,9 @@ namespace Hearthline.Game
         public CoverSurface Cover => _cover;
         public bool Exposed => _exposed;
         public int CharacterId => _link.BoundId ?? 0;
+        /// <summary>Cheat panel: draw each enemy's state over its head.</summary>
+        public static bool ShowDebug { get; set; }
+
         /// <summary>Shared by the spawner: when one enemy flanks, the others hold.</summary>
         public static EnemyAI Flanker { get; set; }
 
@@ -402,6 +405,14 @@ namespace Hearthline.Game
             transform.rotation = Quaternion.Euler(-90f, transform.eulerAngles.y, 0f);
             transform.position += Vector3.up * 0.2f;
             if (Flanker == this) Flanker = null;
+        }
+
+        private void OnGUI()
+        {
+            if (!ShowDebug || Camera.main == null) return;
+            Vector3 screen = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2.1f);
+            if (screen.z < 0f) return;
+            GUI.Label(new Rect(screen.x - 80f, Screen.height - screen.y, 200f, 22f), _state + (_exposed ? " (out)" : "") + (_cover != null ? " @" + _cover.name : ""));
         }
 
         // Animation events in the Starter Assets clips (footsteps, landing). Hooks for sound later.

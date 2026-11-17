@@ -90,10 +90,13 @@ namespace Hearthline.Tests.PlayMode
             int loaded = gun.Loaded;
             gun.Jammed = false;
             gun.Condition = 1;
-            // Stand the player right in front, in the open, and shoot with no spread.
+            // Both on the open path in front of the house, six metres apart, and shoot with no spread.
+            Vector3 Ground(Vector3 p) => Physics.Raycast(new Vector3(p.x, 200f, p.z), Vector3.down, out RaycastHit g, 400f, ~0, QueryTriggerInteraction.Ignore) ? g.point : p;
+            enemy.GetComponent<NavMeshAgent>().Warp(Ground(new Vector3(0f, 0f, -2f)));
+            enemy.transform.rotation = Quaternion.LookRotation(Vector3.forward);
             var body = _player.GetComponent<CharacterController>();
             body.enabled = false;
-            _player.transform.position = enemy.transform.position + enemy.transform.forward * 6f;
+            _player.transform.position = Ground(new Vector3(0f, 0f, 4f)) + Vector3.up * 0.05f;
             body.enabled = true;
             yield return null;
             BodyRegion? hit = null;
@@ -103,7 +106,14 @@ namespace Hearthline.Tests.PlayMode
                 hit = enemy.ShootAt(_player.transform.position + Vector3.up * 1.3f, 0f);
                 yield return null;
             }
-            Assert.That(hit, Is.Not.Null, "A point-blank shot hits.");
+            string why = "loaded " + gun.Loaded + "/" + loaded + ", jammed " + gun.Jammed + ", head health " + _host.Sim.Head.Health
+                + ", enemy " + enemy.Current + " at " + enemy.transform.position + ", player at " + _player.transform.position
+                + ", muzzle " + (enemy.GetComponent<GunVisuals>().Muzzle != null ? enemy.GetComponent<GunVisuals>().Muzzle.position.ToString() : "none");
+            var from = enemy.GetComponent<GunVisuals>().Muzzle != null ? enemy.GetComponent<GunVisuals>().Muzzle.position : enemy.transform.position + Vector3.up * 1.5f;
+            var to = _player.transform.position + Vector3.up * 1.3f;
+            foreach (var h in Physics.RaycastAll(from, (to - from).normalized, 20f, ~0, QueryTriggerInteraction.Collide).OrderBy(h => h.distance))
+                why += " | " + h.collider.name + "@" + h.distance.ToString("F1") + (h.collider.isTrigger ? "t" : "");
+            Assert.That(hit, Is.Not.Null, "A point-blank shot hits. " + why);
             Assert.That(gun.Loaded, Is.LessThan(loaded));
             Assert.That(_host.Sim.Head.Marks.Any(m => m.DefId == "wound_gunshot"), Is.True);
         }
@@ -152,7 +162,8 @@ namespace Hearthline.Tests.PlayMode
             Character head = _host.Sim.Head;
             Assert.That(_host.Sim.Execute(new ShotHit { TargetId = head.Id, Region = BodyRegion.Head, Distance = 10 }).Ok, Is.True);
             Assert.That(head.Downed, Is.True);
-            int Rounds() => _host.Sim.Encounter.Combatants.Sum(x => _host.Sim.FindCharacter(x.CharacterId).Gear.Sum(g => g.Loaded) + x.Ammo);
+            int[] ids = _host.Sim.Encounter.Combatants.Select(x => x.CharacterId).ToArray();
+            int Rounds() => ids.Sum(id => _host.Sim.FindCharacter(id).Gear.Sum(g => g.Loaded));
             yield return new WaitForSeconds(1f);
             int before = Rounds();
             yield return new WaitForSeconds(6f);

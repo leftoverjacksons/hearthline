@@ -51,6 +51,24 @@ namespace Hearthline.Bridge
         {
             if (_host == null) { _host = SimHost.Instance; if (_host != null) _host.EventRaised += OnDomainEvent; }
             if (_host != null && _host.Sim.InEncounter && _bodies.Count == 0) Spawn(_host.Sim.Encounter);
+            if (_host != null) foreach (DroppedLoot loot in _host.Sim.State.Dropped) PlaceLoot(loot.Id);
+        }
+
+        /// <summary>Puts a pickup for dropped loot by the body it came from (or by the player if that body is gone).</summary>
+        public LootPickup PlaceLoot(int lootId)
+        {
+            foreach (LootPickup existing in FindObjectsByType<LootPickup>(FindObjectsInactive.Exclude))
+                if (existing.LootId == lootId) return existing;
+            DroppedLoot loot = _host.Sim.State.Dropped.Find(l => l.Id == lootId);
+            if (loot == null || player == null) return null;
+            Vector3 at = player.position + player.forward * 1.5f;
+            if (loot.FromCharacterId.HasValue && _bodies.TryGetValue(loot.FromCharacterId.Value, out GameObject body) && body != null)
+                at = body.transform.position;
+            var pickup = new GameObject("Loot " + lootId).AddComponent<LootPickup>();
+            pickup.transform.position = at;
+            pickup.Configure(lootId);
+            pickup.SetReach(2.4f);
+            return pickup;
         }
 
         private void OnDomainEvent(DomainEvent e)
@@ -63,7 +81,8 @@ namespace Hearthline.Bridge
                 case CombatantLeftFight left when left.State == CombatantState.Fled:
                     if (_bodies.TryGetValue(left.CharacterId, out GameObject gone)) { Destroy(gone); _bodies.Remove(left.CharacterId); }
                     break;
-                case EncounterEnded _:
+                case EncounterEnded ended:
+                    foreach (int lootId in ended.LootIds) PlaceLoot(lootId);
                     var standing = new List<int>();
                     foreach (var kv in _bodies)
                     {

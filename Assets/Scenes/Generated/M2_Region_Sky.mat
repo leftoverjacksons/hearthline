@@ -30,7 +30,7 @@ Material:
     - _CloudShadow: 0.45
     - _CloudSharpness: 0.18
     - _CloudSpeed: 0.012
-    - _Exposure: 1.05
+    - _Exposure: 1.0501356
     - _SunSize: 0.025
     m_Colors:
     - _HorizonColor: {r: 0.7, g: 0.8, b: 0.88, a: 1}

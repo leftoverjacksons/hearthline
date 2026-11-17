@@ -87,3 +87,19 @@ The architecture rules say the simulation owns persistent state and presentation
   sits still in cover, lies down when downed, and flees or kneels when the group breaks. Accuracy starts poor
   and tightens while it keeps the player in sight. All shots are `FireWeapon` and `ShotHit`.
 - **Bullets pass through movement capsules** (CharacterControllers) and land on the hit zones inside.
+
+## Step 5 notes (ending fights)
+
+- **`FightDirector` (Game) decides when a fight is over** and tells the sim:
+  - won, when nobody is still fighting, after a short settle (with a panel for the ones who gave up);
+  - got away, when every enemy still fighting is 65 m off for 4 s;
+  - downed, 2 s after the head goes down.
+
+  It also runs the quick-draw slowdown (`Time.timeScale` 0.35 for 2 real seconds) and the HUD: banner,
+  enemies left, and a red edge when you're hit.
+- **Down and alone after a fight, a panel offers "Lie still"** (`LeaveDowned`: death, or a permanent loss).
+  Companions reviving you come later.
+- **Loot is a `LootPickup` interactable** at the body it came from (E to search). Pickups for loot still on
+  the ground are re-placed after a load.
+- **`SetGunState` is a sim command for the cheat panel** (condition, rounds, jam), so cheats don't touch
+  state directly.

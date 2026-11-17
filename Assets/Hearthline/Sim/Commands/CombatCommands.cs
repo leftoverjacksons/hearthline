@@ -182,4 +182,26 @@ namespace Hearthline.Sim
 
         internal override string Apply(SimContext ctx) => CombatSystem.PickUp(ctx, LootId);
     }
+
+    /// <summary>Cheat panel and tests: sets a gun's condition, rounds and jam.</summary>
+    public sealed class SetGunState : Command
+    {
+        public int GearId;
+        public double? Condition;
+        public int? Loaded;
+        public bool? Jammed;
+
+        internal override string Apply(SimContext ctx)
+        {
+            GearItem gun = GearSystem.Find(ctx, GearId, out _);
+            if (gun == null) return "no gear with id " + GearId;
+            if (!ctx.Content.Items.TryGetValue(gun.DefId, out Content.ItemDef def) || def.Weapon == null) return "not a firearm";
+            if (Condition.HasValue && (Condition < 0 || Condition > 1)) return "condition must be 0..1";
+            if (Loaded.HasValue && (Loaded < 0 || Loaded > def.Weapon.Capacity)) return "loaded must be 0.." + def.Weapon.Capacity;
+            if (Condition.HasValue) gun.Condition = Condition.Value;
+            if (Loaded.HasValue) gun.Loaded = Loaded.Value;
+            if (Jammed.HasValue) gun.Jammed = Jammed.Value;
+            return null;
+        }
+    }
 }

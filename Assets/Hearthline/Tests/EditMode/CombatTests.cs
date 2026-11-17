@@ -385,6 +385,18 @@ namespace Hearthline.Tests
         }
 
         [Test]
+        public void TheCheatPanelCanSetAGunsStateWithinLimits()
+        {
+            Simulation sim = SimWithRifle(out _, out GearItem rifle);
+            TestSupport.Ok(sim.Execute(new SetGunState { GearId = rifle.Id, Condition = 0.2, Loaded = 3, Jammed = true }));
+            Assert.That(rifle.Condition, Is.EqualTo(0.2));
+            Assert.That(rifle.Loaded, Is.EqualTo(3));
+            Assert.That(rifle.Jammed, Is.True);
+            TestSupport.Rejected(sim.Execute(new SetGunState { GearId = rifle.Id, Loaded = 99 }), "loaded must be");
+            TestSupport.Rejected(sim.Execute(new SetGunState { GearId = rifle.Id, Condition = 2 }), "condition");
+        }
+
+        [Test]
         public void ANewGameCanStartWithALoadedRifleInHand()
         {
             Simulation sim = Simulation.NewGame(TestSupport.Content, new NewGameOptions { StartingGear = { "lever_rifle", "no_such_thing" } });
