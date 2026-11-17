@@ -52,9 +52,17 @@ Keep these current.
 
 - Run EditMode tests without Unity (needs the .NET 8 SDK; this is what CI runs): `tools/test.sh`
 - Validate content only: `tools/test.sh content`
-- Run EditMode tests in Unity: `TODO (Unity CLI or MCP command, fill in once the Editor is connected)`
-- Run PlayMode tests: `TODO`
-- Read the Editor console: via the Unity MCP tools
+Editor control goes through the Unity CLI (`winget install Unity.CLI`) and the `com.unity.pipeline` package; the Editor must be open on this project. `unity status` confirms the connection. The same commands are exposed as MCP tools by `unity mcp` (server `unity-editor-mcp`).
+
+- Recompile and list compile errors: `unity recompile`
+- Read the Editor console: `unity command console get`
+- Run EditMode tests in the open Editor: `unity command test run --mode editor`
+- Run PlayMode tests in the open Editor: `unity command test run --mode playmode --async-tests`, then `unity command test status --detail failures`
+- Run tests with the Editor closed (batch mode): `unity test --mode EditMode`
+- Enter / exit Play Mode: `unity command editor.playmode start` / `unity command editor.playmode stop`
+- Discover other Editor commands: `unity command` (groups), `unity command <group>`
+
+Unity's bundled NUnit is older than the headless NUnit 3.14: `Does.Not.Contain` only takes a string there. For collections use `Has.Member` / `Has.No.Member`.
 
 The headless run and the Unity run compile the same test files. Write tests against NUnit 3 APIs that both have (`Assert.That`, `[Test]`, `[TestCase]`), and keep `UnityEngine` out of EditMode sim tests.
 

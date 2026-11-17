@@ -302,8 +302,8 @@ namespace Hearthline.Tests
 
             var heirs = sim.EligibleHeirs();
             Assert.That(heirs.ConvertAll(c => c.GivenName), Is.EqualTo(new[] { "Ruth", "Eli", "Silas" }));
-            Assert.That(heirs, Does.Not.Contain(sim.Head));
-            Assert.That(heirs, Does.Not.Contain(partner));
+            Assert.That(heirs, Has.No.Member(sim.Head));
+            Assert.That(heirs, Has.No.Member(partner));
             Assert.That(heirs[0], Is.SameAs(daughter));
         }
 
@@ -362,7 +362,7 @@ namespace Hearthline.Tests
             Assert.That(ada.Alive, Is.True);
             Assert.That(ada.Retired, Is.True);
             Assert.That(sim.State.Household.MemberIds, Does.Contain(ada.Id));
-            Assert.That(sim.EligibleHeirs(), Does.Not.Contain(ada), "the retired do not take the household back");
+            Assert.That(sim.EligibleHeirs(), Has.No.Member(ada), "the retired do not take the household back");
         }
 
         [Test]

@@ -31,7 +31,7 @@ namespace Hearthline.Tests
 
             Assert.That(view.Cast["hero"], Is.EqualTo(sim.Head.Id));
             Assert.That(stranger.Archetype, Is.EqualTo("traveler"));
-            Assert.That(sim.State.Household.MemberIds, Does.Not.Contain(stranger.Id));
+            Assert.That(sim.State.Household.MemberIds, NUnit.Framework.Has.No.Member(stranger.Id));
             Assert.That(view.Text, Does.StartWith(stranger.GivenName + " is slumped against a cairn"));
             Assert.That(view.Text, Does.Not.Contain("{"));
             Assert.That(view.Choices.Count, Is.EqualTo(3));
@@ -106,7 +106,7 @@ namespace Hearthline.Tests
                 TestSupport.Ok(result);
                 Assert.That(sim.ItemCount("bandage"), Is.EqualTo(0));
 
-                if (Has<AmbushRequested>(result)) { ambushes++; Assert.That(sim.State.Household.MemberIds, Does.Not.Contain(strangerId)); }
+                if (Has<AmbushRequested>(result)) { ambushes++; Assert.That(sim.State.Household.MemberIds, NUnit.Framework.Has.No.Member(strangerId)); }
                 else
                 {
                     recruits++;

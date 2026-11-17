@@ -25,6 +25,7 @@ namespace Hearthline.Game
         private static readonly string[] OneToThree = { "1", "2", "3" };
 
         private Rect _window = new Rect(12, 12, 480, 680);
+        private const int WindowId = 0x48454C4E; // any stable id; GUILayout only needs it unique among windows
         private Vector2 _scroll, _pickScroll;
         private bool _open;
         private int _tab, _defIndex, _eventIndex, _itemIndex, _severityIndex, _damageIndex, _tierIndex, _timeIndex, _thinLevel;
@@ -47,7 +48,7 @@ namespace Hearthline.Game
                 e.Use();
             }
             if (!_open) return;
-            _window = GUILayout.Window(GetInstanceID(), _window, DrawWindow, "Hearthline cheats (" + toggleKey + ")");
+            _window = GUILayout.Window(WindowId, _window, DrawWindow, "Hearthline cheats (" + toggleKey + ")");
         }
 
         private void DrawWindow(int id)

@@ -23,7 +23,7 @@ namespace Hearthline.Tests
             Character shopkeeper = sim.FindResident("shopkeeper");
             Assert.That(shopkeeper, Is.Not.Null);
             Assert.That(sim.AgeOf(shopkeeper), Is.InRange(35, 55));
-            Assert.That(sim.State.Household.MemberIds, Does.Not.Contain(shopkeeper.Id));
+            Assert.That(sim.State.Household.MemberIds, Has.No.Member(shopkeeper.Id));
             Assert.That(sim.FindResident("preacher"), Is.Not.Null);
             Assert.That(sim.FindResident("blacksmith"), Is.Null);
         }
