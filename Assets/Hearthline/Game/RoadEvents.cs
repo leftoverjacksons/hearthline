@@ -28,6 +28,7 @@ namespace Hearthline.Game
         [SerializeField, Min(0.1f)] private float hoursPerTurnAtHome = 8f;
 
         private readonly List<string> _summary = new List<string>();
+        private AmbushRequested _ambush;
         private readonly SortedDictionary<string, int> _items = new SortedDictionary<string, int>();
         private SimHost _host;
         private Vector3 _lastPosition;
@@ -97,6 +98,14 @@ namespace Hearthline.Game
         {
             Simulation sim = Sim;
             if (sim == null || location == null) return;
+            if (_ambush != null && sim.State.ActiveEvent == null)
+            {
+                // The event is over: the fight it called for starts here.
+                AmbushRequested a = _ambush;
+                _ambush = null;
+                if (!sim.InEncounter)
+                    sim.Execute(new StartEncounter { EncounterId = a.EncounterId, EventId = a.EventId, PlaceName = a.PlaceName, LeaderId = a.LeaderId });
+            }
 
             // Distance walked, ignoring teleports and the panels' pauses.
             Vector3 p = location.transform.position;
@@ -150,7 +159,9 @@ namespace Hearthline.Game
                     foreach (KeyValuePair<string, int> kv in _items)
                         _summary.Insert(0, (kv.Value > 0 ? "+" : "") + kv.Value + " " + ItemName(kv.Key) + (sim.OnTrip ? " (pack)" : " (stores)"));
                     if (_summary.Count == 0) _summary.Add("Nothing changed hands.");
-                    _showingSummary = true;
+                    // An ambush skips the summary: the fight starts where you stand (combat step 6).
+                    _showingSummary = _ambush == null;
+                    if (_ambush != null) _summary.Clear();
                     return;
                 case DateAdvanced _:
                     if (sim.OnTrip && !_collecting) _tickAfterNight = true;
@@ -190,8 +201,8 @@ namespace Hearthline.Game
                     break;
                 }
                 case AmbushRequested ambush:
-                    // Fights are staged in M2 step 5; until then the ambush is reported, not played.
-                    _summary.Add("Ambush! (" + ambush.EncounterId + ": the fight itself comes in a later step)");
+                    if (sim.Content.Encounters.TryGetValue(ambush.EncounterId, out var encounter) && encounter.Staged) _ambush = ambush;
+                    else _summary.Add((encounter != null ? encounter.Name : ambush.EncounterId) + ". (Fights with animals aren't staged yet.)");
                     break;
             }
         }

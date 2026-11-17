@@ -103,3 +103,10 @@ The architecture rules say the simulation owns persistent state and presentation
   the ground are re-placed after a load.
 - **`SetGunState` is a sim command for the cheat panel** (condition, rounds, jam), so cheats don't touch
   state directly.
+
+## Step 6 notes (events)
+
+- **`RoadEvents` holds a staged `AmbushRequested` until the event ends**, then sends `StartEncounter` with the
+  cast leader and place. The event summary is skipped: the fight is what happens next.
+- **Animal ambushes (`wolves_pack`, `staged: false`) are still reported in the summary.** Animal fights are
+  out of scope for M2 combat.

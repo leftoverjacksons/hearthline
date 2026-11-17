@@ -102,6 +102,14 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 - [x] Commit homestead, shading, crouch and leaf-card oak (7b844a9)
 - [x] Approve the combat and ambush spec (docs/specs/combat-and-ambush.md), with sticky cover
 - [ ] 🟡 Leaf-card oak vs the old blob trees: convert the rest, or change direction? (ADR 0020)
+- [ ] 🟡 **Play a fight and tune its feel.** Cheat panel (F1), Combat tab: "Start reavers_road here". Or at the
+  ford, refuse the toll and draw. These are all starting guesses, in the Inspector:
+  - aim: camera distance, field of view and aim speed on the Player (AimController);
+  - guns: spread, recoil and draw time (PlayerWeapon);
+  - cover: reach, slide speed and lean distance (PlayerCover);
+  - enemies: accuracy, hide and expose times (Enemy_Reaver prefab, EnemyAI);
+  - the quick-draw slowdown (Fight Director);
+  - the gun stats in `Content/items/*.yaml`.
 - [ ] ⚪ Tune the look values in ADR 0018 by eye (they are starting points)
 
 ---
