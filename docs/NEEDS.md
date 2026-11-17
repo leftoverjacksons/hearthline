@@ -101,6 +101,10 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 
 ## Decisions waiting on you
 
+- [ ] 🔴 **Approve the life-and-weather spec** (`docs/specs/life-and-weather.md`): weather in the simulation,
+  birds, insects and fireflies around you, and birds going silent in Thin places.
+- [ ] 🟡 **OK to download CC0 sounds?** Rain, wind, birdsong, insects and thunder from a free CC0 library
+  (Freesound CC0 or the Sonniss GDC bundles). Until then, the audio sources are in place but silent.
 - [x] Commit homestead, shading, crouch and leaf-card oak (7b844a9)
 - [x] Approve the hunt spec: a deer first, from the job board
 - [x] Approve the combat and ambush spec (docs/specs/combat-and-ambush.md), with sticky cover
