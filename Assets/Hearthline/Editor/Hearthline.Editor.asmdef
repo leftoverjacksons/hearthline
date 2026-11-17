@@ -1,0 +1,21 @@
+{
+    "name": "Hearthline.Editor",
+    "rootNamespace": "Hearthline.EditorTools",
+    "references": [
+        "Hearthline.Sim",
+        "Hearthline.Bridge",
+        "Hearthline.Game",
+        "Unity.Cinemachine"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

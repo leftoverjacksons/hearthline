@@ -14,7 +14,7 @@ namespace Hearthline.Game
     /// highlights its marker. Read-only: it never sends a command to the simulation.
     /// Opened from the cheat panel or a hotkey for now; the washhouse and creek reflections will open it later.
     /// </summary>
-    public sealed class MirrorView : MonoBehaviour
+    public sealed class MirrorView : MonoBehaviour, IPausesPlayer
     {
         [SerializeField] private CharacterMarksView character;
         [SerializeField] private CinemachineCamera mirrorCamera;
@@ -40,6 +40,7 @@ namespace Hearthline.Game
         private bool _snapNextFrame;
 
         public bool IsOpen { get; private set; }
+        public bool PausesPlayer => IsOpen;
         public int? SelectedMarkId => _selected;
         public CinemachineCamera Camera => mirrorCamera;
 

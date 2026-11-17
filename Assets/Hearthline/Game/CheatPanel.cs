@@ -12,7 +12,7 @@ namespace Hearthline.Game
     /// Tabs: Marks (add/remove marks, hits, treatment), Events (spawn by id, storyteller, items),
     /// House (members, partners, births, heirs, chronicle), World (settlement values, services, townsfolk, grudges).
     /// </summary>
-    public sealed class CheatPanel : MonoBehaviour
+    public sealed class CheatPanel : MonoBehaviour, IPausesPlayer
     {
         [SerializeField] private KeyCode toggleKey = KeyCode.F1;
         [SerializeField] private bool openOnStart = true;
@@ -33,6 +33,7 @@ namespace Hearthline.Game
 
         /// <summary>Whether the panel is showing. Other presentation code (player input, cursor) follows it.</summary>
         public bool IsOpen => _open;
+        public bool PausesPlayer => _open;
         private int _tab, _defIndex, _eventIndex, _itemIndex, _severityIndex, _damageIndex, _tierIndex, _timeIndex, _thinLevel;
         private int _regionIndex = (int)BodyRegion.Face;
         private bool _atHome;

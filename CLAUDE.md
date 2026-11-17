@@ -24,6 +24,7 @@ Gate: the edit → compile → test → console loop works through Claude Code, 
 Assets/Hearthline/Sim      pure C# simulation (marks, lineage, household, events, world state)
 Assets/Hearthline/Bridge   sim <-> Unity mapping (spawning, mark visuals, hit -> wound requests)
 Assets/Hearthline/Game     MonoBehaviours, controllers, cameras, UI
+Assets/Hearthline/Editor   scene builders (scenes are generated: change the builder, then rebuild)
 Assets/Hearthline/Tests/EditMode   sim + content validation tests (also run headless, see Commands)
 Assets/Hearthline/Tests/PlayMode   smoke tests
 Assets/Plugins             managed libraries the sim needs (YamlDotNet)

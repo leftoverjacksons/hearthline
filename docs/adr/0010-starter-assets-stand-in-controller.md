@@ -21,8 +21,8 @@ them.
   choice.
 - **Hearthline wraps it, never edits it.** The greybox scene uses the `PlayerArmature`, `MainCamera` and
   `PlayerFollowCamera` prefabs as they are; our additions (mark anchors, `CharacterMarksView`,
-  `CheatPanelInputRelease`) sit on the scene instance. `Hearthline.Game` references `Unity.StarterAssets`
-  only for `CheatPanelInputRelease`.
+  `PlayerInputRelease`) sit on the scene instance. `Hearthline.Game` references `Unity.StarterAssets`
+  only for `PlayerInputRelease`.
 - **Mark anchors ride on humanoid bones.** The scene builder puts one anchor per body region under the
   Animator's humanoid bones, so marks follow the animated body. Any humanoid character that replaces the
   mannequin gets anchors the same way.
@@ -35,8 +35,8 @@ them.
 
 ## Consequences
 
-- Replacing the controller later means swapping prefabs in `tools/unity/BuildGreyboxScene.cs` and
-  rewriting `CheatPanelInputRelease`; sim, bridge and tests are unaffected.
+- Replacing the controller later means swapping prefabs in `Assets/Hearthline/Editor/SceneBuildKit.cs` and
+  rewriting `PlayerInputRelease`; sim, bridge and tests are unaffected.
 - The mannequin has no skin-detail layers, so the M1 visual layer (decals, materials, part swaps) still
   needs a real character model. Marks are drawn as greybox markers until then.
 - Its editor script raises four obsolete-API warnings (`FindObjectsSortMode`), and a mobile UI file warns
