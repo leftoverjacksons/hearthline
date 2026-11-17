@@ -33,6 +33,13 @@ namespace Hearthline.Bridge
         /// <summary>Domain events from whichever simulation is current, so listeners need not resubscribe.</summary>
         public event Action<DomainEvent> EventRaised;
 
+        /// <summary>File name under persistentDataPath. Tests point this at a throwaway file.</summary>
+        public string SaveFileName
+        {
+            get => saveFileName;
+            set => saveFileName = value;
+        }
+
         public string SavePath => Path.Combine(Application.persistentDataPath, saveFileName);
 
         /// <summary>
