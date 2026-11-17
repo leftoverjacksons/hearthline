@@ -47,6 +47,7 @@ namespace Hearthline.EditorTools
             public MirrorView Mirror;
             public HitReceiver Receiver;
             public PlayerInputRelease InputRelease;
+            public Crouch Crouch;
             public int HitZones;
         }
 
@@ -74,6 +75,9 @@ namespace Hearthline.EditorTools
             player.transform.position = Vector3.zero; // anchors and zones are placed facing +Z at the origin
             rig.Player = player;
             rig.InputRelease = player.AddComponent<PlayerInputRelease>();
+            player.GetComponent<Animator>().runtimeAnimatorController = PlayerAnimatorBuilder.Build();
+            player.AddComponent<PlayerSpeed>();
+            rig.Crouch = player.AddComponent<Crouch>();
             AddMarksView(player);
             int hitboxLayer = EnsureHitboxLayer();
             rig.Receiver = player.AddComponent<HitReceiver>();

@@ -29,6 +29,7 @@ namespace Hearthline.Bridge
             new StartingItem { itemId = "cartridges", count = 20 },
             new StartingItem { itemId = "bandage", count = 3 },
             new StartingItem { itemId = "firewood", count = 6 },
+            new StartingItem { itemId = "lumber", count = 12 },
         };
 
         [Serializable]

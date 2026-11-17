@@ -61,3 +61,11 @@ Thumbs.db
 
 # Blender backup files
 *.blend1
+
+# Mixamo animations: Adobe's terms don't allow redistributing the raw files. See docs/SETUP.md.
+/Assets/ThirdParty/Mixamo/
+/Assets/ThirdParty/Mixamo.meta
+
+# Downloaded archives (e.g. the MakeHuman asset pack for MPFB): install them, don't commit them.
+/Assets/*.zip
+/Assets/*.zip.meta

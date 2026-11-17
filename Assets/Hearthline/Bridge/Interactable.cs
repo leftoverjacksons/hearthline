@@ -19,6 +19,9 @@ namespace Hearthline.Bridge
         public static IReadOnlyList<Interactable> All => Registry;
         public float Reach => reach;
 
+        /// <summary>Used by scene builders.</summary>
+        public void SetReach(float metres) => reach = metres;
+
         /// <summary>What pressing the key would do ("Pick wild berries"), or why it cannot ("Picked over").</summary>
         public abstract string Prompt { get; }
         public abstract bool CanInteract { get; }

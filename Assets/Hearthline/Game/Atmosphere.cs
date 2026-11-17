@@ -24,15 +24,15 @@ namespace Hearthline.Game
             (0f, new Color(0.35f, 0.4f, 0.65f)), (5.5f, new Color(1f, 0.55f, 0.35f)), (8f, new Color(1f, 0.93f, 0.82f)),
             (16.5f, new Color(1f, 0.9f, 0.76f)), (19.5f, new Color(1f, 0.5f, 0.25f)), (21f, new Color(0.35f, 0.4f, 0.65f)));
         [SerializeField] private AnimationCurve sunIntensity = Curve((0f, 0f), (5f, 0f), (6.5f, 0.7f), (9f, 1.35f), (16f, 1.35f), (19f, 0.7f), (20.5f, 0f), (24f, 0f));
-        [SerializeField] private AnimationCurve moonIntensity = Curve((0f, 0.2f), (5f, 0.16f), (6.5f, 0f), (19.5f, 0f), (21f, 0.16f), (24f, 0.2f));
+        [SerializeField] private AnimationCurve moonIntensity = Curve((0f, 0.3f), (5f, 0.24f), (6.5f, 0f), (19.5f, 0f), (21f, 0.24f), (24f, 0.3f));
 
         [Header("Ambient and sky")]
         [SerializeField] private Gradient skyAmbient = Keys(
-            (0f, new Color(0.07f, 0.09f, 0.16f)), (6f, new Color(0.5f, 0.45f, 0.48f)), (9f, new Color(0.58f, 0.66f, 0.78f)),
-            (17f, new Color(0.58f, 0.64f, 0.74f)), (19.5f, new Color(0.6f, 0.45f, 0.4f)), (22f, new Color(0.07f, 0.09f, 0.16f)));
+            (0f, new Color(0.11f, 0.13f, 0.22f)), (6f, new Color(0.5f, 0.45f, 0.48f)), (9f, new Color(0.58f, 0.66f, 0.78f)),
+            (17f, new Color(0.58f, 0.64f, 0.74f)), (19.5f, new Color(0.6f, 0.45f, 0.4f)), (22f, new Color(0.11f, 0.13f, 0.22f)));
         [SerializeField] private Gradient groundAmbient = Keys(
             (0f, new Color(0.03f, 0.04f, 0.05f)), (8f, new Color(0.36f, 0.37f, 0.28f)), (18f, new Color(0.36f, 0.34f, 0.26f)), (22f, new Color(0.03f, 0.04f, 0.05f)));
-        [SerializeField] private AnimationCurve skyExposure = Curve((0f, 0.12f), (5.5f, 0.35f), (8f, 1.15f), (17f, 1.15f), (20f, 0.4f), (22f, 0.12f), (24f, 0.12f));
+        [SerializeField] private AnimationCurve skyExposure = Curve((0f, 0.8f), (5.5f, 0.9f), (8f, 1.05f), (17f, 1.05f), (20f, 0.95f), (22f, 0.8f), (24f, 0.8f));
 
         [Header("Fog")]
         [SerializeField] private Gradient fogColour = Keys(
@@ -46,6 +46,8 @@ namespace Hearthline.Game
         [SerializeField] private float fogBlendSpeed = 0.5f;
 
         private float _fogMultiplier = 1f;
+        private static readonly int SunDirectionId = Shader.PropertyToID("_HL_SunDirection");
+        private static readonly int SunColorId = Shader.PropertyToID("_HL_SunColor");
 
         private void OnEnable()
         {
@@ -66,6 +68,10 @@ namespace Hearthline.Game
             float t = Mathf.Repeat(hour, 24f) / 24f;
             if (sun != null)
             {
+                // The sky shader reads the true sun (not URP's main light, which is the moon at night).
+                Shader.SetGlobalVector(SunDirectionId, -sun.transform.forward);
+                Color sc = sunColour.Evaluate(t);
+                Shader.SetGlobalVector(SunColorId, new Vector4(sc.r, sc.g, sc.b, 1f));
                 sun.color = sunColour.Evaluate(t);
                 sun.intensity = sunIntensity.Evaluate(hour);
                 sun.enabled = sun.intensity > 0.001f;

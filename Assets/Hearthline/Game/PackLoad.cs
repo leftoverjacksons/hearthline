@@ -1,6 +1,5 @@
 using Hearthline.Bridge;
 using Hearthline.Sim;
-using StarterAssets;
 using UnityEngine;
 
 namespace Hearthline.Game
@@ -9,10 +8,11 @@ namespace Hearthline.Game
     /// What the pack looks and feels like. On a trip the pack is on the player's back and grows as it fills; a
     /// sack and then a lashed bundle appear as it gets heavy. A heavy pack slows walking and running, and an
     /// overloaded one slows them a lot. Reads the simulation's pack weight and carry capacity every frame;
-    /// wraps the Starter Assets controller's speeds without changing the controller.
+    /// the slowdown is applied by <see cref="PlayerSpeed"/>.
     /// </summary>
-    [RequireComponent(typeof(ThirdPersonController))]
-    public sealed class PackLoad : MonoBehaviour
+    [DefaultExecutionOrder(-60)] // before PlayerSpeed applies it
+    [RequireComponent(typeof(PlayerSpeed))]
+    public sealed class PackLoad : MonoBehaviour, IMoveSpeedFactor
     {
         [SerializeField] private GameObject pack;
         [SerializeField] private GameObject sack;
@@ -28,11 +28,11 @@ namespace Hearthline.Game
         [Tooltip("Speed multiplier when overloaded.")]
         [SerializeField, Range(0.2f, 1f)] private float overloadedSpeed = 0.55f;
 
-        private ThirdPersonController _controller;
-        private float _baseMove, _baseSprint;
-
         public float Fill { get; private set; }
         public float SpeedMultiplier { get; private set; } = 1f;
+
+        float IMoveSpeedFactor.MoveFactor => SpeedMultiplier;
+        bool IMoveSpeedFactor.BlocksSprint => false;
 
         /// <summary>Used by scene builders.</summary>
         public void Configure(GameObject packVisual, GameObject sackVisual, GameObject bundleVisual)
@@ -40,13 +40,6 @@ namespace Hearthline.Game
             pack = packVisual;
             sack = sackVisual;
             bundle = bundleVisual;
-        }
-
-        private void Awake()
-        {
-            _controller = GetComponent<ThirdPersonController>();
-            _baseMove = _controller.MoveSpeed;
-            _baseSprint = _controller.SprintSpeed;
         }
 
         private void Update()
@@ -65,15 +58,6 @@ namespace Hearthline.Game
             if (bundle != null) bundle.SetActive(onTrip && Fill >= extrasAt.y);
 
             SpeedMultiplier = overloaded ? overloadedSpeed : Mathf.Lerp(1f, fullSpeed, Mathf.InverseLerp(0.5f, 1f, Fill));
-            _controller.MoveSpeed = _baseMove * SpeedMultiplier;
-            _controller.SprintSpeed = _baseSprint * SpeedMultiplier;
-        }
-
-        private void OnDisable()
-        {
-            if (_controller == null) return;
-            _controller.MoveSpeed = _baseMove;
-            _controller.SprintSpeed = _baseSprint;
         }
     }
 }

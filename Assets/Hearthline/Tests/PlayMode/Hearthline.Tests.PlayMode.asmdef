@@ -6,6 +6,7 @@
         "Hearthline.Bridge",
         "Hearthline.Game",
         "Unity.Cinemachine",
+        "Unity.StarterAssets",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -92,6 +92,7 @@ namespace Hearthline.EditorTools
             var roadEvents = new GameObject("Road Events").AddComponent<RoadEvents>();
             SceneBuildKit.SetRef(roadEvents, "location", location);
             SceneBuildKit.SetRef(roadEvents, "clock", clock);
+            BuildHomeUse(clock, roadEvents);
 
             BuildAtmosphere(sun, moon, clock, location);
 
@@ -171,6 +172,13 @@ namespace Hearthline.EditorTools
             Material m = SceneBuildKit.ColorMaterial("Region_Ground", Color.white);
             m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(GroundMapPath));
             m.SetFloat("_Smoothness", 0.05f);
+            // Close-up detail over the painted map: grass blades and soil grain repeating every 2 m.
+            m.SetTexture("_DetailAlbedoMap", TextureForge.Albedo("grass"));
+            m.SetTexture("_DetailNormalMap", TextureForge.Normal("grass"));
+            m.SetTextureScale("_DetailAlbedoMap", Vector2.one * (Size / 2f));
+            m.SetFloat("_DetailAlbedoMapScale", 0.55f);
+            m.SetFloat("_DetailNormalMapScale", 0.5f);
+            m.EnableKeyword("_DETAIL_MULX2");
             EditorUtility.SetDirty(m);
             return m;
         }
@@ -222,9 +230,11 @@ namespace Hearthline.EditorTools
 
         private static Material WaterMaterial()
         {
-            Material m = SceneBuildKit.ColorMaterial("Region_Water", new Color(0.16f, 0.26f, 0.27f));
-            m.SetFloat("_Smoothness", 0.93f);
-            EditorUtility.SetDirty(m);
+            // The creek's own shader: depth colour, refraction, ripples, glints, foam (ADR 0018).
+            string path = Generated + "/Region_Water.mat";
+            AssetDatabase.DeleteAsset(path);
+            var m = new Material(Shader.Find("Hearthline/Water")) { name = "Region_Water" };
+            AssetDatabase.CreateAsset(m, path);
             return m;
         }
 
@@ -236,18 +246,18 @@ namespace Hearthline.EditorTools
         {
             var root = new GameObject("Homestead").transform;
             root.SetParent(props, false);
-            // The cabin stands on the dwelling slot, porch facing the yard and the creek (south).
-            GreyboxKit.Place("Cabin", OnGround(0f, 16f), 180f, 1f, root, collider: true);
-            GreyboxKit.Place("Rain_Barrel", OnGround(4.6f, 12.6f), 0f, 1f, root, collider: true);
-            GreyboxKit.Place("Clothesline", OnGround(14f, 20f), 15f, 1f, root, collider: false);
-            GreyboxKit.Place("Woodpile", OnGround(-9.5f, 15f), 90f, 1f, root, collider: true);
-            GreyboxKit.Place("Garden_Bed", OnGround(10f, 4f), 0f, 1f, root, collider: false);
-            GreyboxKit.Place("Garden_Bed", OnGround(10f, -0.5f), 0f, 1f, root, collider: false);
+            // The three building slots show whatever tier the simulation says (ADR 0017). Their panels are
+            // wired in BuildHomeUse once the clock and road events exist.
+            Structure(root, "dwelling", new Vector3(0f, 0f, 16f), 180f, "Build_Site", "Dwelling_Tent", "Cabin", "Dwelling_Farmhouse");
+            Structure(root, "hearth", new Vector3(-16f, 0f, 2f), 90f, "Build_Site", "Hearth_FirePit", "Hearth_Kitchen", "Hearth_Smokehouse");
+            Structure(root, "infirmary", new Vector3(18f, 0f, 10f), -90f, "Build_Site", "Infirmary_Cot", "Infirmary_Sickroom", "Infirmary_Surgery");
 
-            // The two other building slots (hearth west, infirmary east) are still empty pads for M2 step 6.
-            Material slot = SceneBuildKit.ColorMaterial("Greybox_Slot", new Color(0.62f, 0.52f, 0.36f));
-            foreach ((string id, float x, float z) in new[] { ("hearth", -16f, 2f), ("infirmary", 18f, 10f) })
-                SceneBuildKit.Block(PrimitiveType.Cube, "Slot_" + id, OnGround(x, z) + Vector3.up * 0.05f, new Vector3(8f, 0.1f, 6f), slot, root);
+            GreyboxKit.Place("Rain_Barrel", OnGround(6.6f, 18.5f), 0f, 1f, root, collider: true);
+            GreyboxKit.Place("Clothesline", OnGround(14f, 22f), 15f, 1f, root, collider: false);
+            GreyboxKit.Place("Woodpile", OnGround(-10f, 15f), 90f, 1f, root, collider: true);
+            GreyboxKit.Place("Garden_Bed", OnGround(9f, 1f), 0f, 1f, root, collider: false);
+            GreyboxKit.Place("Garden_Bed", OnGround(9f, -3.5f), 0f, 1f, root, collider: false);
+            GreyboxKit.Place("Job_Board", OnGround(-5f, 8f), 200f, 1f, root, collider: true).name = "Job Board";
 
             // Split-rail fence round the clearing, open to the south where the path runs down to the creek.
             Bounds b = GreyboxKit.MeshOf("Fence_Rail").bounds;
@@ -262,6 +272,65 @@ namespace Hearthline.EditorTools
                 if (mid.z < -18f && Mathf.Abs(mid.x) < 9f) continue; // the gate
                 PlaceRun("Fence_Rail", b, p0, p1, root);
             }
+        }
+
+        // One slot: a StructureView holding a model per tier (index 0 = not built), all but one hidden.
+        private static void Structure(Transform root, string id, Vector3 at, float yaw, params string[] tierModels)
+        {
+            var slot = new GameObject("Structure " + id);
+            slot.transform.SetParent(root, false);
+            slot.transform.SetPositionAndRotation(OnGround(at.x, at.z), Quaternion.Euler(0f, yaw, 0f));
+            var tiers = new GameObject[tierModels.Length];
+            for (int i = 0; i < tierModels.Length; i++)
+            {
+                tiers[i] = GreyboxKit.Place(tierModels[i], slot.transform.position, yaw, 1f, slot.transform, collider: true);
+                tiers[i].SetActive(i == 1);
+            }
+            slot.AddComponent<StructureView>().Configure(id, tiers);
+        }
+
+        // What you press E on at each building, the job board, and the household figures.
+        private static void BuildHomeUse(TravelClock clock, RoadEvents roadEvents)
+        {
+            Transform root = GameObject.Find("Homestead").transform;
+            void Use(string id, HomeBuilding.Kind kind, Vector3 front)
+            {
+                var view = GameObject.Find("Structure " + id).GetComponent<StructureView>();
+                var use = new GameObject("Use " + id);
+                use.transform.SetParent(root, false);
+                use.transform.position = OnGround(front.x, front.z);
+                var building = use.AddComponent<HomeBuilding>();
+                building.Configure(kind, view, clock, roadEvents);
+                building.SetReach(4.5f);
+            }
+            Use("dwelling", HomeBuilding.Kind.Dwelling, new Vector3(0f, 0f, 10.5f));
+            Use("hearth", HomeBuilding.Kind.Hearth, new Vector3(-12.5f, 0f, 2f));
+            Use("infirmary", HomeBuilding.Kind.Infirmary, new Vector3(14.5f, 0f, 10f));
+            GameObject.Find("Job Board").AddComponent<JobBoard>().SetReach(2.8f);
+
+            // Where each job is done, and where people without one stand about; all facing the yard.
+            Transform Spot(string name, float x, float z)
+            {
+                var t = new GameObject("Spot " + name).transform;
+                t.SetParent(root, false);
+                t.position = OnGround(x, z);
+                Vector3 look = new Vector3(-x, 0f, -z);
+                t.rotation = look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.identity;
+                return t;
+            }
+            string[] jobs = { "woodcutter", "cook", "healer", "farmer", "hunter", "guard", "smith" };
+            Transform[] spots =
+            {
+                Spot("woodcutter", -8f, 13f), Spot("cook", -13f, 5f), Spot("healer", 15.5f, 7.5f), Spot("farmer", 6.5f, -1f),
+                Spot("hunter", -18f, -6f), Spot("guard", 3f, -24f), Spot("smith", -6f, -12f),
+            };
+            Transform[] idle = { Spot("idle 0", -3f, 9f), Spot("idle 1", 3f, 9f), Spot("idle 2", 2f, -6f) };
+            var figures = new GameObject("Household Figures").AddComponent<HouseholdFigures>();
+            figures.transform.SetParent(root, false);
+            figures.Configure(
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/StarterAssets/Runtime/ThirdPersonController/Character/Models/Armature.fbx"),
+                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/ThirdParty/StarterAssets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller"),
+                jobs, spots, idle);
         }
 
         // Places a model whose length runs along its local Z (or X) so it spans p0 to p1.
@@ -366,18 +435,19 @@ namespace Hearthline.EditorTools
                 double chance = deep ? 0.8 : woods ? 0.6 : ridge ? 0.28 : 0.035;
                 if (rnd.NextDouble() > chance || !Clear(x, z, 8f)) continue;
                 if (deep) Tree(Pick(("Tree_Tall_Hollow", 3), ("Tree_Pine", 2), ("Tree_Broadleaf_B", 1)), x, z, R(0.9, 1.3));
-                else if (woods) Tree(Pick(("Tree_Broadleaf_A", 3), ("Tree_Broadleaf_B", 3), ("Tree_Broadleaf_C", 2), ("Tree_Pine", 2)), x, z, R(0.8, 1.2));
-                else if (ridge) Tree(Pick(("Tree_Pine", 3), ("Tree_Broadleaf_A", 1), ("Tree_Broadleaf_C", 1)), x, z, R(0.8, 1.15));
-                else Tree(Pick(("Tree_Broadleaf_A", 2), ("Tree_Broadleaf_B", 2), ("Tree_Broadleaf_C", 1)), x, z, R(1.0, 1.35));
+                else if (woods) Tree(Pick(("Tree_Oak", 3), ("Tree_Broadleaf_B", 3), ("Tree_Broadleaf_C", 2), ("Tree_Pine", 2)), x, z, R(0.8, 1.2));
+                else if (ridge) Tree(Pick(("Tree_Pine", 3), ("Tree_Oak", 1), ("Tree_Broadleaf_C", 1)), x, z, R(0.8, 1.15));
+                else Tree(Pick(("Tree_Oak", 2), ("Tree_Broadleaf_B", 2), ("Tree_Broadleaf_C", 1)), x, z, R(1.0, 1.35));
             }
             // A big shade tree at the edge of the yard, as in the references.
             Tree("Tree_Broadleaf_B", -24f, -12f, 1.35f);
 
             // Grass, flowers and ferns: dense, instanced, no colliders.
-            for (float gx = -Size / 2f; gx < Size / 2f; gx += 2.6f)
-            for (float gz = -Size / 2f; gz < Size / 2f; gz += 2.6f)
+            const float coverStep = 2.1f;
+            for (float gx = -Size / 2f; gx < Size / 2f; gx += coverStep)
+            for (float gz = -Size / 2f; gz < Size / 2f; gz += coverStep)
             {
-                float x = gx + R(0, 2.6), z = gz + R(0, 2.6);
+                float x = gx + R(0, coverStep), z = gz + R(0, coverStep);
                 bool yard = Mathf.Sqrt(x * x + z * z) < HomeRadius;
                 if (!yard && !Clear(x, z, 0f)) continue;
                 if (yard && (Mathf.Sqrt(x * x + z * z) < 10f || PathDistance(x, z) < 2f)) continue;
@@ -554,11 +624,8 @@ namespace Hearthline.EditorTools
         {
             string skyPath = Generated + "/M2_Region_Sky.mat";
             AssetDatabase.DeleteAsset(skyPath);
-            var sky = new Material(Shader.Find("Skybox/Procedural"));
-            sky.SetFloat("_SunSize", 0.035f);
-            sky.SetFloat("_AtmosphereThickness", 1.05f);
-            sky.SetColor("_SkyTint", new Color(0.52f, 0.58f, 0.66f));
-            sky.SetColor("_GroundColor", new Color(0.33f, 0.36f, 0.3f));
+            // Hearthline/Sky: gradient, sunset glow, sun disc, drifting cumulus, stars (ADR 0018).
+            var sky = new Material(Shader.Find("Hearthline/Sky"));
             AssetDatabase.CreateAsset(sky, skyPath);
             RenderSettings.skybox = sky;
             RenderSettings.sun = sun;
