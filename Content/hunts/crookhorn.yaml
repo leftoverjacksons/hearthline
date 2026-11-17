@@ -6,6 +6,7 @@ animal:
   archetype: deer
   name: Crookhorn
 sign: 6                    # signs to read before he can be found
+health: 2                  # a clean chest, neck or head shot drops him; a leg shot only wounds
 bolt_cost: 2               # signs lost when he bolts
 area_tags_any: [woods, deep_woods]
 yields:

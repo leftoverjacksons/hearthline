@@ -23,6 +23,8 @@ namespace Hearthline.Bridge
 
         public static IReadOnlyList<AreaVolume> All => Registry;
         public string PlaceName => placeName;
+        /// <summary>The box's size in local space (centred on the transform).</summary>
+        public Vector3 Size => size;
         public IReadOnlyList<string> AreaTags => areaTags;
         public int ThinLevel => thinLevel;
         public bool IsHomestead => homestead;

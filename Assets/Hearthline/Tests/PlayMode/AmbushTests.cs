@@ -72,7 +72,9 @@ namespace Hearthline.Tests.PlayMode
         {
             yield return Fight();
             Vector3[] start = Enemies.Select(e => e.transform.position).ToArray();
-            yield return new WaitForSeconds(10f);
+            // Spawn spots are random and the fight opens with the quick-draw slowdown: give them up to 16 s.
+            float waited = 0f;
+            while (Enemies.Count(e => e.Current == EnemyAI.State.InCover) < Enemies.Length - 1 && waited < 16f) { waited += Time.deltaTime; yield return null; }
             Assert.That(Enemies.Count(e => e.Current == EnemyAI.State.InCover), Is.GreaterThanOrEqualTo(Enemies.Length - 1), "Most should be in place.");
             Assert.That(Enemies.Count(e => e.Cover != null), Is.GreaterThan(0), "Some cover is in reach of the homestead.");
             int moved = 0;

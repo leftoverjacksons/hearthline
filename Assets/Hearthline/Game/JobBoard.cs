@@ -47,6 +47,46 @@ namespace Hearthline.Game
             GUILayout.Window(0x4A4F4253, new Rect((Screen.width - 640f) / 2f, Screen.height * 0.12f, 640f, 0f), Draw, "Who does what");
         }
 
+        // Hunts (docs/specs/hunt.md): take one up, or give it up.
+        private void DrawHunts(Simulation sim)
+        {
+            GUILayout.Space(6);
+            GUILayout.Label("Hunts");
+            if (sim.Hunt != null)
+            {
+                HuntDef on = sim.HuntDefOf(sim.Hunt.HuntId);
+                GUILayout.Label((on != null ? on.Name : sim.Hunt.HuntId) + ": " + (sim.Hunt.Revealed ? "he's been found." : "sign read " + sim.Hunt.Progress + " of " + (on != null ? on.Sign : 0) + "."));
+                if (GUILayout.Button("Give up the hunt", GUILayout.Height(24))) _status = GiveUpHunt() ?? "You let him be, for now.";
+                return;
+            }
+            bool any = false;
+            foreach (HuntDef def in _host.Content.Hunts.Values.OrderBy(h => h.Name))
+            {
+                if (sim.HuntDone(def.Id)) continue;
+                any = true;
+                GUILayout.Label(def.Offer);
+                if (GUILayout.Button("Take up " + def.Name.ToLowerInvariant(), GUILayout.Height(26)))
+                {
+                    _status = TakeHunt(def.Id) ?? "";
+                    if (_status.Length == 0) Close();
+                }
+            }
+            if (!any) GUILayout.Label("No talk of game worth chasing.");
+        }
+
+        /// <summary>Takes up a hunt. Returns why not, or null.</summary>
+        public string TakeHunt(string huntId)
+        {
+            CommandResult r = _host.Sim.Execute(new StartHunt { HuntId = huntId });
+            return r.Ok ? null : r.Error;
+        }
+
+        public string GiveUpHunt()
+        {
+            CommandResult r = _host.Sim.Execute(new GiveUpHunt());
+            return r.Ok ? null : r.Error;
+        }
+
         private void Draw(int id)
         {
             Simulation sim = _host.Sim;
@@ -67,6 +107,7 @@ namespace Hearthline.Game
             }
             if (!any) GUILayout.Label("Nobody else lives here yet. People join through events on the road and at the gate.");
             GUILayout.EndScrollView();
+            DrawHunts(sim);
             if (_status.Length > 0) GUILayout.Label(_status);
             if (GUILayout.Button("Close", GUILayout.Height(24))) Close();
         }

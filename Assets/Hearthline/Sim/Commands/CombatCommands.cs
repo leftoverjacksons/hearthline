@@ -113,7 +113,7 @@ namespace Hearthline.Sim
             DamageType damage = weapon?.Damage ?? DamageType.Gunshot;
             Content.MarkDef wound = MarkSystem.FindWoundFor(ctx.Content, damage, Region);
             if (wound == null) return "no wound is defined for " + Naming.ToSnake(damage) + " on " + Naming.ToSnake(Region);
-            int severity = CombatSystem.ShotSeverity(ctx, weapon, Region, Distance);
+            int severity = HuntSystem.AdjustSeverity(ctx, target, Region, CombatSystem.ShotSeverity(ctx, weapon, Region, Distance));
             var origin = new MarkOrigin
             {
                 Cause = shooter == null ? "a stray bullet"

@@ -69,6 +69,9 @@ namespace Hearthline.Game
         private string _message;
         private Coroutine _reloading;
 
+        /// <summary>Raised when any shot is fired (where from), so animals can hear it.</summary>
+        public static event System.Action<Vector3> ShotFired;
+
         public GunVisuals.Drawn Drawn { get; private set; }
         public bool Ready => Drawn != GunVisuals.Drawn.None && _drawTimer <= 0f;
         public bool Reloading => _reloading != null;
@@ -226,6 +229,7 @@ namespace Hearthline.Game
                 }
 
             result.Kind = ShotKind.Fired;
+            ShotFired?.Invoke(transform.position);
             if (_impulse != null) _impulse.GenerateImpulseWithVelocity(new Vector3(Random.Range(-0.3f, 0.3f), 1f, -0.4f) * recoil);
             Vector3 from = _visuals.Muzzle != null ? _visuals.Muzzle.position : ray.origin;
             Vector3 to = ray.GetPoint(maxRange);

@@ -21,6 +21,8 @@ namespace Hearthline.Sim.Content
         public string AnimalName;
         /// <summary>Signs to read before the animal can be found.</summary>
         public int Sign;
+        /// <summary>Harm it takes before going down (people take 3): a clean chest or head shot should do it.</summary>
+        public int Health = 2;
         /// <summary>Signs lost when it bolts.</summary>
         public int BoltCost;
         public readonly List<string> AreaTagsAny = new List<string>();
@@ -39,7 +41,7 @@ namespace Hearthline.Sim.Content
             var def = new HuntDef
             {
                 SourceFile = path, Id = root.Str("id"), Name = root.Str("name"), Offer = root.Str("offer"),
-                Sign = root.Int("sign", true) ?? 0, BoltCost = root.Int("bolt_cost") ?? 0, Chronicle = root.Str("chronicle"),
+                Sign = root.Int("sign", true) ?? 0, Health = root.Int("health") ?? 2, BoltCost = root.Int("bolt_cost") ?? 0, Chronicle = root.Str("chronicle"),
             };
             YamlMap animal = root.Map("animal", "animal", true);
             if (animal != null)
@@ -80,6 +82,7 @@ namespace Hearthline.Sim.Content
                 senses.Done();
             }
             if (def.Sign < 1) root.Error("'sign' must be at least 1");
+            if (def.Health < 1 || def.Health > LifeRules.MaxHealth) root.Error("'health' must be 1.." + LifeRules.MaxHealth);
             if (def.BoltCost < 0) root.Error("'bolt_cost' must not be negative");
             if (def.MeatCount < 0 || def.MeatWithKnife < 0) root.Error("meat counts must not be negative");
             root.Done();

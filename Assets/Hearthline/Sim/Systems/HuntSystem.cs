@@ -13,6 +13,14 @@ namespace Hearthline.Sim
     {
         public static string DoneFlag(string huntId) => "hunt_done_" + huntId;
 
+        /// <summary>The hunted animal hit in a leg: one step less severe (it runs on three).</summary>
+        public static int AdjustSeverity(SimContext ctx, Character target, BodyRegion region, int severity)
+        {
+            if (ctx.State.Hunt == null || ctx.State.Hunt.AnimalId != target.Id) return severity;
+            bool limb = region == BodyRegion.ArmL || region == BodyRegion.ArmR || region == BodyRegion.LegL || region == BodyRegion.LegR;
+            return limb ? Math.Max(MarkSystem.MinSeverity, severity - 1) : severity;
+        }
+
         public static string Start(SimContext ctx, string huntId)
         {
             if (ctx.State.Hunt != null) return "a hunt is already on";
@@ -26,6 +34,7 @@ namespace Hearthline.Sim
                 Surname = "",
                 BirthDay = ctx.State.Day - 9 * GameDate.DaysPerYear,
                 Archetype = def.AnimalArchetype,
+                Health = def.Health,
             };
             ctx.State.Characters.Add(animal);
             ctx.State.Hunt = new ActiveHunt { HuntId = def.Id, AnimalId = animal.Id, StartDay = ctx.State.Day, Seed = ctx.Rng.NextInt(1, int.MaxValue) };

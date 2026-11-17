@@ -379,6 +379,36 @@ namespace Hearthline.Game
                 }
             }
             GUILayout.Label(sim.State.Dropped.Count + " loot bundle(s) on the ground.");
+
+            // The hunt (docs/specs/hunt.md).
+            GUILayout.Space(6);
+            HuntDirector director = FindAnyObjectByType<HuntDirector>();
+            if (sim.Hunt == null)
+            {
+                foreach (var kv in sim.Content.Hunts)
+                    if (!sim.HuntDone(kv.Key) && GUILayout.Button("Take up hunt: " + kv.Value.AnimalName)) Run(sim, new StartHunt { HuntId = kv.Key });
+            }
+            else
+            {
+                GUILayout.Label("Hunt: " + sim.Hunt.HuntId + ", sign " + sim.Hunt.Progress + (sim.Hunt.Revealed ? ", found" : "") + ", bolted " + sim.Hunt.Bolts + "x");
+                GUILayout.BeginHorizontal();
+                if (!sim.Hunt.Revealed && GUILayout.Button("Read next sign")) Run(sim, new ReadSign { Index = sim.Hunt.Progress });
+                if (!sim.Hunt.Revealed && GUILayout.Button("Read all sign"))
+                    for (int i = 0; i < 20 && sim.Hunt != null && !sim.Hunt.Revealed; i++) Run(sim, new ReadSign { Index = sim.Hunt.Progress });
+                Transform player = GameObject.Find("Player")?.transform;
+                if (director != null && player != null && GUILayout.Button(director.Deer != null ? "Go to 40 m from him" : "Go to the next sign"))
+                {
+                    Vector3 target = director.Deer != null ? director.Deer.transform.position - director.Deer.transform.forward * -40f
+                        : director.CurrentSign != null ? director.CurrentSign.transform.position + Vector3.back * 2f : player.position;
+                    if (Physics.Raycast(new Vector3(target.x, 300f, target.z), Vector3.down, out RaycastHit g, 600f, ~0, QueryTriggerInteraction.Ignore)) target = g.point + Vector3.up * 0.1f;
+                    var body = player.GetComponent<CharacterController>();
+                    if (body != null) body.enabled = false;
+                    player.position = target;
+                    if (body != null) body.enabled = true;
+                }
+                if (GUILayout.Button("Give up")) Run(sim, new GiveUpHunt());
+                GUILayout.EndHorizontal();
+            }
             GUILayout.EndScrollView();
         }
 

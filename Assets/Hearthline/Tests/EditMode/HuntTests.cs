@@ -121,6 +121,18 @@ namespace Hearthline.Tests
         }
 
         [Test]
+        public void AChestShotDropsHimButALegShotOnlyWounds()
+        {
+            Simulation sim = Hunting(out Character buck);
+            TestSupport.Ok(sim.Execute(new ShotHit { TargetId = buck.Id, Region = BodyRegion.LegL, ShooterId = sim.Head.Id, Distance = 30 }));
+            Assert.That(buck.Downed, Is.False, "Wounded in the leg, he runs on three.");
+            Assert.That(buck.Marks.Single().Severity, Is.EqualTo(1));
+            Simulation sim2 = Hunting(out Character buck2);
+            TestSupport.Ok(sim2.Execute(new ShotHit { TargetId = buck2.Id, Region = BodyRegion.Torso, ShooterId = sim2.Head.Id, Distance = 30 }));
+            Assert.That(buck2.Downed, Is.True, "A clean chest shot.");
+        }
+
+        [Test]
         public void GivingUpEndsTheHuntButHeStillLives()
         {
             Simulation sim = Hunting(out Character buck);

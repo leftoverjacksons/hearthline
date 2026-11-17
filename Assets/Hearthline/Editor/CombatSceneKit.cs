@@ -91,6 +91,58 @@ namespace Hearthline.EditorTools
             return surface;
         }
 
+        public const string DeerPrefabPath = PrefabFolder + "/Animal_Crookhorn.prefab";
+
+        /// <summary>
+        /// The hunted deer (docs/specs/hunt.md): the greybox buck with hit zones on head, neck, chest and legs, a nav
+        /// agent and DeerAI moving its neck and legs.
+        /// </summary>
+        public static GameObject BuildDeerPrefab()
+        {
+            SceneBuildKit.EnsureFolder(PrefabFolder);
+            var deer = (GameObject)PrefabUtility.InstantiatePrefab(GreyboxKit.Model("Deer_Crookhorn"));
+            PrefabUtility.UnpackPrefabInstance(deer, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            deer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            Transform Part(string n) => SceneBuildKit.FindChild(deer.transform, n);
+            Transform body = Part("Deer_Body"), neck = Part("Deer_Neck");
+            Transform[] legs = { Part("Deer_Leg_FL"), Part("Deer_Leg_FR"), Part("Deer_Leg_BL"), Part("Deer_Leg_BR") };
+            int layer = SceneBuildKit.EnsureHitboxLayer();
+            void Zone(Hearthline.Sim.BodyRegion region, Transform parent, Vector3 worldCentre, Vector3 size)
+            {
+                var zone = new GameObject("HitZone_" + region);
+                zone.layer = layer;
+                zone.transform.SetParent(parent, false);
+                zone.transform.position = worldCentre;
+                var box = zone.AddComponent<BoxCollider>(); // before HitRegion, which requires a collider
+                box.isTrigger = true;
+                box.size = size;
+                zone.AddComponent<HitRegion>().Configure(region);
+            }
+            // Unity space: the deer faces +Z, about 1 m at the shoulder.
+            Zone(Hearthline.Sim.BodyRegion.Head, neck, new Vector3(0f, 1.47f, 0.9f), new Vector3(0.2f, 0.26f, 0.36f));
+            Zone(Hearthline.Sim.BodyRegion.Face, neck, new Vector3(0f, 1.26f, 0.64f), new Vector3(0.2f, 0.26f, 0.42f)); // the neck: a killing shot too
+            Zone(Hearthline.Sim.BodyRegion.Torso, body, new Vector3(0f, 0.95f, 0f), new Vector3(0.44f, 0.54f, 1.3f));
+            Zone(Hearthline.Sim.BodyRegion.ArmL, legs[0], legs[0].position + Vector3.down * 0.45f, new Vector3(0.1f, 0.9f, 0.1f));
+            Zone(Hearthline.Sim.BodyRegion.ArmR, legs[1], legs[1].position + Vector3.down * 0.45f, new Vector3(0.1f, 0.9f, 0.1f));
+            Zone(Hearthline.Sim.BodyRegion.LegL, legs[2], legs[2].position + Vector3.down * 0.45f, new Vector3(0.12f, 0.9f, 0.12f));
+            Zone(Hearthline.Sim.BodyRegion.LegR, legs[3], legs[3].position + Vector3.down * 0.45f, new Vector3(0.12f, 0.9f, 0.12f));
+            deer.AddComponent<HitReceiver>();
+            var agent = deer.AddComponent<NavMeshAgent>();
+            agent.radius = 0.45f; agent.height = 1.6f; agent.speed = 1.1f; agent.angularSpeed = 360f; agent.acceleration = 8f;
+            agent.stoppingDistance = 0.2f;
+            deer.AddComponent<DeerAI>().Configure(neck, legs);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(deer, DeerPrefabPath);
+            Object.DestroyImmediate(deer);
+            return prefab;
+        }
+
+        public static HuntDirector AddHuntDirector(Transform player)
+        {
+            var director = new GameObject("Hunt Director").AddComponent<HuntDirector>();
+            director.Configure(player, BuildDeerPrefab());
+            return director;
+        }
+
         public static EnemySpawner AddSpawner(Transform player)
         {
             var spawner = new GameObject("Enemy Spawner").AddComponent<EnemySpawner>();

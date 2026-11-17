@@ -1,6 +1,6 @@
 # Spec: one hunt goal (M2)
 
-Status: **approved 2026-11-17** (Travis): a deer first; hunts start from the job board. Fits the tone of the land
+Status: **approved 2026-11-17** (Travis): a deer first; hunts start from the job board. **Built** (ADR 0023): `HuntTests`, `HuntPlayTests`. Fits the tone of the land
 (DESIGN, *Exploration*): a lonely landscape where most of the danger is patience, distance and your own noise.
 
 ## Goal

@@ -110,4 +110,5 @@ Wind values are on each foliage material, water values on `Scenes/Generated/Regi
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
 `unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();"`.
 A practice target stands in the yard in front of the spawn: hits show where they landed and how bad they'd be on a person, and never reach the simulation. `WeaponTests` (PlayMode) covers aiming, firing, reloading and jams.
+**Hunting** (docs/specs/hunt.md): at the job board, *Take up the hunt for Crookhorn*. A line says which way to start; the first sign (dark hoofprints, a snapped twig) waits in the woods. E reads it and points to the next. After the last one he grazes nearby: crouch and come slowly, use cover, take one clean shot (chest, neck or head), then E on him to butcher. The cheat panel's Combat tab can take up the hunt, read the sign, and put you near him.
 `TripFlowTests` (PlayMode) covers places, leaving, setting out, staying home, coming home and the clock.
