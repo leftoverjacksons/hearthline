@@ -14,6 +14,15 @@ namespace Hearthline.Bridge
         [SerializeField] private bool followHeadOfHousehold = true;
         [SerializeField] private int characterId;
 
+        /// <summary>Makes this object stand for one particular character (spawned enemies, figures).</summary>
+        public void Bind(int id)
+        {
+            followHeadOfHousehold = false;
+            characterId = id;
+        }
+
+        public int? BoundId => followHeadOfHousehold ? (int?)null : characterId;
+
         /// <summary>The character this object stands for, or null if there is none (or they are gone).</summary>
         public Character Resolve(Simulation sim)
         {

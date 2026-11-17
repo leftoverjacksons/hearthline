@@ -97,6 +97,9 @@ namespace Hearthline.EditorTools
 
             BuildAtmosphere(sun, moon, clock, location);
             int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
+            CombatSceneKit.BuildEnemyPrefab();
+            CombatSceneKit.AddSpawner(rig.Player.transform);
+            CombatSceneKit.BakeNavMesh("Assets/Scenes/Generated/M2_Region_NavMesh.asset");
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             SceneBuildKit.AddToBuild(ScenePath, first: false);

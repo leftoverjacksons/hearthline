@@ -72,3 +72,18 @@ The architecture rules say the simulation owns persistent state and presentation
   momentum from the body's velocity and otherwise pushes against the slide.
 - **No cover animations yet.** Pressed in is the idle or crouch pose, sliding glides, and leaning out
   steps the body sideways past the edge. The clips are in `docs/NEEDS.md`.
+
+## Step 4 notes (enemies)
+
+- **Unity's AI Navigation package** (`com.unity.ai.navigation` 2.0.16, free; spec decision 5). The region
+  builder bakes a NavMesh over the solid colliders (trigger volumes and hit zones ignored) into
+  `Scenes/Generated/M2_Region_NavMesh.asset`.
+- **`EnemySpawner` (Bridge) stages a fight** when the sim emits `EncounterStarted`, and re-stages one found in
+  a loaded state. Bodies come from the generated `Enemy_Reaver` prefab: the mannequin with hit zones, a gun,
+  a nav agent and the player's animator. Spawned bodies implement the Bridge's `ISpawnedCombatant`, so the
+  Bridge never references Game types.
+- **`EnemyAI` (Game) uses the same `CoverSurface` data as the player.** It picks the far side of cover within
+  its gun's range, pops out to shoot, reloads and clears jams in cover, flanks one at a time when the player
+  sits still in cover, lies down when downed, and flees or kneels when the group breaks. Accuracy starts poor
+  and tightens while it keeps the player in sight. All shots are `FireWeapon` and `ShotHit`.
+- **Bullets pass through movement capsules** (CharacterControllers) and land on the hit zones inside.

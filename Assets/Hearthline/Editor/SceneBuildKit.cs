@@ -193,7 +193,7 @@ namespace Hearthline.EditorTools
             return count;
         }
 
-        private static Material TracerMaterial()
+        public static Material TracerMaterial()
         {
             const string folder = "Assets/Hearthline/Art/Effects", path = folder + "/Tracer.mat";
             EnsureFolder(folder);

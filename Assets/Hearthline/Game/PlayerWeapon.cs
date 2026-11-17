@@ -270,6 +270,7 @@ namespace Hearthline.Game
             {
                 if (h.distance < skip) continue;
                 if (h.collider.transform.IsChildOf(transform)) continue; // our own body and zones
+                if (h.collider is CharacterController) continue;           // movement capsules: hit zones decide
                 HitRegion region = h.collider.GetComponent<HitRegion>();
                 if (h.collider.isTrigger && region == null) continue;  // areas, interaction volumes
                 nearest = h;

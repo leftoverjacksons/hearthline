@@ -6,6 +6,7 @@
         "Hearthline.Bridge",
         "Hearthline.Game",
         "Unity.Cinemachine",
+        "Unity.AI.Navigation",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.Runtime"
     ],
