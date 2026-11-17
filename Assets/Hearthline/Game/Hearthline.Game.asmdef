@@ -3,7 +3,9 @@
     "rootNamespace": "Hearthline.Game",
     "references": [
         "Hearthline.Sim",
-        "Hearthline.Bridge"
+        "Hearthline.Bridge",
+        "Unity.StarterAssets",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

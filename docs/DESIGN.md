@@ -494,7 +494,7 @@ Camera and combat feel tuning, animation selection and blending, lighting and po
 
 The first goal is a **vertical slice** that proves the core idea: one region, two generations, 3 to 4 hours of play, at near-final quality in a small area. Each milestone ends at a gate. Stop and reassess if a gate fails, rather than pushing on.
 
-1. **M0 — Toolchain spike.** Unity project, Claude Code plugin with MCP, a purchased third-person controller, a greybox terrain, and one scar that persists through save and load.
+1. **M0 — Toolchain spike.** Unity project, Claude Code plugin with MCP, a purchased third-person controller (for now Unity's free Starter Assets; see ADR 0010), a greybox terrain, and one scar that persists through save and load.
    - Gate: the Claude Code loop (edit, compile, test, read console) feels fast, and adding a scar via the cheat panel shows on the model after reload.
 2. **M1 — Body as record.** Full Mark data model, wounds from hit regions, infirmary treatment outcomes, 15 mark definitions, the visual layer (decals, materials, part swaps), and the mirror view.
    - Gate: a character carrying 6 or more marks reads as a person with a history in a single screenshot.

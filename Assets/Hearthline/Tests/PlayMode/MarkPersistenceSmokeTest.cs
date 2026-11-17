@@ -39,8 +39,9 @@ namespace Hearthline.Tests.PlayMode
         [UnityTest]
         public IEnumerator ScarOnFaceSurvivesSaveAndLoad()
         {
-            Transform face = GameObject.Find("Character/Anchor_Face")?.transform;
-            Assert.That(face, Is.Not.Null, "The character has no Anchor_Face.");
+            Transform face = FindAnchor("MarkAnchor_Face");
+            Assert.That(face, Is.Not.Null, "The player has no MarkAnchor_Face.");
+            Assert.That(face.parent.name, Does.Contain("Head"), "The face anchor should ride on the head bone.");
             Assert.That(ScarsUnder(face), Is.EqualTo(0));
 
             CommandResult added = _host.Sim.Execute(new AddMark
@@ -63,6 +64,15 @@ namespace Hearthline.Tests.PlayMode
             Assert.That(_host.Load(), Is.True, "Loading the save failed.");
             yield return null;
             Assert.That(ScarsUnder(face), Is.EqualTo(1), "The scar is not back on the face after loading.");
+        }
+
+        private static Transform FindAnchor(string name)
+        {
+            GameObject player = GameObject.Find("Player");
+            if (player == null) return null;
+            foreach (Transform t in player.GetComponentsInChildren<Transform>(true))
+                if (t.name == name) return t;
+            return null;
         }
 
         private static int ScarsUnder(Transform anchor)

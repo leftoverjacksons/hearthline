@@ -50,3 +50,7 @@ tools/headless/**/obj/
 # OS
 .DS_Store
 Thumbs.db
+
+# Asset Store packs: licensed per user, never committed to this public repo. See docs/SETUP.md.
+/Assets/ThirdParty/StarterAssets/
+/Assets/ThirdParty/StarterAssets.meta

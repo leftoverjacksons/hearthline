@@ -28,6 +28,9 @@ namespace Hearthline.Game
         private const int WindowId = 0x48454C4E; // any stable id; GUILayout only needs it unique among windows
         private Vector2 _scroll, _pickScroll;
         private bool _open;
+
+        /// <summary>Whether the panel is showing. Other presentation code (player input, cursor) follows it.</summary>
+        public bool IsOpen => _open;
         private int _tab, _defIndex, _eventIndex, _itemIndex, _severityIndex, _damageIndex, _tierIndex, _timeIndex, _thinLevel;
         private int _regionIndex = (int)BodyRegion.Face;
         private bool _atHome;
