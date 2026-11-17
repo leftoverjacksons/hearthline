@@ -418,7 +418,8 @@ namespace Hearthline.Sim
                 }
             }
             if (o.Chronicle != null && head != null) ctx.Chronicle(head, ChronicleKind.Deed, Render(ctx, active, o.Chronicle));
-            if (o.Ambush != null) ctx.Emit(new AmbushRequested { Day = day, EncounterId = o.Ambush, EventId = def.Id });
+            if (o.Ambush != null)
+                ctx.Emit(new AmbushRequested { Day = day, EncounterId = o.Ambush, EventId = def.Id, PlaceName = active.PlaceName, LeaderId = CombatSystem.CastLeader(ctx, o.Ambush, active) });
 
             string next = o.Goto;
             if (o.Chance.Count > 0)

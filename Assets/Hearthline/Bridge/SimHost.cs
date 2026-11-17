@@ -26,7 +26,7 @@ namespace Hearthline.Bridge
         {
             new StartingItem { itemId = "jerky", count = 6 },
             new StartingItem { itemId = "cornmeal", count = 4 },
-            new StartingItem { itemId = "cartridges", count = 20 },
+            new StartingItem { itemId = "cartridges", count = 12 }, // scarce (combat spec decision 3)
             new StartingItem { itemId = "bandage", count = 3 },
             new StartingItem { itemId = "firewood", count = 6 },
             new StartingItem { itemId = "lumber", count = 12 },
@@ -114,10 +114,18 @@ namespace Hearthline.Bridge
             return map;
         }
 
-        public void Save()
+        /// <summary>Writes the save. Returns why not (a fight is going on), or null once saved.</summary>
+        public string Save()
         {
+            string why = Sim.WhyCannotSave();
+            if (why != null)
+            {
+                Debug.Log("Not saved: " + why);
+                return why;
+            }
             File.WriteAllText(SavePath, Sim.ToJson());
             Debug.Log("Saved to " + SavePath);
+            return null;
         }
 
         /// <summary>Returns false (and keeps the current game) if there is no save or it cannot be read.</summary>

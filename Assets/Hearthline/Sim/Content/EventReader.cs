@@ -38,6 +38,7 @@ namespace Hearthline.Sim.Content
                 if (def.Equip != null) gather.Error("gear cannot be gathered; each piece is its own thing");
                 gather.Done();
             }
+            def.Weapon = CombatReader.ReadWeapon(root);
             if (def.Weight < 0) root.Error("'weight' must not be negative");
             root.Done();
             return def;

@@ -39,7 +39,26 @@ namespace Hearthline.Sim
     public sealed class EventChoiceMade : DomainEvent { public string EventId; public string BeatId; public int ChoiceIndex; }
     public sealed class EventEnded : DomainEvent { public string EventId; }
     /// <summary>Presentation should stage this fight. The sim does not resolve combat.</summary>
-    public sealed class AmbushRequested : DomainEvent { public string EncounterId; public string EventId; }
+    public sealed class AmbushRequested : DomainEvent
+    {
+        public string EncounterId; public string EventId;
+        /// <summary>Someone the event cast who should lead the fight (the reaver who asked for the toll), or null.</summary>
+        public int? LeaderId;
+        public string PlaceName;
+    }
+    /// <summary>A fight began. Spawn a body for each enemy.</summary>
+    public sealed class EncounterStarted : DomainEvent { public string EncounterId; public System.Collections.Generic.List<int> EnemyIds; public int? LeaderId; }
+    public sealed class WeaponFired : DomainEvent { public int CharacterId; public int GearId; public int Loaded; }
+    /// <summary>The round did not fire and the gun needs clearing.</summary>
+    public sealed class WeaponJammed : DomainEvent { public int CharacterId; public int GearId; }
+    public sealed class WeaponReloaded : DomainEvent { public int CharacterId; public int GearId; public int Loaded; }
+    public sealed class JamCleared : DomainEvent { public int CharacterId; public int GearId; }
+    public sealed class CombatantDown : DomainEvent { public int CharacterId; public int? ShooterId; }
+    /// <summary>The enemy group broke. Act out each one's choice, then report it with CombatantFlees or CombatantSurrenders.</summary>
+    public sealed class GroupBroke : DomainEvent { public System.Collections.Generic.List<int> Fleeing; public System.Collections.Generic.List<int> Surrendering; }
+    public sealed class CombatantLeftFight : DomainEvent { public int CharacterId; public CombatantState State; }
+    public sealed class EncounterEnded : DomainEvent { public string EncounterId; public string Outcome; public System.Collections.Generic.List<int> LootIds; }
+    public sealed class LootPickedUp : DomainEvent { public int LootId; }
     public sealed class ReputationChanged : DomainEvent { public string FactionId; public int Delta; public int NewValue; }
     public sealed class InventoryChanged : DomainEvent { public string ItemId; public int Delta; public int NewCount; }
     public sealed class OpinionChanged : DomainEvent { public int CharacterId; public int AboutCharacterId; public int Delta; public int NewValue; }

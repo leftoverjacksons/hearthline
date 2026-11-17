@@ -1,0 +1,19 @@
+# A couple of reavers who try their luck (smoke_on_the_ridge, night raids).
+id: reavers_small
+name: A few reavers
+enemies:
+  - { archetype: reaver, count: [2, 2], weapon: reaver_rifle, ammo: [4, 8], condition: [0.4, 0.8] }
+spawn:
+  distance: [20, 32]
+  spread_degrees: 90
+morale:
+  break_when_down: 0.5
+  break_on_leader_down: false
+  surrender_chance: 0.25
+loot:
+  - { item: cartridges, count: [1, 4], chance: 0.7 }
+outcomes:
+  won: { reputation: { reavers: -3, homesteaders: 1 }, grudge: reavers }
+  fled: { reputation: { reavers: 1 } }
+  surrender: { reputation: { homesteaders: 2 } }
+  downed: { robbed: true }

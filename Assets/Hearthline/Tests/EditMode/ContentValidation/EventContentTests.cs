@@ -33,6 +33,10 @@ namespace Hearthline.Tests.ContentValidation
                 foreach (LootEntry e in table.Entries) items.Add(e.ItemId);
             foreach (JobDef job in TestSupport.Content.Jobs.Values)
                 foreach (LootEntry e in job.Produces) items.Add(e.ItemId);
+            foreach (EncounterDef encounter in TestSupport.Content.Encounters.Values)
+                foreach (EncounterLootDef l in encounter.Loot) items.Add(l.ItemId);
+            foreach (ItemDef gun in TestSupport.Content.Items.Values)
+                if (gun.Weapon != null) items.Add(gun.Weapon.Ammo);
 
             foreach (string id in TestSupport.Content.LootTables.Keys) Assert.That(loot, Does.Contain(id));
             foreach (string id in TestSupport.Content.Factions.Keys) Assert.That(factions, Does.Contain(id));
@@ -86,6 +90,7 @@ beats:
                 new ContentFile { Path = "vocab.yaml", Text = Vocab },
                 new ContentFile { Path = "marks/rite_test.yaml", Text = Rite },
                 new ContentFile { Path = "events/test_event.yaml", Text = eventYaml },
+                new ContentFile { Path = "encounters/reavers_small.yaml", Text = "id: reavers_small\nname: Test fight\nstaged: false\n" },
             });
             if (expected == null) { Assert.That(result.Errors, Is.Empty, string.Join("\n", result.Errors)); return; }
             foreach (ContentError e in result.Errors) if (e.Message.Contains(expected)) return;

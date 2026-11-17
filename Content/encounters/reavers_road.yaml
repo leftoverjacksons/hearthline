@@ -1,0 +1,21 @@
+# Reavers who hold a road or a ford and don't like being refused (reaver_toll, reavers_remember).
+id: reavers_road
+name: Reavers on the road
+enemies:
+  - { archetype: reaver, role: leader, count: [1, 1], weapon: reaver_revolver, ammo: [4, 8], condition: [0.5, 0.9], traits_any: [hot_tempered] }
+  - { archetype: reaver, count: [2, 3], weapon: reaver_rifle, ammo: [6, 12], condition: [0.4, 0.8] }
+spawn:
+  distance: [22, 38]
+  spread_degrees: 120
+morale:
+  break_when_down: 0.5
+  break_on_leader_down: true
+  surrender_chance: 0.35
+loot:
+  - { item: cartridges, count: [2, 6], chance: 0.8 }
+  - { item: old_coin, count: [1, 4], chance: 0.5 }
+outcomes:
+  won: { reputation: { reavers: -5, homesteaders: 2 }, grudge: reavers }
+  fled: { reputation: { reavers: 2 } }
+  surrender: { reputation: { reavers: -2, homesteaders: 3 } }
+  downed: { robbed: true }

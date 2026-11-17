@@ -284,7 +284,7 @@ Combat in v1 is **over-the-shoulder ranged combat**. Melee exists only as **stea
 - **Weapons:** revolvers, lever and bolt rifles, shotguns, bows, salvaged oddities. Ammunition is scarce and partly handmade.
 - **Feel targets:** a deliberate pace like RDR2's, not Division-style bullet sponges. Enemies drop in 1 to 3 hits; so do you.
 - **Weapon condition:** fouling, jams, wear. Maintenance at camp or in the field. Condition feeds the gear's history.
-- **Cover:** contextual (lean and crouch behind objects), no sticky cover system in v1.
+- **Cover:** sticky cover (changed from "contextual only" on 2026-11-17, Travis's call). One key snaps you to the nearest cover: your back against a wall, a wreck or a tree trunk. You lean out at an edge or rise over low cover to aim, slide along it, and leave it with the same key. Enemies use the same cover. Cover-to-cover dashes, vaulting and blind fire come later.
 - **Quick-draw moment:** a short slowdown on ambush start, to deliver the "draw and drop them" fantasy without a full Dead Eye system.
 
 ### Stealth and takedowns

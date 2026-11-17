@@ -55,6 +55,7 @@ namespace Hearthline.Sim
         public HomeRules Home { get; } = new HomeRules();
         public TripRules Trips { get; } = new TripRules();
         public GearRules Gear { get; } = new GearRules();
+        public CombatRules Combat { get; } = new CombatRules();
         private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
@@ -71,7 +72,7 @@ namespace Hearthline.Sim
         }
 
         private SimContext NewContext() =>
-            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, Trips = Trips, Gear = Gear, AgeMarks = _ageMarks };
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, Trips = Trips, Gear = Gear, Combat = Combat, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -185,6 +186,26 @@ namespace Hearthline.Sim
         public bool HasGrudge(string factionId) => WorldSystem.HasGrudge(State, factionId);
 
         public bool HasFlag(string flag) => State.Flags.Contains(flag);
+
+        /// <summary>The fight in progress, or null. Read it, never write it.</summary>
+        public ActiveEncounter Encounter => State.Encounter;
+
+        public bool InEncounter => State.Encounter != null;
+
+        /// <summary>Why the game cannot be saved right now, or null when it can.</summary>
+        public string WhyCannotSave() => State.Encounter != null ? "You can't save during a fight." : null;
+
+        /// <summary>The firearm stats of an item, or null if it is not a firearm.</summary>
+        public WeaponDef WeaponOf(string itemId) => itemId != null && Content.Items.TryGetValue(itemId, out ItemDef def) ? def.Weapon : null;
+
+        /// <summary>A gear item anywhere (carried, in the stores, or lying on the ground after a fight), or null.</summary>
+        public GearItem FindGear(int gearId)
+        {
+            foreach (GearItem g in State.Household.GearStore) if (g.Id == gearId) return g;
+            foreach (Character c in State.Characters) foreach (GearItem g in c.Gear) if (g.Id == gearId) return g;
+            foreach (DroppedLoot l in State.Dropped) foreach (GearItem g in l.Gear) if (g.Id == gearId) return g;
+            return null;
+        }
 
         public List<ChronicleEntry> ChronicleOf(Character character)
         {

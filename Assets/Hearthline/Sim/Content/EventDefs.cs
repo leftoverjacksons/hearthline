@@ -14,6 +14,8 @@ namespace Hearthline.Sim.Content
         public EquipDef Equip;
         /// <summary>Non-null when the item can be gathered from spots in the world (berries, deadfall, salvage).</summary>
         public GatherDef Gather;
+        /// <summary>Non-null for firearms (gear only).</summary>
+        public WeaponDef Weapon;
         public string SourceFile;
     }
 

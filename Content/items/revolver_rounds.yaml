@@ -1,0 +1,5 @@
+id: revolver_rounds
+name: Revolver rounds
+weight: 0.3
+value: 1
+tags: [ammo]

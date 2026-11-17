@@ -341,3 +341,56 @@ equip:
 ```
 
 Event outcome: `gear: { def: lever_rifle, to: hero, note: "Found in a wrecked truck by {hero.full_name}." }`
+
+## Items: weapons
+
+A gear item in the `long_gun` or `sidearm` slot can have a `weapon:` block, which makes it a firearm
+(docs/specs/combat-and-ambush.md). The sim uses `ammo`, `capacity`, `damage`, `severity`, `range`,
+`jam_chance` and `wear_per_shot`. `fire_interval`, `reload_per_round` and `spread` are what presentation acts
+out. All values are starting points for tuning by feel.
+
+```yaml
+weapon:
+  ammo: cartridges          # a stackable item, used one per shot
+  capacity: 7               # rounds loaded at once (at least 1)
+  damage: gunshot           # optional, default gunshot; picks the wound mark
+  severity: 2               # wound severity on a body hit: +1 head or face, -1 hands, -1 beyond range (1..3)
+  range: 60                 # metres
+  fire_interval: 0.9        # seconds between shots
+  reload_per_round: 0.6     # seconds per round, scaled by the reload_speed stat
+  spread: 1.2               # degrees at rest
+  jam_chance: 0.01          # optional; per shot at full condition, up to 5x when worn out
+  wear_per_shot: 0.002      # optional; condition runs 1 to 0
+```
+
+## encounters/<id>.yaml
+
+A fight an event's `ambush:` outcome can start. Every id under `encounters:` in vocab.yaml needs a file, and
+every file must be listed there.
+
+```yaml
+id: reavers_road
+name: Reavers on the road
+staged: true              # optional, default true; false = reported only (no enemies needed yet)
+enemies:                  # required when staged; at least one group must have count min > 0
+  - { archetype: reaver, role: leader, count: [1, 1], weapon: reaver_revolver, ammo: [4, 8], condition: [0.5, 0.9], traits_any: [hot_tempered] }
+  - { archetype: reaver, count: [2, 3], weapon: reaver_rifle, ammo: [6, 12], condition: [0.4, 0.8] }
+spawn:                    # optional; presentation places enemies this far away, in this arc ahead
+  distance: [22, 38]
+  spread_degrees: 120
+morale:                   # required when staged
+  break_when_down: 0.5    # the group breaks once this share is down, fled or surrendered
+  break_on_leader_down: true
+  surrender_chance: 0.35  # when it breaks, each still standing gives up with this chance, else flees
+loot:                     # rolled once for each fallen enemy, on top of their own gun and spare rounds
+  - { item: cartridges, count: [2, 6], chance: 0.8 }
+outcomes:                 # optional keys: won, fled, surrender, downed
+  won: { reputation: { reavers: -5 }, grudge: reavers }
+  surrender: { reputation: { homesteaders: 3 } }   # applied on top of won when some gave up
+  downed: { robbed: true }                          # robbed: the enemies take the pack (downed only)
+```
+
+- `archetype` must be in vocab.yaml, `weapon` must be an item with a weapon block, `traits_any` must be
+  traits, and loot must be stackable items (enemies drop their own gear by themselves).
+- At most one group is `role: leader`, with at most one enemy. A person the event cast (the reaver at the
+  toll) takes that place when the ambush names them.

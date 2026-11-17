@@ -83,7 +83,7 @@ namespace Hearthline.Game
             {
                 if (sim.OnTrip) Run(sim, new ReturnHome()); else Run(sim, new SetOut());
             }
-            if (GUILayout.Button("Save")) { host.Save(); _status = "Saved."; }
+            if (GUILayout.Button("Save")) _status = host.Save() ?? "Saved.";
             if (GUILayout.Button("Load")) _status = host.Load() ? "Loaded." : "Load failed; see console.";
             if (GUILayout.Button("New game")) { host.NewGame(); _status = "New game."; }
             GUILayout.EndHorizontal();

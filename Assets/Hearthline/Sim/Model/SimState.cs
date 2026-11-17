@@ -89,6 +89,12 @@ namespace Hearthline.Sim
         /// <summary>Held by a blood descendant of its first owner. Its heirloom effects apply.</summary>
         public bool Heirloom;
         public List<LedgerEntry> Ledger = new List<LedgerEntry>();
+        /// <summary>Firearms: 1 is clean and true, 0 is worn out. Low condition jams more.</summary>
+        public double Condition = 1;
+        /// <summary>Firearms: rounds in the gun.</summary>
+        public int Loaded;
+        /// <summary>Firearms: jammed until cleared.</summary>
+        public bool Jammed;
     }
 
     public sealed class Memory { public int Day; public string Text; }
@@ -161,6 +167,49 @@ namespace Hearthline.Sim
         public SortedDictionary<string, int> Pack = new SortedDictionary<string, int>();
     }
 
+    public enum CombatantState { Fighting, Down, Fled, Surrendered }
+
+    /// <summary>What a fighter decided when their group broke. Presentation acts it out, then reports it.</summary>
+    public enum BreakIntent { None, Flee, Surrender }
+
+    /// <summary>One enemy in the fight. The person is a real <see cref="Character"/>; this is their part in it.</summary>
+    public sealed class Combatant
+    {
+        public int CharacterId;
+        public CombatantState State;
+        public BreakIntent Intent;
+        public bool Leader;
+        /// <summary>Spare rounds beyond what is in the gun.</summary>
+        public int Ammo;
+        /// <summary>The gun they fight with.</summary>
+        public int GearId;
+    }
+
+    /// <summary>
+    /// The fight in progress (docs/specs/combat-and-ambush.md). Saved, but a game cannot be saved during a
+    /// fight; a state loaded with one re-stages it around the player.
+    /// </summary>
+    public sealed class ActiveEncounter
+    {
+        public string EncounterId;
+        public string EventId;
+        public string PlaceName;
+        public int StartDay;
+        public List<Combatant> Combatants = new List<Combatant>();
+        /// <summary>True once the group has broken.</summary>
+        public bool Broke;
+    }
+
+    /// <summary>What a fallen enemy left on the ground, waiting to be picked up.</summary>
+    public sealed class DroppedLoot
+    {
+        public int Id;
+        /// <summary>Whose it was, if anyone's.</summary>
+        public int? FromCharacterId;
+        public SortedDictionary<string, int> Items = new SortedDictionary<string, int>();
+        public List<GearItem> Gear = new List<GearItem>();
+    }
+
     public sealed class StorytellerState
     {
         /// <summary>Builds up while nothing happens; an event spends it.</summary>
@@ -185,6 +234,7 @@ namespace Hearthline.Sim
         public int NextCharacterId = 1;
         public int NextMarkId = 1;
         public int NextGearId = 1;
+        public int NextLootId = 1;
         public Household Household = new Household();
         public List<Character> Characters = new List<Character>();
         public List<ChronicleEntry> Chronicle = new List<ChronicleEntry>();
@@ -196,5 +246,9 @@ namespace Hearthline.Sim
         public StorytellerState Storyteller = new StorytellerState();
         /// <summary>Gathering spot id -> the day it was last gathered. Spots regrow after the item's regrow_days.</summary>
         public SortedDictionary<string, int> Gathered = new SortedDictionary<string, int>();
+        /// <summary>The fight in progress, or null.</summary>
+        public ActiveEncounter Encounter;
+        /// <summary>Loot lying where a fight ended.</summary>
+        public List<DroppedLoot> Dropped = new List<DroppedLoot>();
     }
 }

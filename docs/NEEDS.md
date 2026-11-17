@@ -21,8 +21,13 @@ Search terms are given where the exact Mixamo name varies.
 
 ### Movement and cover (next step)
 - [ ] 🟡 Crouch walk left, right and backwards (search "crouched walk", "crouched sneaking left/right")
-- [ ] 🟡 Standing cover idle, left and right (search "cover idle", "wall lean")
-- [ ] 🟡 Peek or lean out of cover, left and right (search "cover peek", "lean")
+- [ ] 🟡 **Sticky cover set.** Mixamo's cover clips vary in quality; grab whatever of these exists, and IK fills
+  the gaps:
+  - standing with your back to a wall: idle, and sliding left and right (search "cover", "wall", "back against")
+  - crouched behind low cover: idle, and sliding left and right (search "crouch cover", "crouched cover")
+  - leaning out from the edge to aim, left and right (search "cover peek", "lean", "cover to aim")
+  - rising over low cover to aim (search "crouch to aim", "pop up")
+  - entering and leaving cover (search "to cover", "cover to stand")
 - [ ] 🟡 Rifle aimed walk in all directions (search "rifle strafe", or a rifle 8-way pack)
 - [ ] 🟡 Rifle run
 - [ ] ⚪ Vault over a low obstacle (search "vault", "jump over")
@@ -82,7 +87,8 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
      right edge with vertical tabs (Item, Tool, View, …). Click the tab labelled **MPFB v2.0.18**.
   2. In its **Start here** panel, under SYSTEM ASSETS, click **Get system assets**. It opens the download
      page in your browser. Download the zip and don't unzip it.
-  3. Back in that panel, click **Install pack from zip** and pick the zip. Blender may freeze for a few
+  3. Back in that panel, click **Install pack from zip** and pick the zip (yours downloaded to
+     `Assets/makehuman_system_assets_cc0.zip`; it's git-ignored, and can be deleted once installed). Blender may freeze for a few
      seconds.
   4. Restart Blender (and its MCP add-on), then tell Claude.
 - [x] **.NET 8 SDK** (headless tests run: `tools/test.sh`)
@@ -91,7 +97,8 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 
 ## Decisions waiting on you
 
-- [ ] 🟡 Commit the uncommitted work: homestead (ADR 0017), shading pass (ADR 0018), Mixamo + crouch (ADR 0019), leaf-card oak (ADR 0020)
+- [x] Commit homestead, shading, crouch and leaf-card oak (7b844a9)
+- [x] Approve the combat and ambush spec (docs/specs/combat-and-ambush.md), with sticky cover
 - [ ] 🟡 Leaf-card oak vs the old blob trees: convert the rest, or change direction? (ADR 0020)
 - [ ] ⚪ Tune the look values in ADR 0018 by eye (they are starting points)
 

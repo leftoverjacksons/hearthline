@@ -1,0 +1,19 @@
+id: reaver_revolver
+name: Reaver's revolver
+weight: 1.3
+value: 4
+tags: [gear, salvage]
+equip:
+  slot: sidearm
+  visual: revolver
+weapon:
+  ammo: revolver_rounds
+  capacity: 6
+  damage: gunshot
+  severity: 2
+  range: 22
+  fire_interval: 0.5
+  reload_per_round: 0.55
+  spread: 2.6
+  jam_chance: 0.015
+  wear_per_shot: 0.003

@@ -1,0 +1,4 @@
+# Animals are not staged yet (docs/specs/combat-and-ambush.md, "Out"): the ambush is only reported.
+id: wolves_pack
+name: A wolf pack
+staged: false

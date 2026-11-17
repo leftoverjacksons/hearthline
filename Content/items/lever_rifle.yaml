@@ -9,3 +9,14 @@ equip:
     - { stat: marksmanship, add: 1 }
   heirloom_effects:      # only for a blood descendant of whoever first carried it
     - { stat: aim_steadiness, mul: 1.08 }
+weapon:                  # docs/specs/combat-and-ambush.md; feel values are starting points
+  ammo: cartridges
+  capacity: 7
+  damage: gunshot
+  severity: 2
+  range: 60
+  fire_interval: 0.9
+  reload_per_round: 0.6
+  spread: 1.2
+  jam_chance: 0.01
+  wear_per_shot: 0.002
