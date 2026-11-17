@@ -46,5 +46,10 @@ Hits through the body: the cheat panel's "Shoot me at a random spot" button (or 
 ray at the player; the hit zone it strikes picks the body region of the wound (ADR 0011).
 `HitRegionTests` (PlayMode) covers this.
 
+The mirror: M in play (or "Look in the mirror" in the cheat panel) switches to a camera in front of the
+character and lists every mark with its origin, stage, severity and effects. Click a mark to frame its
+body region and highlight its marker. It only reads the simulation. Framing values are on the `Mirror`
+object. `MirrorViewTests` (PlayMode) covers it.
+
 That proves persistence through the sim with greybox markers on the mannequin's bones. Drawing the scar
 into the character's skin needs a real character model and the M1 decal layer.

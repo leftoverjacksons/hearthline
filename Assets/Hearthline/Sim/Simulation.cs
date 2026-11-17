@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Hearthline.Sim.Content;
 
 namespace Hearthline.Sim
@@ -25,6 +26,11 @@ namespace Hearthline.Sim
         public string OriginText;
         /// <summary>Asset keys for the current stage. Never null.</summary>
         public MarkVisual Visual;
+        /// <summary>
+        /// What the current stage does on this mark's region, one readable line per effect:
+        /// "tracking +1", "aim ×0.9", "reaction: scarred", "ability: dowsing". Never null.
+        /// </summary>
+        public List<string> Effects = new List<string>();
         /// <summary>True when the save refers to a definition or stage that content no longer has.</summary>
         public bool Orphaned;
     }
@@ -206,10 +212,33 @@ namespace Hearthline.Sim
                     Stage = mark.Stage,
                     OriginText = mark.OriginText,
                     Visual = stage?.Visual ?? new MarkVisual(),
+                    Effects = DescribeEffects(stage, mark.Region),
                     Orphaned = stage == null,
                 });
             }
             return views;
+        }
+
+        private static List<string> DescribeEffects(MarkStageDef stage, BodyRegion region)
+        {
+            var lines = new List<string>();
+            if (stage == null) return lines;
+            foreach (MarkEffect effect in stage.Effects)
+            {
+                if (!effect.AppliesTo(region)) continue;
+                switch (effect.Kind)
+                {
+                    case EffectKind.Reaction: lines.Add("reaction: " + effect.Target); break;
+                    case EffectKind.Ability: lines.Add("ability: " + effect.Target); break;
+                    default:
+                        string line = effect.Target;
+                        if (effect.Add != 0) line += (effect.Add > 0 ? " +" : " ") + effect.Add.ToString(CultureInfo.InvariantCulture);
+                        if (effect.Mul != 1.0) line += " ×" + effect.Mul.ToString(CultureInfo.InvariantCulture);
+                        lines.Add(line);
+                        break;
+                }
+            }
+            return lines;
         }
 
         /// <summary>Marks whose definition or stage no longer exists in content. Check after loading a save.</summary>

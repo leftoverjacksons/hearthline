@@ -5,7 +5,8 @@
         "Hearthline.Sim",
         "Hearthline.Bridge",
         "Unity.StarterAssets",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Cinemachine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

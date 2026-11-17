@@ -4,6 +4,8 @@
     "references": [
         "Hearthline.Sim",
         "Hearthline.Bridge",
+        "Hearthline.Game",
+        "Unity.Cinemachine",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

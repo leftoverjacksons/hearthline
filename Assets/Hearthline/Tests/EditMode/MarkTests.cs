@@ -163,6 +163,26 @@ namespace Hearthline.Tests
         }
 
         [Test]
+        public void MarkViewsDescribeEffectsForTheirRegion()
+        {
+            Simulation sim = TestSupport.NewSim();
+            TestSupport.Ok(sim.Execute(new AddMark { CharacterId = sim.Head.Id, DefId = "scar_burn", Region = BodyRegion.HandL, Origin = TestSupport.Boar }));
+            TestSupport.Ok(sim.Execute(new AddMark { CharacterId = sim.Head.Id, DefId = "scar_burn", Region = BodyRegion.Face, Origin = TestSupport.Boar }));
+            List<MarkView> views = sim.MarkViewsOf(sim.Head);
+
+            Assert.That(views[0].Effects, Is.EqualTo(new[] { "reaction: scarred", "reload_speed ×0.85" }));
+            Assert.That(views[1].Effects, Is.EqualTo(new[] { "reaction: scarred", "persuasion -1", "reaction: disfigured" }));
+        }
+
+        [Test]
+        public void ClawScarOnTheFaceListsItsEffects()
+        {
+            Simulation sim = TestSupport.NewSim();
+            TestSupport.Ok(sim.Execute(new AddMark { CharacterId = sim.Head.Id, DefId = "scar_claw", Region = BodyRegion.Face, Origin = TestSupport.Boar }));
+            Assert.That(sim.MarkViewsOf(sim.Head)[0].Effects, Is.EqualTo(new[] { "reaction: scarred", "tracking +1" }));
+        }
+
+        [Test]
         public void ACharacterCanCarryTwelveMarks()
         {
             Simulation sim = TestSupport.NewSim();

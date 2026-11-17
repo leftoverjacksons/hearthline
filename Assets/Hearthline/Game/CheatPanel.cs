@@ -29,6 +29,7 @@ namespace Hearthline.Game
         private Vector2 _scroll, _pickScroll;
         private bool _open;
         private DebugHitter _hitter;
+        private MirrorView _mirror;
 
         /// <summary>Whether the panel is showing. Other presentation code (player input, cursor) follows it.</summary>
         public bool IsOpen => _open;
@@ -141,6 +142,9 @@ namespace Hearthline.Game
             if (_hitter == null) _hitter = FindAnyObjectByType<DebugHitter>();
             if (_hitter != null && GUILayout.Button("Shoot me at a random spot with " + DamageNames[_damageIndex]))
                 _status = _hitter.Fire((DamageType)_damageIndex, severity, origin);
+            if (_mirror == null) _mirror = FindAnyObjectByType<MirrorView>();
+            if (_mirror != null && GUILayout.Button(_mirror.IsOpen ? "Close the mirror" : "Look in the mirror"))
+                _mirror.SetOpen(!_mirror.IsOpen);
 
             // Gear: unique items the head carries. Click a kind to be given one; click one carried to wear it or take it off.
             GUILayout.BeginHorizontal();

@@ -5,14 +5,15 @@ using UnityEngine.InputSystem;
 namespace Hearthline.Game
 {
     /// <summary>
-    /// While the cheat panel is open, frees the mouse and stops the player character from moving or turning
-    /// the camera, so the panel can be clicked and typed into. Put it on the player next to the Starter Assets
-    /// controller. Wraps the third-party input component without changing it.
+    /// While the cheat panel or the mirror is open, frees the mouse and stops the player character from moving
+    /// or turning the camera, so the panel can be clicked and typed into. Put it on the player next to the
+    /// Starter Assets controller. Wraps the third-party input component without changing it.
     /// </summary>
     [RequireComponent(typeof(StarterAssetsInputs))]
     public sealed class CheatPanelInputRelease : MonoBehaviour
     {
         [SerializeField] private CheatPanel panel;
+        [SerializeField] private MirrorView mirror;
 
         private StarterAssetsInputs _inputs;
         private PlayerInput _playerInput;
@@ -23,11 +24,12 @@ namespace Hearthline.Game
             _inputs = GetComponent<StarterAssetsInputs>();
             _playerInput = GetComponent<PlayerInput>();
             if (panel == null) panel = FindAnyObjectByType<CheatPanel>();
+            if (mirror == null) mirror = FindAnyObjectByType<MirrorView>();
         }
 
         private void Update()
         {
-            bool release = panel != null && panel.IsOpen;
+            bool release = (panel != null && panel.IsOpen) || (mirror != null && mirror.IsOpen);
             if (_released == release) return;
             _released = release;
 

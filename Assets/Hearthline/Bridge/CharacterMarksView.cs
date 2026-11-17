@@ -23,8 +23,12 @@ namespace Hearthline.Bridge
         [Tooltip("A bone or empty transform per body region. Regions without an anchor fall back to this object.")]
         [SerializeField] private RegionAnchor[] anchors = new RegionAnchor[0];
         [SerializeField] private float markerSize = 0.06f;
+        [Tooltip("How much bigger the highlighted marker is drawn, and how fast it pulses.")]
+        [SerializeField] private float highlightScale = 1.8f;
+        [SerializeField] private float highlightPulseSpeed = 6f;
 
-        private readonly List<GameObject> _markers = new List<GameObject>();
+        private readonly Dictionary<int, GameObject> _markers = new Dictionary<int, GameObject>();
+        private readonly Dictionary<int, Vector3> _baseScales = new Dictionary<int, Vector3>();
         private SimHost _host;
         private SimCharacterLink _link;
 
@@ -56,10 +60,38 @@ namespace Hearthline.Bridge
                 Rebuild();
         }
 
+        /// <summary>The mark drawn highlighted (the mirror view's selection), or null for none.</summary>
+        public int? HighlightedMarkId { get; private set; }
+
+        public void Highlight(int? markId)
+        {
+            if (HighlightedMarkId.HasValue) ResetScale(HighlightedMarkId.Value);
+            HighlightedMarkId = markId;
+        }
+
+        /// <summary>The marker drawn for a mark, or null if it is not drawn.</summary>
+        public Transform MarkerFor(int markId) => _markers.TryGetValue(markId, out GameObject m) && m != null ? m.transform : null;
+
+        private void Update()
+        {
+            if (!HighlightedMarkId.HasValue) return;
+            int id = HighlightedMarkId.Value;
+            if (!_markers.TryGetValue(id, out GameObject marker) || marker == null) return;
+            float pulse = 1f + 0.15f * Mathf.Sin(Time.unscaledTime * highlightPulseSpeed);
+            marker.transform.localScale = _baseScales[id] * (highlightScale * pulse);
+        }
+
+        private void ResetScale(int markId)
+        {
+            if (_markers.TryGetValue(markId, out GameObject marker) && marker != null)
+                marker.transform.localScale = _baseScales[markId];
+        }
+
         public void Rebuild()
         {
-            foreach (GameObject marker in _markers) Destroy(marker);
+            foreach (GameObject marker in _markers.Values) Destroy(marker);
             _markers.Clear();
+            _baseScales.Clear();
 
             Simulation sim = _host.Sim;
             Character character = _link.Resolve(sim);
@@ -80,11 +112,13 @@ namespace Hearthline.Bridge
                 marker.transform.localPosition = Vector3.up * (index * markerSize * 1.2f);
                 marker.transform.localScale = Vector3.one * (markerSize * (0.7f + 0.3f * view.Severity));
                 marker.GetComponent<Renderer>().material.color = ColorFor(view.Category);
-                _markers.Add(marker);
+                _markers[view.MarkId] = marker;
+                _baseScales[view.MarkId] = marker.transform.localScale;
             }
         }
 
-        private Transform AnchorFor(BodyRegion region)
+        /// <summary>Where marks on a region are drawn; the character root if the region has no anchor.</summary>
+        public Transform AnchorFor(BodyRegion region)
         {
             foreach (RegionAnchor a in anchors)
                 if (a.region == region && a.anchor != null) return a.anchor;

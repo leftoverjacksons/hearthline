@@ -76,6 +76,22 @@ public static class BuildGreyboxScene
         Transform cameraRoot = FindChild(player.transform, "PlayerCameraRoot");
         followCamera.GetComponent<CinemachineCamera>().Follow = cameraRoot;
 
+        // The mirror: its own Cinemachine camera, above the follow camera's priority, switched on only
+        // while the mirror is open. MirrorView moves it; the brain blends to it and back.
+        var mirrorCamera = new GameObject("MirrorCamera").AddComponent<CinemachineCamera>();
+        mirrorCamera.Priority = 100;
+        mirrorCamera.Lens = LensSettings.Default;
+        mirrorCamera.Lens.FieldOfView = 35f;
+        var mirror = new GameObject("Mirror").AddComponent<MirrorView>();
+        var mirrorSerialized = new SerializedObject(mirror);
+        mirrorSerialized.FindProperty("character").objectReferenceValue = player.GetComponent<CharacterMarksView>();
+        mirrorSerialized.FindProperty("mirrorCamera").objectReferenceValue = mirrorCamera;
+        mirrorSerialized.ApplyModifiedPropertiesWithoutUndo();
+        mirrorCamera.gameObject.SetActive(false);
+        var releaseMirror = new SerializedObject(player.GetComponent<CheatPanelInputRelease>());
+        releaseMirror.FindProperty("mirror").objectReferenceValue = mirror;
+        releaseMirror.ApplyModifiedPropertiesWithoutUndo();
+
         EditorSceneManager.SaveScene(scene, ScenePath);
 
         var buildScenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
