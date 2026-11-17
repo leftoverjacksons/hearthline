@@ -30,6 +30,7 @@ namespace Hearthline.Game
         private bool _open;
         private DebugHitter _hitter;
         private MirrorView _mirror;
+        private RoadEvents _roadEvents;
 
         /// <summary>Whether the panel is showing. Other presentation code (player input, cursor) follows it.</summary>
         public bool IsOpen => _open;
@@ -216,6 +217,15 @@ namespace Hearthline.Game
                 GUILayout.EndScrollView();
                 if (_eventIds.Length > 0 && GUILayout.Button("Start " + _eventIds[_eventIndex]))
                     Run(sim, new StartEvent { EventId = _eventIds[_eventIndex], Context = where });
+                // In a world scene: start it where the player is standing (their area, place name and time).
+                if (_roadEvents == null) _roadEvents = FindAnyObjectByType<RoadEvents>();
+                if (_roadEvents != null && _eventIds.Length > 0 && GUILayout.Button("Start " + _eventIds[_eventIndex] + " here"))
+                {
+                    string error = _roadEvents.StartHere(_eventIds[_eventIndex]);
+                    _status = error == null ? "Started here." : "Rejected: " + error;
+                }
+                if (_roadEvents != null && GUILayout.Button("Storyteller turn here"))
+                    _status = _roadEvents.StorytellerTurn() ? "An event started." : "Nothing happened.";
             }
 
             GUILayout.Space(8);

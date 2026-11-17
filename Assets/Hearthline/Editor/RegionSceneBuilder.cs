@@ -86,6 +86,10 @@ namespace Hearthline.EditorTools
             SceneBuildKit.SetRef(trip, "location", location);
             SceneBuildKit.SetRef(trip, "clock", clock);
 
+            var roadEvents = new GameObject("Road Events").AddComponent<RoadEvents>();
+            SceneBuildKit.SetRef(roadEvents, "location", location);
+            SceneBuildKit.SetRef(roadEvents, "clock", clock);
+
             BuildAtmosphere(sun, moon, clock, location);
 
             EditorSceneManager.SaveScene(scene, ScenePath);

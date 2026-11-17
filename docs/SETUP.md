@@ -78,6 +78,12 @@ map, instanced trees and ground cover, and sky, fog and post-processing that fol
 `Post-processing` volume's profile. To change a model: edit it in Blender, re-export to the same FBX name
 (and `palette.json` if colours changed), then rebuild the scene.
 
+While you are away, the storyteller gets a turn every so often (distance walked, hours passed, each
+night in camp) and may start an event that fits where you are. The event panel shows the text and
+choices; a summary of what changed follows (ADR 0015). Pacing values are on the `Road Events` object.
+In the cheat panel's Events tab, "Start … here" runs any event at your spot and "Storyteller turn here"
+forces a turn. `RoadEventTests` (PlayMode) covers this.
+
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
 `unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();"`.
 `TripFlowTests` (PlayMode) covers places, leaving, setting out, staying home, coming home and the clock.

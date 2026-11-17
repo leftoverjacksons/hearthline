@@ -53,9 +53,10 @@ namespace Hearthline.Game
 
         private void Update()
         {
+            // Days owed from an event are settled as soon as the simulation allows, even while a panel is up.
+            if (_owedDays > 0) PayOwedDays();
             if (playerInput != null && playerInput.Released) return;
             AdvanceHours(Time.deltaTime / (minutesPerDay * 60f) * 24f);
-            if (_owedDays > 0) PayOwedDays();
         }
 
         /// <summary>Moves the clock forward; every midnight crossed advances the simulation one day.</summary>
