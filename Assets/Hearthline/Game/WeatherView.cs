@@ -52,10 +52,18 @@ namespace Hearthline.Game
         [Tooltip("Seconds from flash to thunder (distance).")]
         [SerializeField] private Vector2 thunderDelay = new Vector2(0.6f, 4f);
 
-        [Header("Sound (no clips yet: see docs/NEEDS.md)")]
+        [Header("Sound (CC0, see Assets/Hearthline/Art/Audio/CREDITS.md)")]
         [SerializeField] private AudioClip rainLoop;
-        [SerializeField] private AudioClip windLoop;
+        [Tooltip("Heavier rain, faded in for storms.")]
+        [SerializeField] private AudioClip stormLoop;
+        [Tooltip("Gusts, played now and then: more often and louder as the wind rises.")]
+        [SerializeField] private AudioClip[] windGusts = new AudioClip[0];
         [SerializeField] private AudioClip[] thunder = new AudioClip[0];
+        [SerializeField, Range(0f, 1f)] private float rainVolume = 0.8f;
+        [SerializeField, Range(0f, 1f)] private float windVolume = 0.5f;
+        [SerializeField, Range(0f, 1f)] private float thunderVolume = 1f;
+        [Tooltip("Seconds between gusts on a calm day; wind shortens it.")]
+        [SerializeField] private float gustEvery = 25f;
 
         public WeatherKind Current { get; private set; } = WeatherKind.Clear;
         public float Wetness { get; private set; }
@@ -72,9 +80,22 @@ namespace Hearthline.Game
         private Color[] _dryColours = new Color[0];
         private float[] _drySmoothness = new float[0];
         private float _nextLightning = 10f, _flash, _thunderAt = -1f;
-        private AudioSource _rainAudio, _windAudio, _thunderAudio;
+        private AudioSource _rainAudio, _stormAudio, _windAudio, _thunderAudio;
+        private float _nextGust = 5f;
         private static readonly int WindId = Shader.PropertyToID("_HL_WindBoost");
         private static readonly int WetId = Shader.PropertyToID("_HL_Wetness");
+
+        /// <summary>Used by the scene builder.</summary>
+        public void SetSounds(AudioClip rainClip, AudioClip stormClip, AudioClip[] gusts, AudioClip[] thunderClips)
+        {
+            rainLoop = rainClip;
+            stormLoop = stormClip;
+            windGusts = gusts;
+            thunder = thunderClips;
+        }
+
+        /// <summary>Rain loudness right now (light and heavy loops together).</summary>
+        public float RainVolume => (_rainAudio != null ? _rainAudio.volume : 0f) + (_stormAudio != null ? _stormAudio.volume : 0f);
 
         public void Configure(TravelClock travelClock, Atmosphere atmo, Renderer[] wet)
         {
@@ -106,7 +127,10 @@ namespace Hearthline.Game
             _rain = BuildRain();
             _splash = BuildSplash();
             _rainAudio = Loop("Rain Sound", rainLoop);
-            _windAudio = Loop("Wind Sound", windLoop);
+            _stormAudio = Loop("Storm Rain Sound", stormLoop);
+            _windAudio = gameObject.AddComponent<AudioSource>();
+            _windAudio.playOnAwake = false;
+            _windAudio.spatialBlend = 0f;
             _thunderAudio = gameObject.AddComponent<AudioSource>();
             _thunderAudio.playOnAwake = false;
             _thunderAudio.spatialBlend = 0f;
@@ -192,8 +216,15 @@ namespace Hearthline.Game
                 velocity.x = new ParticleSystem.MinMaxCurve(_look.wind * 2.5f);
             }
             float rainLevel = Mathf.InverseLerp(0f, storm.rain, RainRate);
-            if (_rainAudio != null) _rainAudio.volume = rainLevel;
-            if (_windAudio != null) _windAudio.volume = Mathf.Clamp01(0.15f + _look.wind * 0.35f);
+            float heavy = Mathf.InverseLerp(rain.rain, storm.rain, RainRate);
+            if (_rainAudio != null) _rainAudio.volume = rainVolume * Mathf.Clamp01(rainLevel * 2.5f) * (1f - heavy * 0.6f);
+            if (_stormAudio != null) _stormAudio.volume = rainVolume * heavy;
+            // Gusts: the windier, the more often and the louder.
+            if (windGusts.Length > 0 && Time.time >= _nextGust && _windAudio != null)
+            {
+                _nextGust = Time.time + gustEvery / (1f + _look.wind * 2f) * Random.Range(0.6f, 1.4f);
+                _windAudio.PlayOneShot(windGusts[Random.Range(0, windGusts.Length)], windVolume * Mathf.Clamp01(0.35f + _look.wind * 0.3f));
+            }
         }
 
         private void Lightning(bool storming)
@@ -202,7 +233,7 @@ namespace Hearthline.Game
             if (_thunderAt >= 0f && Time.time >= _thunderAt)
             {
                 _thunderAt = -1f;
-                if (thunder.Length > 0 && _thunderAudio != null) _thunderAudio.PlayOneShot(thunder[Random.Range(0, thunder.Length)]);
+                if (thunder.Length > 0 && _thunderAudio != null) _thunderAudio.PlayOneShot(thunder[Random.Range(0, thunder.Length)], thunderVolume);
             }
             if (!storming) { _nextLightning = Time.time + Random.Range(2f, lightningEvery.x); return; }
             if (Time.time < _nextLightning) return;

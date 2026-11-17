@@ -34,5 +34,13 @@ Status: accepted (spec approved 2026-11-17: docs/specs/life-and-weather.md).
 
   It thins in deep woods and bad weather, and is **silent in Thin places**. The deep hollow is Thin level 1,
   so it is silent too.
-- **Sound:** audio sources are in place without clips until Travis OKs CC0 downloads.
+- **Sound (approved 2026-11-17):** CC0 clips from OpenGameArt in `Assets/Hearthline/Art/Audio`, credited in
+  `CREDITS.md`. Freesound needs a login and the Sonniss bundles aren't CC0, so neither is used. The clips:
+  - light and heavy rain loops, faded by rain rate;
+  - wind gusts at random, more often and louder in wind;
+  - two thunder cuts after each flash;
+  - birdsong by day, following how much life is about;
+  - crickets on evenings outside winter.
+
+  All of it is silent in Thin places.
 - **The Particle System module** is now enabled in `Packages/manifest.json`; it was off.

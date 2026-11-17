@@ -117,8 +117,8 @@ season from `Content/weather.yaml`, and the scene shows it: rain around you, wet
 the trees, lightning in storms. Birds sit in the trees and the grass and flush when you come close or fire;
 flocks cross overhead; gnats hang over the creeks by day; fireflies come out on summer evenings. None of it
 appears in Thin places. The HUD shows the weather, and a forecast if someone in the household has stiff
-joints. Cheats are in the World tab: set the weather, lightning, send a flock, skip to an hour. Look values
-are on the `Weather` and `Ambient Life` objects. `WeatherPlayTests` covers it.
+joints. Cheats are in the World tab: set the weather, lightning, send a flock, skip to an hour. Look and sound values
+are on the `Weather` and `Ambient Life` objects; the sounds are CC0 (`Assets/Hearthline/Art/Audio/CREDITS.md`). `WeatherPlayTests` covers it.
 
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
 `unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();" --timeout 900`.

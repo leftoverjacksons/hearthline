@@ -103,7 +103,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 
 - [x] **Approve the life-and-weather spec** (`docs/specs/life-and-weather.md`): weather in the simulation,
   birds, insects and fireflies around you, and birds going silent in Thin places.
-- [ ] 🟡 **OK to download CC0 sounds?** Rain, wind, birdsong, insects and thunder from a free CC0 library
+- [x] **OK to download CC0 sounds?** (yes: OpenGameArt CC0, credits in `Assets/Hearthline/Art/Audio/CREDITS.md`) Rain, wind, birdsong, insects and thunder from a free CC0 library
   (Freesound CC0 or the Sonniss GDC bundles). Until then, the audio sources are in place but silent.
 - [x] Commit homestead, shading, crouch and leaf-card oak (7b844a9)
 - [x] Approve the hunt spec: a deer first, from the job board

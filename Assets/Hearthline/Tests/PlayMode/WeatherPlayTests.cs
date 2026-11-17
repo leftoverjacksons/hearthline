@@ -84,9 +84,11 @@ namespace Hearthline.Tests.PlayMode
             yield return new WaitForSeconds(1f);
             Assert.That(_weather.Rain.particleCount, Is.GreaterThan(100), "Drops are falling.");
             Assert.That(_weather.Wetness, Is.GreaterThan(wet), "The ground is getting wetter.");
+            Assert.That(_weather.RainVolume, Is.GreaterThan(0.3f), "And you hear it.");
 
             yield return Weather(WeatherKind.Clear);
             Assert.That(_weather.RainRate, Is.EqualTo(0f));
+            Assert.That(_weather.RainVolume, Is.EqualTo(0f));
             wet = _weather.Wetness;
             yield return new WaitForSeconds(1f);
             Assert.That(_weather.Wetness, Is.LessThan(wet), "And it dries.");
@@ -109,6 +111,8 @@ namespace Hearthline.Tests.PlayMode
             yield return Weather(WeatherKind.Clear);
             for (float t = 0f; t < 6f && _life.PerchedCount == 0; t += Time.deltaTime) yield return null;
             Assert.That(_life.PerchedCount, Is.GreaterThan(0), "Birds about on a clear morning.");
+            for (float t = 0f; t < 3f && _life.DaySoundVolume < 0.2f; t += Time.deltaTime) yield return null;
+            Assert.That(_life.DaySoundVolume, Is.GreaterThan(0.2f), "And singing.");
         }
 
         [UnityTest]
@@ -149,6 +153,8 @@ namespace Hearthline.Tests.PlayMode
             Assert.That(Object.FindAnyObjectByType<PlayerLocation>().ThinLevel, Is.GreaterThan(0));
             Assert.That(_life.Density, Is.EqualTo(0f));
             Assert.That(_life.PerchedCount, Is.EqualTo(0), "Not a bird.");
+            for (float t = 0f; t < 4f && _life.DaySoundVolume > 0f; t += Time.deltaTime) yield return null;
+            Assert.That(_life.DaySoundVolume, Is.EqualTo(0f), "Not a sound.");
         }
 
         [UnityTest]
@@ -161,6 +167,7 @@ namespace Hearthline.Tests.PlayMode
             yield return new WaitForSeconds(1f);
             Assert.That(_life.FirefliesOn, Is.True);
             Assert.That(_life.Fireflies.particleCount, Is.GreaterThan(3));
+            Assert.That(_life.NightSoundVolume, Is.GreaterThan(0.1f), "Crickets.");
             yield return SetHour(12f);
             yield return Weather(WeatherKind.Clear);
             Assert.That(_life.FirefliesOn, Is.False, "Not at noon.");

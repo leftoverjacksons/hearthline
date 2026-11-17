@@ -104,9 +104,14 @@ namespace Hearthline.EditorTools
 
             BuildAtmosphere(sun, moon, clock, location);
             // Weather and the life around you (docs/specs/life-and-weather.md).
-            new GameObject("Weather").AddComponent<WeatherView>()
-                .Configure(clock, Object.FindAnyObjectByType<Atmosphere>(), new Renderer[] { GameObject.Find("Region Ground").GetComponent<Renderer>() });
-            new GameObject("Ambient Life").AddComponent<AmbientLife>().Configure(rig.Player.transform, clock, location);
+            AudioClip Clip(string name) => AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Hearthline/Art/Audio/" + name);
+            var weatherView = new GameObject("Weather").AddComponent<WeatherView>();
+            weatherView.Configure(clock, Object.FindAnyObjectByType<Atmosphere>(), new Renderer[] { GameObject.Find("Region Ground").GetComponent<Renderer>() });
+            weatherView.SetSounds(Clip("Rain_3.ogg"), Clip("Rain_2.ogg"),
+                new[] { Clip("Wind_1.ogg"), Clip("Wind_2.ogg"), Clip("Wind_3.ogg") }, new[] { Clip("Thunder_Long.wav"), Clip("Thunder_Short.wav") });
+            var life = new GameObject("Ambient Life").AddComponent<AmbientLife>();
+            life.Configure(rig.Player.transform, clock, location);
+            life.SetSounds(Clip("Birds_And_Wind.ogg"), Clip("Crickets.mp3"));
             int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
             CombatSceneKit.BuildEnemyPrefab();
             CombatSceneKit.AddSpawner(rig.Player.transform);

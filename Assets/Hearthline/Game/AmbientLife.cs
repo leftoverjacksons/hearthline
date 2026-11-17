@@ -45,7 +45,26 @@ namespace Hearthline.Game
         [SerializeField] private Vector2 fireflyHours = new Vector2(19.5f, 24f);
         [SerializeField] private float firefliesPerSecond = 14f;
 
+        [Header("Sound (CC0, see Assets/Hearthline/Art/Audio/CREDITS.md)")]
+        [Tooltip("Birdsong and breeze by day; follows how much life there is here.")]
+        [SerializeField] private AudioClip dayLoop;
+        [Tooltip("Crickets outside winter, from dusk.")]
+        [SerializeField] private AudioClip nightLoop;
+        [SerializeField, Range(0f, 1f)] private float dayVolume = 0.6f;
+        [SerializeField, Range(0f, 1f)] private float nightVolume = 0.45f;
+        [SerializeField] private float soundFadePerSecond = 0.25f;
+
         public readonly List<Bird> Birds = new List<Bird>();
+        public float DaySoundVolume => _day != null ? _day.volume : 0f;
+        public float NightSoundVolume => _night != null ? _night.volume : 0f;
+        private AudioSource _day, _night;
+
+        /// <summary>Used by the scene builder.</summary>
+        public void SetSounds(AudioClip day, AudioClip night)
+        {
+            dayLoop = day;
+            nightLoop = night;
+        }
         public int PerchedCount { get { int n = 0; foreach (Bird b in Birds) if (b.Perched) n++; return n; } }
         public float Density { get; private set; }
         public bool FirefliesOn { get; private set; }
@@ -82,6 +101,21 @@ namespace Hearthline.Game
             for (int i = 0; i < 3; i++) _gnats.Add(BuildGnats(i));
             _nextFlock = Time.time + Random.Range(flockEvery.x * 0.3f, flockEvery.y * 0.5f);
             PlayerWeapon.ShotFired += OnShot;
+            _day = Loop("Day Sound", dayLoop);
+            _night = Loop("Night Sound", nightLoop);
+        }
+
+        private AudioSource Loop(string name, AudioClip clip)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var s = go.AddComponent<AudioSource>();
+            s.loop = true;
+            s.spatialBlend = 0f;
+            s.volume = 0f;
+            s.clip = clip;
+            if (clip != null) s.Play();
+            return s;
         }
 
         private void OnDestroy() => PlayerWeapon.ShotFired -= OnShot;
@@ -119,6 +153,25 @@ namespace Hearthline.Game
             UpdateBirds();
             UpdateFlocks();
             UpdateInsects();
+            UpdateSound();
+        }
+
+        // Birdsong by day where there is life; crickets on evenings and nights outside winter; nothing in Thin places.
+        private void UpdateSound()
+        {
+            float h = Hour;
+            bool thin = location != null && location.ThinLevel > 0;
+            float daylight = Mathf.Clamp01(Mathf.InverseLerp(5f, 7f, h)) * Mathf.Clamp01(Mathf.InverseLerp(20.5f, 19f, h));
+            float dayTarget = thin ? 0f : dayVolume * Density * daylight;
+            Simulation sim = Sim;
+            GameDate date = sim != null ? sim.Date : new GameDate(GameDate.DaysPerSeason + 1);
+            bool cold = date.Season == Season.Winter;
+            bool dry = Weather != WeatherKind.Rain && Weather != WeatherKind.Storm;
+            float night = Mathf.Max(Mathf.InverseLerp(18.5f, 20.5f, h), Mathf.InverseLerp(5.5f, 4f, h));
+            float nightTarget = thin || cold || !dry ? 0f : nightVolume * night * (Has("deep_woods") ? 0.6f : 1f);
+            float step = soundFadePerSecond * Time.deltaTime;
+            if (_day != null) _day.volume = Mathf.MoveTowards(_day.volume, dayTarget, step);
+            if (_night != null) _night.volume = Mathf.MoveTowards(_night.volume, nightTarget, step);
         }
 
         // ---- Birds -----------------------------------------------------------------------------------
