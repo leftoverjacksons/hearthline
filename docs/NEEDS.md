@@ -72,6 +72,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 - [ ] ⚪ **Gear** → `gear/`. Lever rifle, bolt rifle, revolver, shotgun, a homemade bow, knives; worn and
   repaired. Needed when weapons get models (shooting step).
 - [ ] ⚪ **Marks** → `marks/`. Scars, bandages, burns, how far realism goes (M1 visuals).
+- [ ] ⚪ **Animals** → `animals/`. A boar (the first hunt), deer and wolves, if you have a look in mind.
 - [ ] ⚪ **Not this** → `not-this/`. Any looks to avoid.
 
 ### Have
@@ -100,6 +101,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 ## Decisions waiting on you
 
 - [x] Commit homestead, shading, crouch and leaf-card oak (7b844a9)
+- [ ] 🟡 **Approve the hunt spec** (`docs/specs/hunt.md`): the last piece of M2. Three decisions at the end.
 - [x] Approve the combat and ambush spec (docs/specs/combat-and-ambush.md), with sticky cover
 - [ ] 🟡 Leaf-card oak vs the old blob trees: convert the rest, or change direction? (ADR 0020)
 - [ ] 🟡 **Play a fight and tune its feel.** Cheat panel (F1), Combat tab: "Start reavers_road here". Or at the
