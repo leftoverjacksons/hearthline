@@ -128,6 +128,11 @@ effects:
 
 `area_tags`, `archetypes` and `encounters` are the lists events may use in `when`, `generate` and `ambush`.
 
+`visuals` (required mapping) lists every visual key the Unity side must supply: `decals`, `part_swaps`,
+`material_params`, `blendshapes` (keys of a mark stage's `visual`) and `gear` (an item's `equip.visual`).
+A mark or item that names an unlisted key is rejected, and a listed key that nothing uses fails
+`EveryListedVisualIsUsed`. It doubles as the art deliverables list (ADR 0012).
+
 ## factions/<id>.yaml, items/<id>.yaml, loot/<id>.yaml
 
 ```yaml

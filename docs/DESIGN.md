@@ -498,6 +498,7 @@ The first goal is a **vertical slice** that proves the core idea: one region, tw
    - Gate: the Claude Code loop (edit, compile, test, read console) feels fast, and adding a scar via the cheat panel shows on the model after reload.
 2. **M1 — Body as record.** Full Mark data model, wounds from hit regions, infirmary treatment outcomes, 15 mark definitions, the visual layer (decals, materials, part swaps), and the mirror view.
    - Gate: a character carrying 6 or more marks reads as a person with a history in a single screenshot.
+   - **Split (ADR 0012):** everything except the visual art is done in greybox, along with the visual-key table. Decals, materials and part swaps wait for a chosen character and art direction, and the gate is judged then. M2 goes first.
 3. **M2 — Fast loop greybox.** Homestead slots (3 structures), a small greybox region, one hunt goal, carrying and hauling home, one ambush encounter, basic ranged combat, and household roles reporting results.
    - Gate: one out-and-back trip is fun in greybox.
 4. **M3 — Event engine.** YAML schema and validator, storyteller pacing, casting, diegetic and storybook presentation, and 20 events covering every outcome type.

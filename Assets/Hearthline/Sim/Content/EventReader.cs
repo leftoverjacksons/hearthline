@@ -367,6 +367,8 @@ namespace Hearthline.Sim.Content
             {
                 if (!Naming.IsSnakeId(i.Id)) errors.Add(new ContentError { File = i.SourceFile, Message = "id '" + i.Id + "' must be snake_case" });
                 if (i.Equip == null) continue;
+                if (i.Equip.Visual != null && !db.Vocab.GearVisuals.Contains(i.Equip.Visual))
+                    errors.Add(new ContentError { File = i.SourceFile, Message = "gear visual '" + i.Equip.Visual + "' is not listed under visuals in " + ContentLoader.VocabFile });
                 var all = new List<MarkEffect>(i.Equip.Effects);
                 all.AddRange(i.Equip.HeirloomEffects);
                 foreach (MarkEffect fx in all)

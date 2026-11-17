@@ -152,6 +152,16 @@ namespace Hearthline.Sim.Content
             AddIds(root, "area_tags", vocab.AreaTags, false);
             AddIds(root, "archetypes", vocab.Archetypes, false);
             AddIds(root, "encounters", vocab.Encounters, false);
+            YamlMap visuals = root.Map("visuals", "visuals", true);
+            if (visuals != null)
+            {
+                AddIds(visuals, "decals", vocab.Decals, false);
+                AddIds(visuals, "part_swaps", vocab.PartSwaps, false);
+                AddIds(visuals, "material_params", vocab.MaterialParams, false);
+                AddIds(visuals, "blendshapes", vocab.Blendshapes, false);
+                AddIds(visuals, "gear", vocab.GearVisuals, false);
+                visuals.Done();
+            }
             root.Done();
         }
 

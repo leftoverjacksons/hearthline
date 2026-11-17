@@ -12,6 +12,8 @@ stats:
   - { id: stamina, name: Stamina, base: 1 }
 reaction_tags: [scarred, bleeding]
 abilities: [night_sight]
+visuals:
+  decals: [scar_test]
 ";
 
         private const string Scar = @"
@@ -181,6 +183,20 @@ outcomes:
         [Test]
         public void ContentInAFolderWithoutASchemaIsRejected() =>
             AssertError(Load(extraPath: "quests/some_quest.yaml", extraText: "id: some_quest\n"), "unexpected content file location");
+
+        [Test]
+        public void UnlistedDecalIsRejected()
+        {
+            AssertError(Load(scar: Scar.Replace("decal: scar_test", "decal: scar_unlisted")), "decal 'scar_unlisted' is not listed under visuals");
+        }
+
+        [Test]
+        public void UnlistedPartSwapAndMaterialParamAreRejected()
+        {
+            ContentLoadResult result = Load(scar: Scar.Replace("visual: { decal: scar_test }", "visual: { part_swap: eyepatch, material_params: { iris_glow: 1 } }"));
+            AssertError(result, "part_swap 'eyepatch' is not listed under visuals");
+            AssertError(result, "material_param 'iris_glow' is not listed under visuals");
+        }
 
         [Test]
         public void MissingVocabIsRejected()

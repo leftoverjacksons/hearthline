@@ -50,6 +50,7 @@ abilities: [night_sight]
 area_tags: [road]
 archetypes: [traveler]
 encounters: [reavers_small]
+visuals: {}
 ";
         private const string Rite = @"
 id: rite_test

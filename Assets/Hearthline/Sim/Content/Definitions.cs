@@ -21,6 +21,14 @@ namespace Hearthline.Sim.Content
         public readonly HashSet<string> Archetypes = new HashSet<string>();
         /// <summary>Fights presentation knows how to stage, requested by an event's ambush outcome.</summary>
         public readonly HashSet<string> Encounters = new HashSet<string>();
+
+        // Visual keys: every asset the bridge must supply. Marks and gear may only name keys listed here,
+        // which makes this the art deliverables list (docs/art/reference-prompts.md has the briefs).
+        public readonly HashSet<string> Decals = new HashSet<string>();
+        public readonly HashSet<string> PartSwaps = new HashSet<string>();
+        public readonly HashSet<string> MaterialParams = new HashSet<string>();
+        public readonly HashSet<string> Blendshapes = new HashSet<string>();
+        public readonly HashSet<string> GearVisuals = new HashSet<string>();
     }
 
     public enum EffectKind { Stat, Reaction, Ability }

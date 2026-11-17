@@ -54,3 +54,7 @@ Thumbs.db
 # Asset Store packs: licensed per user, never committed to this public repo. See docs/SETUP.md.
 /Assets/ThirdParty/StarterAssets/
 /Assets/ThirdParty/StarterAssets.meta
+
+# Reference images (mostly other people's work); only the README is committed. See ArtReference/README.md.
+/ArtReference/*
+!/ArtReference/README.md

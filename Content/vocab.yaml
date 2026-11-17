@@ -46,3 +46,55 @@ archetypes: [traveler, peddler, homesteader, reaver, continuity_agent, open_seek
 
 # Fights presentation can stage when an event asks for an ambush.
 encounters: [reavers_small, reavers_road, wolves_pack]
+
+# Visual keys: every asset the Unity side must supply for marks and gear. Marks and items may only name
+# keys listed here, so this is the art deliverables list. Briefs: docs/art/reference-prompts.md.
+# Nothing here has real art yet (ADR 0012).
+visuals:
+  decals:
+    # Wounds: one per damage type and stage (fresh, bound after field treatment, infected)
+    - wound_gunshot_fresh
+    - wound_gunshot_bound
+    - wound_gunshot_infected
+    - wound_blade_fresh
+    - wound_blade_bound
+    - wound_blade_infected
+    - wound_claw_fresh
+    - wound_claw_bound
+    - wound_claw_infected
+    - wound_burn_fresh
+    - wound_burn_bound
+    - wound_burn_infected
+    - wound_blunt_fresh
+    - wound_blunt_bound
+    - wound_blunt_infected
+    # Scars
+    - scar_gunshot
+    - scar_blade
+    - scar_claw
+    - scar_burn
+    - scar_ragged
+    - scar_knit_bone
+    # Rites
+    - brand_raw
+    - brand_healed
+  part_swaps:
+    - missing_fingers   # loss_fingers
+    - eyepatch          # loss_eye
+    - arm_sling         # loss_weak_arm
+    - gait_limp         # loss_limp (an animation change rather than a mesh)
+  material_params:
+    - hair_grey         # age_grey
+    - iris_glow         # exposure_pale_eyes
+    - translucency      # exposure_glass_skin
+    - emissive_veins    # exposure_glass_skin, deepened
+  blendshapes:
+    - posture_stoop     # age_stiff
+    - crooked_bone      # scar_crooked_bone
+  gear:
+    - hat_brimmed
+    - coat_wool
+    - boots_work
+    - knife_hunting
+    - revolver
+    - rifle_lever

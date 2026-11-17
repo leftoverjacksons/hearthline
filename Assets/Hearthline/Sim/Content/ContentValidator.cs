@@ -83,6 +83,12 @@ namespace Hearthline.Sim.Content
                         if (!def.Regions.Contains(region))
                             Err(where + "effect is limited to region '" + Naming.ToSnake(region) + "', which the mark does not allow");
                 }
+                MarkVisual visual = stage.Visual;
+                void Visual(bool known, string kind, string key) { if (!known) Err(where + kind + " '" + key + "' is not listed under visuals in " + ContentLoader.VocabFile); }
+                if (visual.Decal != null) Visual(db.Vocab.Decals.Contains(visual.Decal), "decal", visual.Decal);
+                if (visual.PartSwap != null) Visual(db.Vocab.PartSwaps.Contains(visual.PartSwap), "part_swap", visual.PartSwap);
+                foreach (string key in visual.MaterialParams.Keys) Visual(db.Vocab.MaterialParams.Contains(key), "material_param", key);
+                foreach (string key in visual.Blendshapes.Keys) Visual(db.Vocab.Blendshapes.Contains(key), "blendshape", key);
                 // No cosmetic-only marks: every stage must do something wherever the mark can sit.
                 foreach (var region in def.Regions)
                 {
