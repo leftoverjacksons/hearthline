@@ -79,6 +79,7 @@ namespace Hearthline.EditorTools
             player.GetComponent<Animator>().runtimeAnimatorController = PlayerAnimatorBuilder.Build();
             player.AddComponent<PlayerSpeed>();
             rig.Crouch = player.AddComponent<Crouch>();
+            player.AddComponent<PlayerCover>();
             AddMarksView(player);
             int hitboxLayer = EnsureHitboxLayer();
             rig.Receiver = player.AddComponent<HitReceiver>();
@@ -138,6 +139,58 @@ namespace Hearthline.EditorTools
             flash.shadows = LightShadows.None;
             rig.Weapon = player.AddComponent<PlayerWeapon>();
             rig.Weapon.Configure(tracer, flash);
+        }
+
+        /// <summary>
+        /// Combat step 3: makes every solid prop and tree trunk that stands on the ground and is tall enough into
+        /// a <see cref="CoverSurface"/>, from its geometry (inactive ones too, so swappable building tiers count).
+        /// Returns how many.
+        /// </summary>
+        // Kit pieces you can see and shoot through: not cover.
+        private static readonly string[] SeeThrough = { "Fence_Rail", "Clothesline" };
+
+        public static int AddCoverSurfaces(Func<float, float, float> groundAt)
+        {
+            int hitbox = LayerMask.NameToLayer(HitReceiver.LayerName);
+            int count = 0;
+            foreach (Collider c in Object.FindObjectsByType<Collider>(FindObjectsInactive.Include))
+            {
+                if (c.isTrigger || c.gameObject.layer == hitbox || c is CharacterController || c is TerrainCollider) continue;
+                if (c.GetComponentInParent<Animator>() != null || c.GetComponent<CoverSurface>() != null) continue;
+                GameObject instance = PrefabUtility.GetNearestPrefabInstanceRoot(c.gameObject);
+                if (instance != null && Array.IndexOf(SeeThrough, instance.name) >= 0) continue;
+                Bounds local;
+                if (c is MeshCollider mc && mc.sharedMesh != null) local = mc.sharedMesh.bounds;
+                else if (c is BoxCollider box) local = new Bounds(box.center, box.size);
+                else if (c is CapsuleCollider cap) local = new Bounds(cap.center, new Vector3(cap.radius * 2f, cap.height, cap.radius * 2f));
+                else continue;
+
+                Transform t = c.transform;
+                Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 corner = local.center + Vector3.Scale(local.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    Vector3 w = t.TransformPoint(corner);
+                    min = Vector3.Min(min, w);
+                    max = Vector3.Max(max, w);
+                }
+                Vector3 centre = t.TransformPoint(local.center);
+                float ground = groundAt(centre.x, centre.z);
+                if (min.y - ground > 0.4f) continue;                          // up in the air: decks, roofs
+                if (max.x - min.x > 30f || max.z - min.z > 30f) continue;     // ground and bridges, not cover
+                float height = max.y - ground;
+                if (height < CoverSurface.MinCoverHeight) continue;
+
+                Vector3 scale = t.lossyScale;
+                var surface = c.gameObject.AddComponent<CoverSurface>();
+                var foot = new Vector3(centre.x, ground, centre.z);
+                Vector2 half = new Vector2(Mathf.Abs(local.extents.x * scale.x), Mathf.Abs(local.extents.z * scale.z));
+                bool round = c is CapsuleCollider || (half.x < 0.55f && half.y < 0.55f && Mathf.Abs(half.x - half.y) < 0.15f);
+                if (round) surface.ConfigureRing(foot, (half.x + half.y) / 2f, height);
+                else surface.ConfigureBox(foot, t.eulerAngles.y, half, height);
+                count++;
+            }
+            return count;
         }
 
         private static Material TracerMaterial()

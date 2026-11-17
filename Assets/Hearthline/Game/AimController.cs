@@ -65,6 +65,9 @@ namespace Hearthline.Game
 
         public void SwapShoulder() => _right = !_right;
 
+        /// <summary>Puts the camera over the given shoulder (cover leans pick the side they lean to).</summary>
+        public void SetShoulder(bool right) => _right = right;
+
         private void Update()
         {
             Keyboard keyboard = Keyboard.current;

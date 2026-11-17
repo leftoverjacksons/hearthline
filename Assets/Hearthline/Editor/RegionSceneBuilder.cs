@@ -96,11 +96,12 @@ namespace Hearthline.EditorTools
             BuildPracticeTarget(new Vector3(4f, 0f, -10f));
 
             BuildAtmosphere(sun, moon, clock, location);
+            int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             SceneBuildKit.AddToBuild(ScenePath, first: false);
             AssetDatabase.SaveAssets();
-            return "Saved " + ScenePath + ": " + trees.InstanceCount + " trees, " + cover.InstanceCount + " ground-cover instances, "
+            return "Saved " + ScenePath + ": " + covers + " cover pieces, " + trees.InstanceCount + " trees, " + cover.InstanceCount + " ground-cover instances, "
                 + props.childCount + " prop groups, " + Object.FindObjectsByType<AreaVolume>(FindObjectsInactive.Exclude).Length + " areas.";
         }
 

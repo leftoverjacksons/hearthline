@@ -21,7 +21,7 @@ Search terms are given where the exact Mixamo name varies.
 
 ### Movement and cover (next step)
 - [ ] 🟡 Crouch walk left, right and backwards (search "crouched walk", "crouched sneaking left/right")
-- [ ] 🟡 **Sticky cover set.** Mixamo's cover clips vary in quality; grab whatever of these exists, and IK fills
+- [ ] 🟡 **Sticky cover set** (cover works now; these make it look right). Mixamo's cover clips vary in quality; grab whatever of these exists, and IK fills
   the gaps:
   - standing with your back to a wall: idle, and sliding left and right (search "cover", "wall", "back against")
   - crouched behind low cover: idle, and sliding left and right (search "crouch cover", "crouched cover")

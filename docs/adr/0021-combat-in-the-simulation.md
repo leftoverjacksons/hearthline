@@ -59,3 +59,16 @@ The architecture rules say the simulation owns persistent state and presentation
   cartridges in the stores.
 - **The practice target** has real hit zones but no simulation character. `PracticeTarget` takes the hit and
   shows the severity it would have had, using the simulation's own rule (`Simulation.ShotSeverity`).
+
+## Step 3 notes (sticky cover)
+
+- **Cover is data the scene builder generates** (`CoverSurface` next to each solid collider that stands on the
+  ground and is at least 0.6 m tall; under 1.35 m is low cover): a box footprint (faces to press against,
+  corners to lean out at) or a ring (trunks, barrels: lean out on either side). There are about 1,780 in the
+  region, 1,641 of them tree trunks. Rail fences and the clothesline are see-through, so they aren't cover.
+  Open shapes like the fire pit's tripod count as high cover by their bounding box; good enough for now.
+- **`PlayerCover` takes over movement while in cover.** It zeroes the controller's move input and sets the
+  final position in `LateUpdate`, from its own anchor on the cover. The Starter Assets controller carries
+  momentum from the body's velocity and otherwise pushes against the slide.
+- **No cover animations yet.** Pressed in is the idle or crouch pose, sliding glides, and leaning out
+  steps the body sideways past the edge. The clips are in `docs/NEEDS.md`.
