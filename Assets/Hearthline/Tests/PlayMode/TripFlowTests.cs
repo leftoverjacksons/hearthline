@@ -55,18 +55,28 @@ namespace Hearthline.Tests.PlayMode
         [UnityTest]
         public IEnumerator PlacesReportTheirAreaTagsNameAndDistance()
         {
-            yield return MoveTo(0f, -48f);
+            // The land is generated (ADR 0024), so go to places by their areas rather than by coordinates.
+            AreaVolume Find(string place) => AreaVolume.All.First(a => a.PlaceName == place);
+            Vector3 bridge = Find("the guardrail bridge").transform.position;
+            yield return MoveTo(bridge.x, bridge.z);
             Assert.That(_location.PlaceName, Is.EqualTo("the guardrail bridge"));
             Assert.That(_location.AreaTags, Has.Member("creek").And.Member("river_crossing"));
 
-            yield return MoveTo(170f, -92f);
+            Vector3 overpass = Find("the fallen overpass").transform.position;
+            yield return MoveTo(overpass.x, overpass.z);
             Assert.That(_location.PlaceName, Is.EqualTo("the fallen overpass"));
             Assert.That(_location.AreaTags, Has.Member("road").And.Member("ruin"));
 
-            yield return MoveTo(-260f, 0f);
+            // The middle of a stretch of deep woods with nothing else there.
+            AreaVolume deep = AreaVolume.All
+                .Where(a => a.AreaTags.Contains("deep_woods"))
+                .OrderByDescending(a => a.Volume)
+                .First(a => AreaVolume.All.All(o => o == a || o.Volume > a.Volume || !o.Contains(a.transform.position)));
+            yield return MoveTo(deep.transform.position.x, deep.transform.position.z);
             Assert.That(_location.AreaTags, Has.Member("deep_woods"));
             Assert.That(_location.ThinLevel, Is.EqualTo(1));
-            Assert.That(_location.DistanceFromHome, Is.EqualTo(260.0 / 300.0).Within(0.01));
+            Vector3 flat = deep.transform.position; flat.y = 0f;
+            Assert.That(_location.DistanceFromHome, Is.EqualTo(Mathf.Min(1f, flat.magnitude / 300f)).Within(0.01));
 
             EventContext context = _location.ToEventContext(TimeOfDay.Dusk);
             Assert.That(context.AtHome, Is.False);
@@ -78,7 +88,7 @@ namespace Hearthline.Tests.PlayMode
         [UnityTest]
         public IEnumerator LeavingHomeOpensTheOutfitPanelAndHoldsThePlayer()
         {
-            yield return MoveTo(0f, -92f);
+            yield return MoveTo(0f, -80f);
             yield return null;
             Assert.That(_trip.Current, Is.EqualTo(TripController.Phase.Outfitting));
             Assert.That(_trip.PausesPlayer, Is.True);
@@ -90,7 +100,7 @@ namespace Hearthline.Tests.PlayMode
         public IEnumerator ChangingYourMindAtTheGatePutsThePlayerBackHome()
         {
             yield return MoveTo(0f, 0f);
-            yield return MoveTo(0f, -92f);
+            yield return MoveTo(0f, -80f);
             yield return null;
             Assert.That(_trip.Current, Is.EqualTo(TripController.Phase.Outfitting));
 
@@ -107,7 +117,7 @@ namespace Hearthline.Tests.PlayMode
         {
             Assert.That(_host.Sim.Execute(new GiveItem { ItemId = "jerky", Count = 5 }).Ok, Is.True);
             int inStores = _host.Sim.ItemCount("jerky"); // the starting supplies include some
-            yield return MoveTo(0f, -92f);
+            yield return MoveTo(0f, -80f);
             yield return null;
 
             _trip.SetPacked("jerky", 3);
@@ -125,7 +135,7 @@ namespace Hearthline.Tests.PlayMode
         public IEnumerator ComingHomeEndsTheTripUnloadsAndReports()
         {
             Assert.That(_host.Sim.Execute(new GiveItem { ItemId = "jerky", Count = 4 }).Ok, Is.True);
-            yield return MoveTo(0f, -92f);
+            yield return MoveTo(0f, -80f);
             yield return null;
             _trip.SetPacked("jerky", 4);
             Assert.That(_trip.ConfirmSetOut(), Is.True, _trip.Status);

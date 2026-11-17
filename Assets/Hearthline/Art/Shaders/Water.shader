@@ -46,13 +46,15 @@ Shader "Hearthline/Water"
                 float _DepthRange, _Refraction, _RippleScale, _RippleSpeed, _RippleStrength, _Smoothness, _ReflectionStrength, _FoamDepth;
             CBUFFER_END
 
-            struct Attributes { float4 positionOS : POSITION; };
+            // uv1: flow direction (xz) times speed for this vertex, e.g. along a stream; zero means use _FlowDirection.
+            struct Attributes { float4 positionOS : POSITION; float2 flow : TEXCOORD1; };
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
                 float4 screenPos : TEXCOORD1;
                 float fogFactor : TEXCOORD2;
+                float2 flow : TEXCOORD3;
             };
 
             Varyings Vert(Attributes input)
@@ -62,13 +64,14 @@ Shader "Hearthline/Water"
                 output.positionCS = TransformWorldToHClip(output.positionWS);
                 output.screenPos = ComputeScreenPos(output.positionCS);
                 output.fogFactor = ComputeFogFactor(output.positionCS.z);
+                output.flow = dot(input.flow, input.flow) > 1e-6 ? input.flow : _FlowDirection.xz;
                 return output;
             }
 
             // Cheap gradient of a sum of travelling waves: a ripple normal without textures.
-            float2 RippleSlope(float2 p, float t)
+            float2 RippleSlope(float2 p, float t, float2 flow)
             {
-                float2 flow = normalize(_FlowDirection.xz + 1e-4);
+                flow = normalize(flow + 1e-4);
                 float2 s = 0;
                 float2 dirs[4] = { flow, normalize(flow + float2(0.6, 0.8)), normalize(flow - float2(0.7, 0.5)), normalize(float2(-flow.y, flow.x) + flow * 0.3) };
                 float freqs[4] = { 1.0, 1.9, 3.1, 5.3 };
@@ -86,7 +89,7 @@ Shader "Hearthline/Water"
             {
                 float t = _Time.y * _RippleSpeed * 4.0;
                 // Two layers at unrelated scales so the pattern does not read as a lattice.
-                float2 slope = (RippleSlope(input.positionWS.xz, t) + 0.6 * RippleSlope(input.positionWS.xz * 2.37 + 17.0, t * 1.31)) * _RippleStrength;
+                float2 slope = (RippleSlope(input.positionWS.xz, t, input.flow) + 0.6 * RippleSlope(input.positionWS.xz * 2.37 + 17.0, t * 1.31, input.flow)) * _RippleStrength;
                 float3 normalWS = normalize(float3(-slope.x, 1.0, -slope.y));
 
                 float2 screenUV = input.screenPos.xy / input.screenPos.w;

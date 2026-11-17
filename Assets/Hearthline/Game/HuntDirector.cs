@@ -126,6 +126,10 @@ namespace Hearthline.Game
                 Vector3 inward = (b.center - edge); inward.y = 0f;
                 start = edge + inward.normalized * (hunt.Bolts == 0 ? 18f : 40f + (float)rnd.NextDouble() * 50f)
                     + new Vector3((float)(rnd.NextDouble() - 0.5) * 60f, 0f, (float)(rnd.NextDouble() - 0.5) * 60f);
+                // Keep it inside the area, a few metres in from the edge.
+                Bounds inner = b;
+                inner.Expand(new Vector3(-Mathf.Min(10f, b.size.x * 0.4f), 0f, -Mathf.Min(10f, b.size.z * 0.4f)));
+                start = inner.ClosestPoint(start);
             }
             else start = player.position + new Vector3(40f, 0f, 40f);
             float heading = (float)rnd.NextDouble() * 360f;
@@ -146,7 +150,10 @@ namespace Hearthline.Game
             var fits = new List<AreaVolume>();
             foreach (AreaVolume a in AreaVolume.All)
                 if (def != null && !a.IsHomestead && def.AreaTagsAny.Exists(t => System.Linq.Enumerable.Contains(a.AreaTags, t))) fits.Add(a);
-            fits.Sort((x, y) => string.CompareOrdinal(x.PlaceName, y.PlaceName));
+            // Room for a trail: prefer stretches of country at least 60 m across.
+            var roomy = fits.FindAll(a => a.Size.x * a.transform.lossyScale.x >= 60f && a.Size.z * a.transform.lossyScale.z >= 60f);
+            if (roomy.Count > 0) fits = roomy;
+            fits.Sort((x, y) => x.transform.position.x != y.transform.position.x ? x.transform.position.x.CompareTo(y.transform.position.x) : x.transform.position.z.CompareTo(y.transform.position.z));
             return fits.Count > 0 ? fits[rnd.Next(fits.Count)] : null;
         }
 

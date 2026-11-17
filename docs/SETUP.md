@@ -62,11 +62,16 @@ into the character's skin needs a real character model and the M1 decal layer.
 
 ## The M2 region (fast loop greybox)
 
-`Assets/Scenes/M2_Region.unity` is a 600 m greybox region laid out after the homestead references: the
-homestead clearing (three empty building slots and a stand-in cabin), the creek and its guardrail bridge,
-the old highway with the fallen overpass, Laurel Woods turning into the deep hollow to the west, the east
-meadow, and Buck Ridge to the north. Each place is an `AreaVolume` with area tags and a place name, and
-the HUD at the bottom shows where you are, the time, the day and the pack.
+`Assets/Scenes/M2_Region.unity` is built from the generated world (ADR 0024): a 1.2 km square of land at
+the foot of a mountain to the north, its streams running down to a river, the old highway crossing the
+valley south of home with a guardrail bridge wherever it meets water, a track up to the homestead on its
+bench, and ruin sites. The middle ~600 m is playable; the rest is the view. Areas are read off the map:
+meadows, Laurel Woods, the deep hollow and the mountain's foot by what grows there, with the creeks, the
+river, the road, the bridges, the fallen overpass, the ruins and the homestead laid over them. The HUD at
+the bottom shows where you are, the time, the day and the pack.
+
+To see the land as a map: `cd tools/headless/WorldPreview && dotnet run -c Release -- <seed> world.bmp`.
+To try another land, change `RegionSceneBuilder.Seed` and rebuild the scene.
 
 - Walk out of the clearing to get the **Setting out** panel: choose companions and pack from the stores
   (the cheat panel's give-item fills the stores; a new game starts with them empty). "Stay home" puts you
@@ -108,7 +113,7 @@ Wind values are on each foliage material, water values on `Scenes/Generated/Regi
 `Scenes/Generated/M2_Region_Sky.mat`, and light by hour on the `Atmosphere` object.
 
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
-`unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();"`.
+`unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();" --timeout 900`.
 A practice target stands in the yard in front of the spawn: hits show where they landed and how bad they'd be on a person, and never reach the simulation. `WeaponTests` (PlayMode) covers aiming, firing, reloading and jams.
 **Hunting** (docs/specs/hunt.md): at the job board, *Take up the hunt for Crookhorn*. A line says which way to start; the first sign (dark hoofprints, a snapped twig) waits in the woods. E reads it and points to the next. After the last one he grazes nearby: crouch and come slowly, use cover, take one clean shot (chest, neck or head), then E on him to butcher. The cheat panel's Combat tab can take up the hunt, read the sign, and put you near him.
 `TripFlowTests` (PlayMode) covers places, leaving, setting out, staying home, coming home and the clock.

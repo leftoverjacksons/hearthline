@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hearthline.Bridge;
 using Hearthline.Game;
+using Hearthline.Sim.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -14,14 +15,14 @@ using Random = System.Random;
 namespace Hearthline.EditorTools
 {
     /// <summary>
-    /// Builds Assets/Scenes/M2_Region.unity: a 600 m region for the fast loop, laid out after the homestead
-    /// references in ArtReference/places: a cabin clearing on a meadow rise, a creek in front crossed by a
-    /// guardrail bridge, the old highway beyond it with a fallen overpass, woods to the west turning deep, a
-    /// meadow to the east, and a ridge to the north. Dressed with the greybox kit (ADR 0014): painted ground,
-    /// low-poly trees and props, instanced ground cover, sky, fog and post-processing.
-    /// Every part is an <see cref="AreaVolume"/> so the simulation knows where the party is.
+    /// Builds Assets/Scenes/M2_Region.unity from the generated world (ADR 0024): the land at the foot of a
+    /// mountain, its streams and river, the old highway with its bridges, the track home, and ruin sites, all
+    /// from <see cref="WorldGen"/> with <see cref="Seed"/>. The scene dresses that map: ground painted by slope,
+    /// wetness and forest; water ribbons along every stream; trees, cover and rocks by terrain; the homestead
+    /// on its bench; and <see cref="AreaVolume"/>s read off the map so the simulation knows where the party is.
+    /// The middle ~600 m is playable; the rest, the mountain included, is the view.
     /// Menu: Hearthline → Rebuild M2 region scene. From the CLI:
-    /// <c>unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();" --timeout 300</c>
+    /// <c>unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();" --timeout 600</c>
     /// </summary>
     public static class RegionSceneBuilder
     {
@@ -29,25 +30,30 @@ namespace Hearthline.EditorTools
         private const string Generated = SceneBuildKit.GeneratedFolder;
         private const string GroundPath = Generated + "/M2_Region_Ground.asset";
         private const string GroundMapPath = Generated + "/M2_Region_GroundMap.png";
+        private const string WaterPath = Generated + "/M2_Region_Water.asset";
+
+        /// <summary>The world's seed. Change it for a different land.</summary>
+        public const ulong Seed = 1;
+        /// <summary>The generated square (m); the playable region is the middle.</summary>
+        public const float WorldSize = 1200f;
         public const float Size = 600f;
         public const float RegionRadius = 300f;
-
-        // Layout (metres). +Z is north. The homestead is at the origin.
+        /// <summary>The fenced yard (the generator's bench is a little wider).</summary>
         public const float HomeRadius = 32f;
-        public const float CreekZ = -48f;
-        public const float RoadZ = -92f;
-        public const float WoodsEdgeX = -70f;
-        public const float DeepWoodsX = -210f;
-        public const float RidgeZ = 150f;
-        public const float BridgeDeckY = 1.75f;
-        public const float WaterY = -0.3f;
-        public static readonly Vector3 OverpassAt = new Vector3(170f, 0f, RoadZ);
+
+        private static WorldMap _map;
+        private static Fields _fields;
+        public static WorldMap Map => _map ??= WorldGen.Generate(new WorldSettings { Seed = Seed });
+        private static Fields F => _fields ??= new Fields(Map);
+        private static Vector3 _overpass;
 
         [MenuItem("Hearthline/Rebuild M2 region scene")]
         private static void Menu() => Debug.Log(Build());
 
         public static string Build()
         {
+            _map = null;
+            _fields = null;
             GreyboxKit.Setup();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             SceneBuildKit.EnsureFolder(Generated);
@@ -58,22 +64,23 @@ namespace Hearthline.EditorTools
             moon.color = new Color(0.55f, 0.65f, 1f);
             moon.shadows = LightShadows.Soft;
 
-            SceneBuildKit.BuildGround("Region Ground", GroundPath, Size, 200, HeightAt, GroundMaterial(), mapUv: true);
-            var water = SceneBuildKit.Block(PrimitiveType.Plane, "Creek Water", new Vector3(0f, WaterY, 0f), new Vector3(Size / 10f, 1f, Size / 10f), WaterMaterial(), collider: false);
-            water.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+            SceneBuildKit.BuildGround("Region Ground", GroundPath, WorldSize, Mathf.RoundToInt(WorldSize / (float)Map.Cell), HeightAt, GroundMaterial(), mapUv: true);
+            BuildWater();
 
             var trees = new GameObject("Trees").AddComponent<InstancedScatter>();
-            SetScatter(trees, drawDistance: 420f, shadows: true);
+            SetScatter(trees, drawDistance: 650f, shadows: true);
             var cover = new GameObject("Ground Cover").AddComponent<InstancedScatter>();
             SetScatter(cover, drawDistance: 130f, shadows: false);
             var props = new GameObject("Props").transform;
 
+            _overpass = PickOverpass();
             BuildHomestead(props);
             BuildCrossings(props);
+            BuildRuins(props);
             ScatterNature(trees, cover, props);
             BuildGathering(props);
             BuildStores(props);
-            Transform home = BuildAreas();
+            Transform home = BuildAreas(out int areaCount);
 
             SceneBuildKit.PlayerRig rig = SceneBuildKit.BuildPlayerRig(new Vector3(0f, HeightAt(0f, 4f) + 0.1f, 4f), yaw: 180f);
             AddHauling(rig);
@@ -101,68 +108,87 @@ namespace Hearthline.EditorTools
             CombatSceneKit.AddSpawner(rig.Player.transform);
             CombatSceneKit.AddHuntDirector(rig.Player.transform);
             new GameObject("Fight Director").AddComponent<FightDirector>().Configure(rig.Player.transform);
-            CombatSceneKit.BakeNavMesh("Assets/Scenes/Generated/M2_Region_NavMesh.asset");
+            CombatSceneKit.BakeNavMesh("Assets/Scenes/Generated/M2_Region_NavMesh.asset", new Bounds(new Vector3(0f, (float)Map.HomeHeight, 0f), new Vector3(Size + 80f, 400f, Size + 80f)));
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             SceneBuildKit.AddToBuild(ScenePath, first: false);
             AssetDatabase.SaveAssets();
-            return "Saved " + ScenePath + ": " + covers + " cover pieces, " + trees.InstanceCount + " trees, " + cover.InstanceCount + " ground-cover instances, "
-                + props.childCount + " prop groups, " + Object.FindObjectsByType<AreaVolume>(FindObjectsInactive.Exclude).Length + " areas.";
+            return "Saved " + ScenePath + " (seed " + Seed + "): " + Map.Streams.Count + " streams, " + Map.Bridges.Count + " bridges, " + covers + " cover pieces, "
+                + trees.InstanceCount + " trees, " + cover.InstanceCount + " ground-cover instances, " + props.childCount + " prop groups, " + areaCount + " areas.";
         }
 
         // ---- Terrain --------------------------------------------------------------------------------
 
-        private static float CreekCentre(float x) => CreekZ + Mathf.Sin(x * 0.02f) * 8f;
-
         /// <summary>Ground height. Public so tests and tools can place things on the ground.</summary>
-        public static float HeightAt(float x, float z)
+        public static float HeightAt(float x, float z) => (float)Map.HeightAt(x, z);
+
+        private static float Smooth(float a, float b, float x) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(a, b, x));
+        private static bool InRegion(float x, float z, float margin = 0f) => Mathf.Abs(x) < Size / 2f + margin && Mathf.Abs(z) < Size / 2f + margin;
+
+        /// <summary>Distances (m) to the road's and track's centre lines and to the water's edge, on a 1 m grid.</summary>
+        private sealed class Fields
         {
-            float hills = Mathf.PerlinNoise(x * 0.012f + 31.7f, z * 0.012f + 8.3f) * 6f
-                        + Mathf.PerlinNoise(x * 0.05f + 2.9f, z * 0.05f + 19.1f) * 1.2f;
+            public const float Reach = 40f;
+            private readonly int _n;
+            private readonly float _origin;
+            private readonly float[] _road, _track, _water;
 
-            // The ridge rises to the north.
-            float ridge = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(RidgeZ - 40f, RidgeZ + 80f, z)) * 26f;
+            public Fields(WorldMap map)
+            {
+                _n = Mathf.RoundToInt(WorldSize) + 1;
+                _origin = -WorldSize / 2f;
+                _road = Blank(); _track = Blank(); _water = Blank();
+                Stamp(_road, map.Road, edge: false);
+                Stamp(_track, map.Track, edge: false);
+                foreach (Waterway w in map.Streams) Stamp(_water, w.Points, edge: true);
+            }
 
-            // The homestead sits on a gentle, flat-topped rise.
-            float d = Mathf.Sqrt(x * x + z * z);
-            float h = Mathf.Lerp(2.5f, hills + ridge, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(HomeRadius, HomeRadius + 30f, d)));
+            private float[] Blank() { var f = new float[_n * _n]; for (int i = 0; i < f.Length; i++) f[i] = Reach; return f; }
 
-            // The old road is a flat strip.
-            float roadBlend = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(10f, 4f, Mathf.Abs(z - RoadZ)));
-            h = Mathf.Lerp(h, 0.6f, roadBlend);
+            private void Stamp(float[] field, List<PathPoint> pts, bool edge)
+            {
+                for (int k = 0; k + 1 < pts.Count; k++)
+                {
+                    Vector2 a = new Vector2((float)pts[k].P.X, (float)pts[k].P.Z), b = new Vector2((float)pts[k + 1].P.X, (float)pts[k + 1].P.Z);
+                    float half = edge ? (float)pts[k].Width / 2f : 0f;
+                    int i0 = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.x, b.x) - Reach - _origin)), i1 = Mathf.Min(_n - 1, Mathf.CeilToInt(Mathf.Max(a.x, b.x) + Reach - _origin));
+                    int j0 = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.y, b.y) - Reach - _origin)), j1 = Mathf.Min(_n - 1, Mathf.CeilToInt(Mathf.Max(a.y, b.y) + Reach - _origin));
+                    Vector2 ab = b - a;
+                    float len2 = Mathf.Max(1e-6f, ab.sqrMagnitude);
+                    for (int j = j0; j <= j1; j++)
+                    for (int i = i0; i <= i1; i++)
+                    {
+                        var p = new Vector2(i + _origin, j + _origin);
+                        float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / len2);
+                        float d = Mathf.Max(0f, Vector2.Distance(p, a + ab * t) - half);
+                        int idx = j * _n + i;
+                        if (d < field[idx]) field[idx] = d;
+                    }
+                }
+            }
 
-            // The creek is carved below water level along a gentle meander.
-            float off = Mathf.Abs(z - CreekCentre(x));
-            float creekBlend = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(14f, 3f, off));
-            h = Mathf.Lerp(Mathf.Min(h, 1.5f + off * 0.15f), -2f, creekBlend * creekBlend);
-            float bankBlend = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(26f, 14f, off));
-            return Mathf.Lerp(h, Mathf.Min(h, 1.5f), bankBlend * (1f - creekBlend));
-        }
+            private float At(float[] f, float x, float z)
+            {
+                int i = Mathf.RoundToInt(x - _origin), j = Mathf.RoundToInt(z - _origin);
+                if (i < 0 || j < 0 || i >= _n || j >= _n) return Reach;
+                return f[j * _n + i];
+            }
 
-        private static float Slope(float x, float z)
-        {
-            const float e = 1.5f;
-            float dx = HeightAt(x + e, z) - HeightAt(x - e, z), dz = HeightAt(x, z + e) - HeightAt(x, z - e);
-            return Mathf.Sqrt(dx * dx + dz * dz) / (2f * e);
-        }
-
-        // Dirt path from the cabin porch down to the bridge, and on from the bridge to the road.
-        private static float PathDistance(float x, float z)
-        {
-            if (z > 13f || z < RoadZ + 4f) return 99f;
-            return Mathf.Abs(x - Mathf.Sin(z * 0.15f) * 1.2f);
+            public float Road(float x, float z) => At(_road, x, z);
+            public float Track(float x, float z) => At(_track, x, z);
+            public float Water(float x, float z) => At(_water, x, z);
         }
 
         // The painted colour map: one texture over the whole ground, coloured by what each spot is.
         private static Material GroundMaterial()
         {
-            const int res = 1024;
+            const int res = 2048;
             var tex = new Texture2D(res, res, TextureFormat.RGB24, false);
             var pixels = new Color[res * res];
             for (int j = 0; j < res; j++)
             for (int i = 0; i < res; i++)
             {
-                float x = (i / (res - 1f) - 0.5f) * Size, z = (j / (res - 1f) - 0.5f) * Size;
+                float x = (i / (res - 1f) - 0.5f) * WorldSize, z = (j / (res - 1f) - 0.5f) * WorldSize;
                 pixels[j * res + i] = GroundColour(x, z);
             }
             tex.SetPixels(pixels);
@@ -182,7 +208,7 @@ namespace Hearthline.EditorTools
             // Close-up detail over the painted map: grass blades and soil grain repeating every 2 m.
             m.SetTexture("_DetailAlbedoMap", TextureForge.Albedo("grass"));
             m.SetTexture("_DetailNormalMap", TextureForge.Normal("grass"));
-            m.SetTextureScale("_DetailAlbedoMap", Vector2.one * (Size / 2f));
+            m.SetTextureScale("_DetailAlbedoMap", Vector2.one * (WorldSize / 2f));
             m.SetFloat("_DetailAlbedoMapScale", 0.55f);
             m.SetFloat("_DetailNormalMapScale", 0.5f);
             m.EnableKeyword("_DETAIL_MULX2");
@@ -195,49 +221,101 @@ namespace Hearthline.EditorTools
             float n1 = Mathf.PerlinNoise(x * 0.03f + 5f, z * 0.03f + 9f);
             float n2 = Mathf.PerlinNoise(x * 0.11f + 1f, z * 0.11f + 3f);
             float fine = Mathf.PerlinNoise(x * 0.5f, z * 0.5f);
+            float moist = (float)Map.MoistureAt(x, z), forest = (float)Map.ForestAt(x, z), slope = (float)Map.SlopeAt(x, z);
+            float high = HeightAt(x, z) - (float)Map.HomeHeight;
 
-            Color grass = Color.Lerp(new Color(0.33f, 0.42f, 0.16f), new Color(0.43f, 0.47f, 0.2f), n1);
-            grass = Color.Lerp(grass, new Color(0.55f, 0.5f, 0.27f), Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.62f, 0.75f, n2)) * 0.7f);
-            Color c = grass * (0.92f + fine * 0.16f);
+            // Grass: golden where it's dry, lush where water gathers.
+            Color dry = Color.Lerp(new Color(0.5f, 0.47f, 0.25f), new Color(0.45f, 0.46f, 0.22f), n1);
+            Color lush = Color.Lerp(new Color(0.28f, 0.4f, 0.14f), new Color(0.36f, 0.45f, 0.18f), n1);
+            Color c = Color.Lerp(dry, lush, Smooth(0.2f, 0.65f, moist + (n2 - 0.5f) * 0.2f)) * (0.92f + fine * 0.16f);
 
-            // Woods floor: leaf litter and moss, darker in the deep hollow.
-            float woods = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(WoodsEdgeX + 15f, WoodsEdgeX - 25f, x));
-            Color floor = Color.Lerp(new Color(0.27f, 0.31f, 0.14f), new Color(0.33f, 0.28f, 0.16f), n2);
-            c = Color.Lerp(c, floor * (0.9f + fine * 0.2f), woods);
-            float deep = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(DeepWoodsX + 20f, DeepWoodsX - 20f, x));
-            c = Color.Lerp(c, new Color(0.14f, 0.17f, 0.1f) * (0.9f + fine * 0.2f), deep);
+            // Under the trees: leaf litter and moss, darker where the forest is thick.
+            Color floor = Color.Lerp(new Color(0.27f, 0.31f, 0.14f), new Color(0.33f, 0.28f, 0.16f), n2) * (0.9f + fine * 0.2f);
+            c = Color.Lerp(c, floor, Smooth(0.3f, 0.6f, forest));
+            c = Color.Lerp(c, new Color(0.15f, 0.18f, 0.1f) * (0.9f + fine * 0.2f), Smooth(0.72f, 0.95f, forest) * 0.8f);
 
-            // Rock on steep ground (the ridge).
-            float rock = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.45f, 0.75f, Slope(x, z)));
-            c = Color.Lerp(c, new Color(0.43f, 0.41f, 0.37f) * (0.85f + fine * 0.3f), rock);
+            // Bare rock on steep ground and up the mountain.
+            float rock = Mathf.Max(Smooth(0.55f, 0.95f, slope), Smooth(150f, 210f, high) * 0.85f);
+            c = Color.Lerp(c, new Color(0.45f, 0.43f, 0.39f) * (0.8f + fine * 0.35f), rock);
 
-            // Creek banks: mud, then gravel at the water.
-            float off = Mathf.Abs(z - CreekCentre(x));
-            c = Color.Lerp(c, new Color(0.33f, 0.27f, 0.19f), Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(11f, 6f, off)));
-            c = Color.Lerp(c, new Color(0.47f, 0.44f, 0.38f) * (0.8f + fine * 0.4f), Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(6f, 4.5f, off)));
+            // Stream banks: mud, then gravel at and under the water.
+            float water = F.Water(x, z);
+            c = Color.Lerp(c, new Color(0.33f, 0.27f, 0.19f) * (0.9f + fine * 0.2f), Smooth(4.5f, 1.5f, water) * 0.85f);
+            c = Color.Lerp(c, new Color(0.47f, 0.44f, 0.38f) * (0.75f + fine * 0.45f), Smooth(1.3f, 0.2f, water));
 
-            // The old highway: gravel shoulders, cracked asphalt with grass in the cracks, a faded centre line.
-            float road = Mathf.Abs(z - RoadZ);
-            c = Color.Lerp(c, new Color(0.45f, 0.42f, 0.35f), Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(7f, 5.5f, road)));
-            if (road < 4.6f)
+            // The old highway: gravel shoulders, cracked asphalt with grass in the cracks.
+            float road = F.Road(x, z);
+            c = Color.Lerp(c, new Color(0.45f, 0.42f, 0.35f) * (0.9f + fine * 0.2f), Smooth(5.2f, 4.2f, road));
+            if (road < 3.6f)
             {
-                float crack = Mathf.Abs(Mathf.PerlinNoise(x * 0.25f, z * 0.6f) - 0.5f);
+                float crack = Mathf.Abs(Mathf.PerlinNoise(x * 0.25f, z * 0.25f) - 0.5f);
                 Color asphalt = new Color(0.2f, 0.2f, 0.2f) * (0.9f + fine * 0.2f);
-                if (road < 0.22f && Mathf.Repeat(x, 6f) < 3f) asphalt = new Color(0.62f, 0.6f, 0.5f);
                 c = crack < 0.025f ? new Color(0.3f, 0.38f, 0.15f) : asphalt;
             }
 
-            // The homestead yard and its paths: trampled earth.
-            float d = Mathf.Sqrt(x * x + z * z);
+            // The track home and the yard: trampled earth.
             Color dirt = new Color(0.42f, 0.33f, 0.22f) * (0.9f + fine * 0.2f);
-            c = Color.Lerp(c, dirt, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(9f, 4f, d)) * 0.8f);
-            c = Color.Lerp(c, dirt, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(1.8f, 0.9f, PathDistance(x, z))));
+            c = Color.Lerp(c, dirt, Smooth(1.9f, 0.9f, F.Track(x, z)) * 0.9f);
+            float d = Mathf.Sqrt(x * x + z * z);
+            c = Color.Lerp(c, dirt, Smooth(9f, 4f, d) * 0.8f);
             return c;
+        }
+
+        // Every stream and the river as a ribbon at its water surface, its ripples running downstream.
+        private static void BuildWater()
+        {
+            var vertices = new List<Vector3>();
+            var flow = new List<Vector2>();
+            var triangles = new List<int>();
+            foreach (Waterway w in Map.Streams)
+            {
+                List<PathPoint> pts = w.Points;
+                if (pts.Count < 2) continue;
+                int first = vertices.Count;
+                for (int i = 0; i < pts.Count; i++)
+                {
+                    PathPoint a = pts[Mathf.Max(0, i - 1)], b = pts[Mathf.Min(pts.Count - 1, i + 1)];
+                    var dir = new Vector2((float)(b.P.X - a.P.X), (float)(b.P.Z - a.P.Z)).normalized;
+                    var side = new Vector2(-dir.y, dir.x);
+                    float half = (float)pts[i].Width / 2f + 0.7f;
+                    var c = new Vector2((float)pts[i].P.X, (float)pts[i].P.Z);
+                    float y = (float)pts[i].Surface;
+                    Vector2 l = c + side * half, r = c - side * half;
+                    vertices.Add(new Vector3(l.x, y, l.y));
+                    vertices.Add(new Vector3(r.x, y, r.y));
+                    // Narrow streams run quicker than the broad river.
+                    Vector2 f = dir * Mathf.Lerp(1.4f, 0.7f, Mathf.InverseLerp(2f, 12f, (float)pts[i].Width));
+                    flow.Add(f); flow.Add(f);
+                    if (i == 0) continue;
+                    int v = first + i * 2;
+                    // Both windings, so the ribbon shows from above whichever way the stream turns.
+                    triangles.Add(v - 2); triangles.Add(v); triangles.Add(v - 1);
+                    triangles.Add(v - 1); triangles.Add(v); triangles.Add(v + 1);
+                    triangles.Add(v - 2); triangles.Add(v - 1); triangles.Add(v);
+                    triangles.Add(v - 1); triangles.Add(v + 1); triangles.Add(v);
+                }
+            }
+            var mesh = new Mesh { name = "Region Water", indexFormat = IndexFormat.UInt32 };
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(1, flow);
+            mesh.SetTriangles(triangles, 0);
+            var normals = new Vector3[vertices.Count];
+            for (int i = 0; i < normals.Length; i++) normals[i] = Vector3.up;
+            mesh.normals = normals;
+            mesh.RecalculateBounds();
+            AssetDatabase.DeleteAsset(WaterPath);
+            AssetDatabase.CreateAsset(mesh, WaterPath);
+            var water = new GameObject("Water");
+            water.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = water.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = WaterMaterial();
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            water.isStatic = true;
         }
 
         private static Material WaterMaterial()
         {
-            // The creek's own shader: depth colour, refraction, ripples, glints, foam (ADR 0018).
+            // The water's own shader: depth colour, refraction, ripples, glints, foam (ADR 0018).
             string path = Generated + "/Region_Water.mat";
             AssetDatabase.DeleteAsset(path);
             var m = new Material(Shader.Find("Hearthline/Water")) { name = "Region_Water" };
@@ -374,56 +452,165 @@ namespace Hearthline.EditorTools
             Vector3 mid = (p0 + p1) / 2f;
             GreyboxKit.Place(model, new Vector3(mid.x, Mathf.Min(p0.y, p1.y), mid.z) - centreOffset, yaw, 1f, parent, collider: true);
         }
+        // ---- Crossings and ruins ----------------------------------------------------------------------
+
+        private static Vector2 RoadDirection(int i)
+        {
+            List<PathPoint> road = Map.Road;
+            PathPoint a = road[Mathf.Max(0, i - 2)], b = road[Mathf.Min(road.Count - 1, i + 2)];
+            return new Vector2((float)(b.P.X - a.P.X), (float)(b.P.Z - a.P.Z)).normalized;
+        }
+
+        private static float Yaw(Vector2 dir) => Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg;
+
+        private static float DistanceToBridge(float x, float z)
+        {
+            float best = float.MaxValue;
+            foreach (Hearthline.Sim.World.Bridge b in Map.Bridges)
+                best = Mathf.Min(best, Vector2.Distance(new Vector2(x, z), new Vector2((float)(b.From.X + b.To.X) / 2f, (float)(b.From.Z + b.To.Z) / 2f)));
+            return best;
+        }
+
+        // The fallen overpass: on the highway in the playable region, well away from home, bridges and ruins.
+        private static Vector3 PickOverpass()
+        {
+            int best = -1; float score = float.MinValue;
+            for (int i = 2; i < Map.Road.Count - 2; i++)
+            {
+                float x = (float)Map.Road[i].P.X, z = (float)Map.Road[i].P.Z;
+                if (!InRegion(x, z, -50f) || Mathf.Sqrt(x * x + z * z) < 110f) continue;
+                float ruin = float.MaxValue;
+                foreach (Vec2 r in Map.RuinSites) ruin = Mathf.Min(ruin, Vector2.Distance(new Vector2(x, z), new Vector2((float)r.X, (float)r.Z)));
+                float s = Mathf.Min(DistanceToBridge(x, z), 80f) + Mathf.Min(ruin, 80f) - (float)Map.SlopeAt(x, z) * 200f + Mathf.Abs(x) * 0.05f;
+                if (s > score) { score = s; best = i; }
+            }
+            float bx = (float)Map.Road[best].P.X, bz = (float)Map.Road[best].P.Z;
+            return new Vector3(bx, HeightAt(bx, bz), bz);
+        }
+
+        private static int NearestRoadIndex(Vector3 p)
+        {
+            int best = 0; float d = float.MaxValue;
+            for (int i = 0; i < Map.Road.Count; i++)
+            {
+                float dd = Vector2.Distance(new Vector2(p.x, p.z), new Vector2((float)Map.Road[i].P.X, (float)Map.Road[i].P.Z));
+                if (dd < d) { d = dd; best = i; }
+            }
+            return best;
+        }
 
         private static void BuildCrossings(Transform props)
         {
             var root = new GameObject("Crossings").transform;
             root.SetParent(props, false);
 
-            // The guardrail bridge over the creek (its length runs along Z), kudzu creeping up the banks.
-            GreyboxKit.Place("Bridge_Guardrail", new Vector3(0f, BridgeDeckY, CreekZ), 0f, 1f, root, collider: true);
-            GreyboxKit.Place("Kudzu_Mound", OnGround(-4f, CreekZ + 14f), 30f, 0.8f, root, collider: false);
-            GreyboxKit.Place("Kudzu_Mound", OnGround(4.5f, CreekZ - 15f), 200f, 0.7f, root, collider: false);
+            // A guardrail bridge wherever the highway meets water, stretched to span it, kudzu on the banks.
+            Mesh bridgeMesh = GreyboxKit.MeshOf("Bridge_Guardrail");
+            float modelLength = Mathf.Max(1f, bridgeMesh.bounds.size.z);
+            int n = 0;
+            foreach (Hearthline.Sim.World.Bridge b in Map.Bridges)
+            {
+                var from = new Vector2((float)b.From.X, (float)b.From.Z);
+                var to = new Vector2((float)b.To.X, (float)b.To.Z);
+                Vector2 mid = (from + to) / 2f, dir = (to - from).normalized;
+                float length = Vector2.Distance(from, to) + 6f;
+                float deck = (float)b.DeckHeight - 0.05f;
+                GameObject bridge = GreyboxKit.Place("Bridge_Guardrail", new Vector3(mid.x, deck, mid.y), Yaw(dir), 1f, root, collider: true);
+                bridge.name = "Bridge " + n++;
+                bridge.transform.localScale = new Vector3(1f, 1f, Mathf.Max(1f, length / modelLength));
+                Vector2 side = new Vector2(-dir.y, dir.x);
+                Vector2 k1 = from - dir * 4f + side * 5f, k2 = to + dir * 4f - side * 5f;
+                GreyboxKit.Place("Kudzu_Mound", new Vector3(k1.x, HeightAt(k1.x, k1.y), k1.y), 30f, 0.8f, root, collider: false);
+                GreyboxKit.Place("Kudzu_Mound", new Vector3(k2.x, HeightAt(k2.x, k2.y), k2.y), 200f, 0.7f, root, collider: false);
+            }
 
-            // The fallen overpass: pillars, a standing deck end to the north, the broken span down on the road.
-            Vector3 o = OverpassAt;
-            GreyboxKit.Place("Overpass_Pillar", o + new Vector3(0f, 0f, 14f), 0f, 1f, root, collider: true);
-            GreyboxKit.Place("Overpass_Pillar", o + new Vector3(-7f, 0f, -16f), 8f, 1f, root, collider: true);
-            GreyboxKit.Place("Overpass_Deck_Standing", o + new Vector3(0f, 9.3f, 26f), 0f, 1f, root, collider: true);
-            GameObject fallen = GreyboxKit.Place("Overpass_Deck_Fallen", o + new Vector3(2f, 4.2f, 1f), 6f, 1f, root, collider: true);
+            // The fallen overpass, laid out with the road along its local X: pillars, a standing deck end, the
+            // broken span down on the road.
+            Vector3 o = _overpass;
+            var overpass = new GameObject("Overpass").transform;
+            overpass.SetParent(root, false);
+            overpass.position = o;
+            GreyboxKit.Place("Overpass_Pillar", o + new Vector3(0f, 0f, 14f), 0f, 1f, overpass, collider: true);
+            GreyboxKit.Place("Overpass_Pillar", o + new Vector3(-7f, 0f, -16f), 8f, 1f, overpass, collider: true);
+            GreyboxKit.Place("Overpass_Deck_Standing", o + new Vector3(0f, 9.3f, 26f), 0f, 1f, overpass, collider: true);
+            GameObject fallen = GreyboxKit.Place("Overpass_Deck_Fallen", o + new Vector3(2f, 4.2f, 1f), 6f, 1f, overpass, collider: true);
             fallen.transform.rotation = Quaternion.Euler(-17f, 6f, 4f);
-            GreyboxKit.Place("Rubble", o + new Vector3(-5f, 0.6f, -10f), 30f, 1f, root, collider: true);
-            GreyboxKit.Place("Rubble", o + new Vector3(6f, 0.6f, -13f), 140f, 0.7f, root, collider: true);
-            // Kudzu hanging off the standing deck and swallowing the pillars.
+            GreyboxKit.Place("Rubble", o + new Vector3(-5f, 0.6f, -10f), 30f, 1f, overpass, collider: true);
+            GreyboxKit.Place("Rubble", o + new Vector3(6f, 0.6f, -13f), 140f, 0.7f, overpass, collider: true);
             for (int i = 0; i < 4; i++)
             {
-                GreyboxKit.Place("Kudzu_Drape", o + new Vector3(-5.6f, 8.8f, 18f + i * 5f), 90f, 1f, root, collider: false);
-                GreyboxKit.Place("Kudzu_Drape", o + new Vector3(5.6f, 8.8f, 20f + i * 5f), 270f, 1f, root, collider: false);
+                GreyboxKit.Place("Kudzu_Drape", o + new Vector3(-5.6f, 8.8f, 18f + i * 5f), 90f, 1f, overpass, collider: false);
+                GreyboxKit.Place("Kudzu_Drape", o + new Vector3(5.6f, 8.8f, 20f + i * 5f), 270f, 1f, overpass, collider: false);
             }
-            GreyboxKit.Place("Kudzu_Mound", o + new Vector3(0f, 0.4f, 14f), 0f, 1.1f, root, collider: false);
-            GreyboxKit.Place("Kudzu_Mound", o + new Vector3(-7f, 0.4f, -16f), 70f, 1f, root, collider: false);
-            GreyboxKit.Place("Kudzu_Mound", o + new Vector3(4f, 3.5f, 6f), 20f, 0.8f, root, collider: false);
+            GreyboxKit.Place("Kudzu_Mound", o + new Vector3(0f, 0.4f, 14f), 0f, 1.1f, overpass, collider: false);
+            GreyboxKit.Place("Kudzu_Mound", o + new Vector3(-7f, 0.4f, -16f), 70f, 1f, overpass, collider: false);
+            GreyboxKit.Place("Kudzu_Mound", o + new Vector3(4f, 3.5f, 6f), 20f, 0.8f, overpass, collider: false);
+            overpass.rotation = Quaternion.Euler(0f, Yaw(RoadDirection(NearestRoadIndex(o))) - 90f, 0f);
+            // Settle each piece onto the ground where it ended up.
+            foreach (Transform piece in overpass)
+            {
+                Vector3 p = piece.position;
+                float lift = p.y - o.y;
+                piece.position = new Vector3(p.x, HeightAt(p.x, p.z) + lift, p.z);
+            }
 
             // Jersey barriers left along the highway, some knocked askew.
             var rnd = new Random(404);
-            for (float x = -Size / 2f + 20f; x < Size / 2f - 20f; x += 24f)
+            float walked = 0f;
+            for (int i = 1; i < Map.Road.Count; i++)
             {
-                if (rnd.NextDouble() < 0.45 || Mathf.Abs(x) < 12f || Mathf.Abs(x - o.x) < 30f) continue;
-                float side = rnd.NextDouble() < 0.5 ? -5.2f : 5.2f;
-                GreyboxKit.Place("Jersey_Barrier", OnGround(x + (float)rnd.NextDouble() * 6f, RoadZ + side), 90f + (float)(rnd.NextDouble() - 0.5) * 30f, 1f, root, collider: true);
+                walked += Vector2.Distance(new Vector2((float)Map.Road[i].P.X, (float)Map.Road[i].P.Z), new Vector2((float)Map.Road[i - 1].P.X, (float)Map.Road[i - 1].P.Z));
+                if (walked < 24f) continue;
+                walked = 0f;
+                float x = (float)Map.Road[i].P.X, z = (float)Map.Road[i].P.Z;
+                if (rnd.NextDouble() < 0.45 || !InRegion(x, z, 60f) || DistanceToBridge(x, z) < 25f || Vector3.Distance(new Vector3(x, 0f, z), new Vector3(o.x, 0f, o.z)) < 30f || F.Track(x, z) < 12f) continue;
+                Vector2 dir = RoadDirection(i), side = new Vector2(-dir.y, dir.x) * (rnd.NextDouble() < 0.5 ? -5.2f : 5.2f);
+                GreyboxKit.Place("Jersey_Barrier", new Vector3(x + side.x, HeightAt(x + side.x, z + side.y), z + side.y), Yaw(dir) + (float)(rnd.NextDouble() - 0.5) * 30f, 1f, root, collider: true);
+            }
+        }
+
+        // What's left at each ruin site: heaps of rubble and scrap, half under kudzu. (Proper ruins come later.)
+        private static void BuildRuins(Transform props)
+        {
+            var root = new GameObject("Ruins").transform;
+            root.SetParent(props, false);
+            var rnd = new Random(77);
+            float R(double a, double b) => (float)(a + rnd.NextDouble() * (b - a));
+            foreach (Vec2 site in Map.RuinSites)
+            {
+                float cx = (float)site.X, cz = (float)site.Z;
+                if (!InRegion(cx, cz, 100f)) continue;
+                for (int i = 0; i < 4; i++)
+                {
+                    float x = cx + R(-10, 10), z = cz + R(-10, 10);
+                    GreyboxKit.Place("Rubble", new Vector3(x, HeightAt(x, z) + 0.3f, z), R(0, 360), R(0.7, 1.2), root, collider: true);
+                }
+                for (int i = 0; i < 3; i++)
+                {
+                    float x = cx + R(-14, 14), z = cz + R(-14, 14);
+                    GreyboxKit.Place("Kudzu_Mound", new Vector3(x, HeightAt(x, z), z), R(0, 360), R(0.8, 1.3), root, collider: false);
+                }
             }
         }
 
         // ---- Nature ---------------------------------------------------------------------------------
 
+        private static bool NearRuin(float x, float z, float within)
+        {
+            foreach (Vec2 r in Map.RuinSites) if (Vector2.Distance(new Vector2(x, z), new Vector2((float)r.X, (float)r.Z)) < within) return true;
+            return false;
+        }
+
         private static bool Clear(float x, float z, float margin)
         {
             if (Mathf.Sqrt(x * x + z * z) < HomeRadius + margin) return false;
-            if (Mathf.Abs(z - RoadZ) < 7f + margin * 0.3f) return false;
-            if (Mathf.Abs(z - CreekCentre(x)) < 5.5f + margin * 0.3f) return false;
-            if (Vector3.Distance(new Vector3(x, 0f, z), OverpassAt) < 26f + margin) return false;
-            if (PathDistance(x, z) < 2.5f + Mathf.Max(0f, margin) * 0.2f) return false;
-            return Mathf.Abs(x) < Size / 2f - 4f && Mathf.Abs(z) < Size / 2f - 4f;
+            if (F.Road(x, z) < 7f + margin * 0.3f) return false;
+            if (F.Track(x, z) < 2.5f + Mathf.Max(0f, margin) * 0.2f) return false;
+            if (F.Water(x, z) < 1.2f + Mathf.Max(0f, margin) * 0.3f) return false;
+            if (Vector3.Distance(new Vector3(x, 0f, z), new Vector3(_overpass.x, 0f, _overpass.z)) < 26f + margin) return false;
+            if (DistanceToBridge(x, z) < 14f + margin) return false;
+            if (NearRuin(x, z, 13f + margin * 0.5f)) return false;
+            return Mathf.Abs(x) < WorldSize / 2f - 4f && Mathf.Abs(z) < WorldSize / 2f - 4f;
         }
 
         private static void ScatterNature(InstancedScatter trees, InstancedScatter cover, Transform props)
@@ -441,11 +628,12 @@ namespace Hearthline.EditorTools
                 return options[options.Length - 1].name;
             }
 
-            // Trees are drawn instanced; each gets an invisible trunk collider so you cannot walk through it.
+            // Trees are drawn instanced; in and near the playable region each gets an invisible trunk collider.
             void Tree(string model, float x, float z, float scale)
             {
                 float y = HeightAt(x, z) - 0.15f;
                 trees.Add(GreyboxKit.MeshOf(model), GreyboxKit.MaterialsOf(model), Matrix4x4.TRS(new Vector3(x, y, z), Quaternion.Euler(0f, R(0, 360), 0f), Vector3.one * scale), 60f);
+                if (!InRegion(x, z, 40f)) return;
                 var trunk = new GameObject("Trunk").AddComponent<CapsuleCollider>();
                 trunk.transform.SetParent(trunks, false);
                 trunk.transform.position = new Vector3(x, y + 2.5f * scale, z);
@@ -456,74 +644,80 @@ namespace Hearthline.EditorTools
             void Cover(string model, float x, float z, float scale, float sink = 0.05f) =>
                 cover.Add(GreyboxKit.MeshOf(model), GreyboxKit.MaterialsOf(model), Matrix4x4.TRS(new Vector3(x, HeightAt(x, z) - sink, z), Quaternion.Euler(0f, R(0, 360), 0f), Vector3.one * scale), 40f);
 
-            // Trees on a jittered grid: dense and tall in the woods, pines on the ridge, solitary in the meadows.
-            for (float gx = -Size / 2f; gx < Size / 2f; gx += 8f)
-            for (float gz = -Size / 2f; gz < Size / 2f; gz += 8f)
+            // Trees where the land grows them: thick in the forest, pines up the mountain, broadleaf by the water,
+            // the odd lone oak in the meadows; none on cliffs.
+            for (float gx = -WorldSize / 2f; gx < WorldSize / 2f; gx += 8f)
+            for (float gz = -WorldSize / 2f; gz < WorldSize / 2f; gz += 8f)
             {
                 float x = gx + R(0, 8), z = gz + R(0, 8);
-                bool deep = x < DeepWoodsX, woods = x < WoodsEdgeX + R(-15, 15), ridge = z > RidgeZ - 15f;
-                double chance = deep ? 0.8 : woods ? 0.6 : ridge ? 0.28 : 0.035;
+                float forest = (float)Map.ForestAt(x, z), slope = (float)Map.SlopeAt(x, z), high = HeightAt(x, z) - (float)Map.HomeHeight;
+                if (slope > 1.1f) continue;
+                double chance = forest * 0.85 + 0.025;
                 if (rnd.NextDouble() > chance || !Clear(x, z, 8f)) continue;
-                if (deep) Tree(Pick(("Tree_Tall_Hollow", 3), ("Tree_Pine", 2), ("Tree_Broadleaf_B", 1)), x, z, R(0.9, 1.3));
-                else if (woods) Tree(Pick(("Tree_Oak", 3), ("Tree_Broadleaf_B", 3), ("Tree_Broadleaf_C", 2), ("Tree_Pine", 2)), x, z, R(0.8, 1.2));
-                else if (ridge) Tree(Pick(("Tree_Pine", 3), ("Tree_Oak", 1), ("Tree_Broadleaf_C", 1)), x, z, R(0.8, 1.15));
+                bool wet = F.Water(x, z) < 14f;
+                if (high > 90f) Tree(Pick(("Tree_Pine", 5), ("Tree_Broadleaf_C", 1)), x, z, R(0.8, 1.15));
+                else if (forest > 0.72f) Tree(Pick(("Tree_Tall_Hollow", 3), ("Tree_Pine", 2), ("Tree_Broadleaf_B", 1)), x, z, R(0.9, 1.3));
+                else if (wet) Tree(Pick(("Tree_Broadleaf_B", 3), ("Tree_Broadleaf_C", 3), ("Tree_Oak", 1)), x, z, R(0.9, 1.3));
+                else if (forest > 0.3f) Tree(Pick(("Tree_Oak", 3), ("Tree_Broadleaf_B", 3), ("Tree_Broadleaf_C", 2), ("Tree_Pine", 2)), x, z, R(0.8, 1.2));
                 else Tree(Pick(("Tree_Oak", 2), ("Tree_Broadleaf_B", 2), ("Tree_Broadleaf_C", 1)), x, z, R(1.0, 1.35));
             }
             // A big shade tree at the edge of the yard, as in the references.
             Tree("Tree_Broadleaf_B", -24f, -12f, 1.35f);
 
-            // Grass, flowers and ferns: dense, instanced, no colliders.
+            // Grass, flowers and ferns in the playable region: dense, instanced, no colliders.
             const float coverStep = 2.1f;
-            for (float gx = -Size / 2f; gx < Size / 2f; gx += coverStep)
-            for (float gz = -Size / 2f; gz < Size / 2f; gz += coverStep)
+            for (float gx = -Size / 2f - 20f; gx < Size / 2f + 20f; gx += coverStep)
+            for (float gz = -Size / 2f - 20f; gz < Size / 2f + 20f; gz += coverStep)
             {
                 float x = gx + R(0, coverStep), z = gz + R(0, coverStep);
-                bool yard = Mathf.Sqrt(x * x + z * z) < HomeRadius;
+                float d = Mathf.Sqrt(x * x + z * z);
+                bool yard = d < HomeRadius;
                 if (!yard && !Clear(x, z, 0f)) continue;
-                if (yard && (Mathf.Sqrt(x * x + z * z) < 10f || PathDistance(x, z) < 2f)) continue;
-                bool deep = x < DeepWoodsX, woods = x < WoodsEdgeX;
+                if (yard && (d < 10f || F.Track(x, z) < 2f)) continue;
+                float forest = (float)Map.ForestAt(x, z), moist = (float)Map.MoistureAt(x, z), water = F.Water(x, z);
+                if (Map.SlopeAt(x, z) > 0.9) continue;
                 double roll = rnd.NextDouble();
-                if (deep) { if (roll < 0.18) Cover("Fern", x, z, R(0.9, 1.5)); }
-                else if (woods) { if (roll < 0.14) Cover("Fern", x, z, R(0.8, 1.3)); else if (roll < 0.2) Cover("Grass_Clump", x, z, R(0.8, 1.2)); }
-                else if (yard) { if (roll < 0.08) Cover("Grass_Clump", x, z, R(0.6, 0.9)); }
+                if (yard) { if (roll < 0.08) Cover("Grass_Clump", x, z, R(0.6, 0.9)); }
+                else if (forest > 0.72f) { if (roll < 0.18) Cover("Fern", x, z, R(0.9, 1.5)); }
+                else if (forest > 0.35f) { if (roll < 0.14) Cover("Fern", x, z, R(0.8, 1.3)); else if (roll < 0.2) Cover("Grass_Clump", x, z, R(0.8, 1.2)); }
+                else if (water < 6f) { if (roll < 0.45) Cover("Grass_Clump", x, z, R(1.0, 1.6)); }
                 else
                 {
-                    bool meadow = x > 40f && z > -30f && z < 120f;
-                    if (roll < 0.34) Cover("Grass_Clump", x, z, R(0.8, 1.4));
-                    else if (roll < (meadow ? 0.43 : 0.36)) Cover("Wildflowers", x, z, R(0.8, 1.2));
+                    if (roll < 0.26 + moist * 0.15) Cover("Grass_Clump", x, z, R(0.8, 1.4));
+                    else if (roll < 0.34 + (1f - moist) * 0.08) Cover("Wildflowers", x, z, R(0.8, 1.2));
                 }
             }
-            // Bushes in the woods, kudzu swallowing the woods' edge and the roadside.
-            for (float gx = -Size / 2f; gx < Size / 2f; gx += 7f)
-            for (float gz = -Size / 2f; gz < Size / 2f; gz += 7f)
+            // Bushes along the forest's edge, kudzu swallowing edges and roadsides.
+            for (float gx = -Size / 2f - 20f; gx < Size / 2f + 20f; gx += 7f)
+            for (float gz = -Size / 2f - 20f; gz < Size / 2f + 20f; gz += 7f)
             {
                 float x = gx + R(0, 7), z = gz + R(0, 7);
                 if (!Clear(x, z, 3f)) continue;
-                bool woods = x < WoodsEdgeX + 10f, edge = Mathf.Abs(x - WoodsEdgeX) < 18f, roadside = Mathf.Abs(z - RoadZ) < 20f;
+                float forest = (float)Map.ForestAt(x, z), road = F.Road(x, z);
+                bool edge = forest > 0.2f && forest < 0.5f, roadside = road < 20f, woods = forest >= 0.5f;
                 double roll = rnd.NextDouble();
-                if ((edge || roadside) && roll < 0.22) Cover("Kudzu_Mound", x, z, R(0.7, 1.3), 0.3f);
+                if ((edge || roadside) && roll < 0.2) Cover("Kudzu_Mound", x, z, R(0.7, 1.3), 0.3f);
                 else if (woods && roll < 0.3) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.7, 1.3), 0.2f);
-                else if (!woods && roll < 0.05) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.6, 1.1), 0.2f);
+                else if (edge && roll < 0.35) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.6, 1.1), 0.2f);
+                else if (roll < 0.03) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.6, 1.1), 0.2f);
             }
 
-            // Rocks and logs are solid: real objects with colliders.
+            // Rocks and logs are solid: stones on steep ground and along the streams, fallen logs in the woods.
             var solid = new GameObject("Rocks and Logs").transform;
             solid.SetParent(props, false);
-            for (int i = 0; i < 900; i++)
+            for (int i = 0; i < 6000; i++)
             {
-                float x = R(-Size / 2f + 8f, Size / 2f - 8f), z = R(-Size / 2f + 8f, Size / 2f - 8f);
-                float creekOff = Mathf.Abs(z - CreekCentre(x));
-                bool bank = creekOff > 5f && creekOff < 12f;
-                bool ridge = z > RidgeZ;
-                bool woods = x < WoodsEdgeX;
-                if (!bank && !ridge && !woods) continue;
-                if (rnd.NextDouble() > (bank ? 0.5 : 0.18)) continue;
+                float x = R(-Size / 2f - 40f, Size / 2f + 40f), z = R(-Size / 2f - 40f, Size / 2f + 40f);
+                float water = F.Water(x, z), slope = (float)Map.SlopeAt(x, z), forest = (float)Map.ForestAt(x, z);
+                bool bank = water > 0.5f && water < 5f, stony = slope > 0.45f, woods = forest > 0.5f;
+                double chance = bank ? 0.12 : stony ? 0.1 : woods ? 0.04 : 0.0;
+                if (rnd.NextDouble() > chance) continue;
                 if (!bank && !Clear(x, z, 0f)) continue;
-                if (Vector3.Distance(new Vector3(x, 0f, z), new Vector3(0f, 0f, CreekZ)) < 16f) continue; // keep the bridge clear
-                if (woods && rnd.NextDouble() < 0.3)
-                    GreyboxKit.Place("Log_Fallen", OnGround(x, z) - Vector3.up * 0.15f, R(0, 360), R(0.8, 1.2), solid, collider: true);
+                if (DistanceToBridge(x, z) < 16f || F.Road(x, z) < 8f || Mathf.Sqrt(x * x + z * z) < HomeRadius + 4f) continue;
+                if (woods && !bank && rnd.NextDouble() < 0.45)
+                    GreyboxKit.Place("Log_Fallen", new Vector3(x, HeightAt(x, z) - 0.15f, z), R(0, 360), R(0.8, 1.2), solid, collider: true);
                 else
-                    GreyboxKit.Place(rnd.NextDouble() < 0.6 ? "Rock_A" : "Rock_B", OnGround(x, z) - Vector3.up * 0.3f, R(0, 360), R(0.6, ridge ? 2.2 : 1.3), solid, collider: true);
+                    GreyboxKit.Place(rnd.NextDouble() < 0.6 ? "Rock_A" : "Rock_B", new Vector3(x, HeightAt(x, z) - 0.3f, z), R(0, 360), R(0.6, stony ? 2.0 : 1.2), solid, collider: true);
             }
         }
 
@@ -551,37 +745,53 @@ namespace Hearthline.EditorTools
                 if (picked != null) picked.SetActive(false);
                 spot.AddComponent<GatherSpot>().Configure(kind + "_" + n.ToString("000"), item, verb, visual, picked);
             }
+            float Lim = Size / 2f - 20f;
 
-            // Berries along the woods' edge and round the meadow; herbs in the woods and on the creek banks;
-            // deadfall under the trees; salvage on the highway and at the overpass.
-            for (int i = 0; i < 2000 && Count("berries") < 22; i++)
+            // Berries along the forest's edge; herbs on stream banks and in the woods; deadfall under the trees;
+            // salvage along the highway, at the overpass and in the ruins.
+            for (int i = 0; i < 6000 && Count("berries") < 22; i++)
             {
-                float x = R(-120, 280), z = R(-80, 160);
-                bool edge = Mathf.Abs(x - WoodsEdgeX) < 20f || (x > 40f && Mathf.Abs(z - 40f) > 60f);
-                if (edge && Clear(x, z, 4f)) Spot("berries", "wild_berries", "Pick", "Berry_Bush", x, z, R(0, 360), "Bush_A");
+                float x = R(-Lim, Lim), z = R(-Lim, Lim), forest = (float)Map.ForestAt(x, z);
+                if (forest > 0.2f && forest < 0.5f && Clear(x, z, 4f)) Spot("berries", "wild_berries", "Pick", "Berry_Bush", x, z, R(0, 360), "Bush_A");
             }
-            for (int i = 0; i < 2000 && Count("herbs") < 16; i++)
+            for (int i = 0; i < 6000 && Count("herbs") < 16; i++)
             {
-                float x = R(-280, 280), z = R(-280, 280);
-                float creekOff = Mathf.Abs(z - CreekCentre(x));
-                bool bank = creekOff > 6f && creekOff < 12f && Mathf.Abs(x) > 20f;
-                bool woods = x < WoodsEdgeX && Clear(x, z, 2f);
-                if (bank || (woods && rnd.NextDouble() < 0.5)) Spot("herbs", "medicinal_herbs", "Gather", "Herb_Patch", x, z, R(0, 360));
+                float x = R(-Lim, Lim), z = R(-Lim, Lim), water = F.Water(x, z);
+                bool bank = water > 2.5f && water < 10f;
+                bool woods = Map.ForestAt(x, z) > 0.5 && rnd.NextDouble() < 0.4;
+                if ((bank || woods) && Clear(x, z, 2f)) Spot("herbs", "medicinal_herbs", "Gather", "Herb_Patch", x, z, R(0, 360));
             }
-            for (int i = 0; i < 2000 && Count("deadfall") < 18; i++)
+            for (int i = 0; i < 6000 && Count("deadfall") < 18; i++)
             {
-                float x = R(-280, WoodsEdgeX + 10f), z = R(-280, 280);
-                if (Clear(x, z, 3f)) Spot("deadfall", "firewood", "Gather", "Deadfall", x, z, R(0, 360));
+                float x = R(-Lim, Lim), z = R(-Lim, Lim);
+                if (Map.ForestAt(x, z) > 0.45 && Clear(x, z, 3f)) Spot("deadfall", "firewood", "Gather", "Deadfall", x, z, R(0, 360));
             }
             Spot("deadfall", "firewood", "Gather", "Deadfall", -22f, -20f, 40f); // one just outside the yard
-            Vector3 o = OverpassAt;
-            Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", o.x - 9f, o.z - 6f, 20f);
-            Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", o.x + 8f, o.z + 4f, 160f);
-            Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", o.x - 3f, o.z + 30f, 95f);
-            for (float x = -260f; x < 260f; x += 70f)
-                if (Mathf.Abs(x) > 20f && Mathf.Abs(x - o.x) > 30f)
-                    Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", x + R(-10, 10), RoadZ + (rnd.NextDouble() < 0.5 ? -6.5f : 6.5f), R(0, 360));
+            Vector3 o = _overpass;
+            Vector2 dir = RoadDirection(NearestRoadIndex(o)), side = new Vector2(-dir.y, dir.x);
+            foreach (float along in new[] { -12f, 10f })
+            {
+                Vector2 p = new Vector2(o.x, o.z) + dir * along + side * (along < 0 ? 7f : -7f);
+                Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", p.x, p.y, R(0, 360));
+            }
+            foreach (Vec2 site in Map.RuinSites)
+            {
+                if (!InRegion((float)site.X, (float)site.Z, -10f)) continue;
+                Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", (float)site.X + R(-4, 4), (float)site.Z + R(-4, 4), R(0, 360));
+            }
+            float walked = 0f;
+            for (int i = 1; i < Map.Road.Count; i++)
+            {
+                walked += Vector2.Distance(new Vector2((float)Map.Road[i].P.X, (float)Map.Road[i].P.Z), new Vector2((float)Map.Road[i - 1].P.X, (float)Map.Road[i - 1].P.Z));
+                if (walked < 70f) continue;
+                walked = 0f;
+                float x = (float)Map.Road[i].P.X, z = (float)Map.Road[i].P.Z;
+                if (!InRegion(x, z, -20f) || DistanceToBridge(x, z) < 20f || Vector3.Distance(new Vector3(x, 0f, z), new Vector3(o.x, 0f, o.z)) < 30f) continue;
+                Vector2 s = new Vector2(-RoadDirection(i).y, RoadDirection(i).x) * (rnd.NextDouble() < 0.5 ? -6.5f : 6.5f);
+                Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", x + s.x, z + s.y, R(0, 360));
+            }
         }
+
 
         // The stores shed: an open lean-to in the yard whose shelves and floor fill with what is in the stores.
         private static void BuildStores(Transform props)
@@ -701,30 +911,125 @@ namespace Hearthline.EditorTools
 
         // ---- Areas ------------------------------------------------------------------------------------
 
-        private static Transform BuildAreas()
+        // The lay of the land in the playable region, from the map: ridge, deep woods, woods or field.
+        private enum Ground { Field, Woods, DeepWoods, Ridge }
+
+        private static Ground GroundAt(float x, float z)
+        {
+            if (HeightAt(x, z) > Map.HomeHeight + 55 || Map.SlopeAt(x, z) > 0.7) return Ground.Ridge;
+            double f = Map.ForestAt(x, z);
+            return f > 0.72 ? Ground.DeepWoods : f > 0.35 ? Ground.Woods : Ground.Field;
+        }
+
+        /// <summary>
+        /// The areas are read off the map (ADR 0024). The land is cut into 20 m tiles by what grows there,
+        /// joined into rectangles; the road, the water, the bridges, the overpass, the ruins and the homestead are
+        /// laid over them as smaller boxes, so they name the place where they are.
+        /// </summary>
+        private static Transform BuildAreas(out int count)
         {
             var root = new GameObject("Areas").transform;
-            void Area(string name, string place, string[] tags, Vector3 centre, Vector3 size, int thin = 0, bool homestead = false)
+            int made = 0;
+            float baseY = (float)Map.HomeHeight;
+            void Area(string name, string place, string[] tags, Vector3 centre, Vector3 size, float yaw = 0f, int thin = 0, bool homestead = false)
             {
                 var go = new GameObject("Area " + name);
                 go.transform.SetParent(root, false);
-                go.transform.position = centre;
+                go.transform.SetPositionAndRotation(centre, Quaternion.Euler(0f, yaw, 0f));
                 go.AddComponent<AreaVolume>().Configure(place, tags, size, thin, homestead);
+                made++;
             }
 
-            const float tall = 120f;
-            Area("Homestead", "the homestead", new[] { "homestead" }, Vector3.zero, new Vector3(HomeRadius * 2f, tall, HomeRadius * 2f), homestead: true);
-            Area("Creek", "the creek", new[] { "creek" }, new Vector3(0f, 0f, CreekZ), new Vector3(Size, tall, 30f));
-            Area("Bridge", "the guardrail bridge", new[] { "creek", "river_crossing" }, new Vector3(0f, 0f, CreekZ), new Vector3(10f, tall, 30f));
-            Area("Road", "the old highway", new[] { "road" }, new Vector3(0f, 0f, RoadZ), new Vector3(Size, tall, 16f));
-            Area("Overpass", "the fallen overpass", new[] { "road", "ruin" }, OverpassAt, new Vector3(40f, tall, 50f));
-            Area("Meadow", "the east meadow", new[] { "field" }, new Vector3(160f, 0f, 40f), new Vector3(260f, tall, 160f));
-            Area("Woods", "Laurel Woods", new[] { "woods" }, new Vector3((WoodsEdgeX - Size / 2f) / 2f, 0f, 0f), new Vector3(Size / 2f + WoodsEdgeX, tall, Size));
-            Area("Deep Woods", "the deep hollow", new[] { "deep_woods", "hollow" }, new Vector3((DeepWoodsX - Size / 2f) / 2f, 0f, 0f), new Vector3(Size / 2f + DeepWoodsX, tall, Size), thin: 1);
-            Area("Ridge", "Buck Ridge", new[] { "ridge" }, new Vector3(0f, 0f, (RidgeZ + Size / 2f) / 2f), new Vector3(Size, tall * 2f, Size / 2f - RidgeZ));
+            // The land: tiles by majority of what grows there, merged into rectangles.
+            const float tile = 20f;
+            int n = Mathf.RoundToInt(Size / tile);
+            var kind = new Ground[n, n];
+            for (int j = 0; j < n; j++)
+            for (int i = 0; i < n; i++)
+            {
+                var votes = new int[4];
+                for (int b = 0; b < 3; b++)
+                for (int a = 0; a < 3; a++)
+                    votes[(int)GroundAt(-Size / 2f + (i + (a + 0.5f) / 3f) * tile, -Size / 2f + (j + (b + 0.5f) / 3f) * tile)]++;
+                int best = 0;
+                for (int k = 1; k < 4; k++) if (votes[k] > votes[best]) best = k;
+                kind[i, j] = (Ground)best;
+            }
+            var done = new bool[n, n];
+            int[] counters = new int[4];
+            for (int j = 0; j < n; j++)
+            for (int i = 0; i < n; i++)
+            {
+                if (done[i, j]) continue;
+                Ground g = kind[i, j];
+                int w = 1;
+                while (i + w < n && !done[i + w, j] && kind[i + w, j] == g) w++;
+                int h = 1;
+                while (j + h < n)
+                {
+                    bool row = true;
+                    for (int a = i; a < i + w; a++) if (done[a, j + h] || kind[a, j + h] != g) { row = false; break; }
+                    if (!row) break;
+                    h++;
+                }
+                for (int b = j; b < j + h; b++) for (int a = i; a < i + w; a++) done[a, b] = true;
+                var centre = new Vector3(-Size / 2f + (i + w / 2f) * tile, baseY, -Size / 2f + (j + h / 2f) * tile);
+                var size = new Vector3(w * tile, 800f, h * tile);
+                string label = g + " " + counters[(int)g]++;
+                switch (g)
+                {
+                    case Ground.Field: Area(label, "the valley meadows", new[] { "field" }, centre, size); break;
+                    case Ground.Woods: Area(label, "Laurel Woods", new[] { "woods" }, centre, size); break;
+                    case Ground.DeepWoods: Area(label, "the deep hollow", new[] { "deep_woods", "hollow" }, centre, size, thin: 1); break;
+                    default: Area(label, "the mountain's foot", new[] { "ridge" }, centre, size); break;
+                }
+            }
+
+            // Thin boxes along the water and the road, a few points at a time. The bridges and the overpass are
+            // flatter still, so they are the smallest box where they stand and name the place.
+            const float tall = 300f;
+            void Along(List<PathPoint> pts, int stride, float extra, string name, string place, string[] tags)
+            {
+                for (int k = 0; k + stride < pts.Count; k += stride)
+                {
+                    var a = new Vector2((float)pts[k].P.X, (float)pts[k].P.Z);
+                    var b = new Vector2((float)pts[k + stride].P.X, (float)pts[k + stride].P.Z);
+                    Vector2 mid = (a + b) / 2f;
+                    if (!InRegion(mid.x, mid.y, 20f)) continue;
+                    float width = (float)pts[k].Width + extra;
+                    Area(name + " " + k, place, tags, new Vector3(mid.x, baseY, mid.y), new Vector3(width, tall, Vector2.Distance(a, b) + 1f), Yaw(b - a));
+                }
+            }
+            int s = 0;
+            foreach (Waterway w in Map.Streams)
+                Along(w.Points, 4, 10f, (w.IsRiver ? "River " : "Creek ") + s++, w.IsRiver ? "the river" : "the creek", new[] { "creek" });
+            Along(Map.Road, 3, 7f, "Road", "the old highway", new[] { "road" });
+
+            int bridgeCount = 0;
+            foreach (Hearthline.Sim.World.Bridge b in Map.Bridges)
+            {
+                var from = new Vector2((float)b.From.X, (float)b.From.Z);
+                var to = new Vector2((float)b.To.X, (float)b.To.Z);
+                Vector2 mid = (from + to) / 2f;
+                if (!InRegion(mid.x, mid.y, 20f)) continue;
+                Area("Bridge " + bridgeCount++, "the guardrail bridge", new[] { "creek", "river_crossing" }, new Vector3(mid.x, HeightAt(mid.x, mid.y), mid.y), new Vector3(12f, 20f, Vector2.Distance(from, to) + 10f), Yaw(to - from));
+            }
+            Area("Overpass", "the fallen overpass", new[] { "road", "ruin" }, _overpass + Vector3.up * 4f, new Vector3(40f, 20f, 50f), Yaw(RoadDirection(NearestRoadIndex(_overpass))) - 90f);
+
+            string[] ruinNames = { "the burned farmstead", "the old feed store", "the fallen chapel", "the schoolhouse", "the filling station" };
+            int r = 0;
+            foreach (Vec2 site in Map.RuinSites)
+            {
+                if (!InRegion((float)site.X, (float)site.Z, -10f)) continue;
+                Area("Ruin " + r, ruinNames[r % ruinNames.Length], new[] { "ruin" }, new Vector3((float)site.X, HeightAt((float)site.X, (float)site.Z), (float)site.Z), new Vector3(40f, 120f, 40f));
+                r++;
+            }
+
+            Area("Homestead", "the homestead", new[] { "homestead" }, new Vector3(0f, baseY, 0f), new Vector3(HomeRadius * 2f, 60f, HomeRadius * 2f), homestead: true);
 
             var home = new GameObject("Homestead Centre").transform;
             home.position = new Vector3(0f, HeightAt(0f, 0f), 0f);
+            count = made;
             return home;
         }
     }

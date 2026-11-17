@@ -38,7 +38,8 @@ namespace Hearthline.Game
         [SerializeField] private Gradient fogColour = Keys(
             (0f, new Color(0.06f, 0.07f, 0.1f)), (6f, new Color(0.78f, 0.7f, 0.64f)), (9f, new Color(0.7f, 0.77f, 0.84f)),
             (17f, new Color(0.72f, 0.76f, 0.8f)), (19.5f, new Color(0.82f, 0.6f, 0.45f)), (22f, new Color(0.06f, 0.07f, 0.1f)));
-        [SerializeField] private float fogDensity = 0.0035f;
+        [Tooltip("Base fog density (exponential squared). Thinned for the 1.2 km generated land so the mountain shows (ADR 0024); tune freely.")]
+        [SerializeField] private float fogDensity = 0.0018f;
         [Tooltip("Multiplier on fog density by hour: morning haze, clear days.")]
         [SerializeField] private AnimationCurve fogByHour = Curve((0f, 1.4f), (5f, 2.4f), (8f, 2f), (11f, 1f), (18f, 1f), (21f, 1.3f), (24f, 1.4f));
         [Tooltip("Fog multiplier in the deep woods, hollows and Thin places.")]

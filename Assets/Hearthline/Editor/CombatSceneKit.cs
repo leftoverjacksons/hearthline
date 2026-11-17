@@ -75,14 +75,21 @@ namespace Hearthline.EditorTools
         }
 
         /// <summary>Bakes a NavMesh over the scene's solid colliders (trigger volumes and hit zones ignored) and saves it next to the scene.</summary>
-        public static NavMeshSurface BakeNavMesh(string dataPath)
+        public static NavMeshSurface BakeNavMesh(string dataPath, Bounds? within = null)
         {
             int hitbox = LayerMask.NameToLayer(HitReceiver.LayerName);
             foreach (Collider c in Object.FindObjectsByType<Collider>(FindObjectsInactive.Exclude))
                 if (c.isTrigger && c.GetComponent<NavMeshModifier>() == null) c.gameObject.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
 
             var surface = new GameObject("Navigation").AddComponent<NavMeshSurface>();
-            surface.collectObjects = CollectObjects.All;
+            surface.collectObjects = within.HasValue ? CollectObjects.Volume : CollectObjects.All;
+            if (within.HasValue)
+            {
+                // Only the playable region: the land beyond is scenery.
+                surface.transform.position = within.Value.center;
+                surface.center = Vector3.zero;
+                surface.size = within.Value.size;
+            }
             surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
             surface.layerMask = ~((1 << hitbox) | (1 << 8)); // not hit zones, not the player
             surface.BuildNavMesh();

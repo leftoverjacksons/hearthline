@@ -53,6 +53,7 @@ Keep these current.
 
 - Run EditMode tests without Unity (needs the .NET 8 SDK; this is what CI runs): `tools/test.sh`
 - Validate content only: `tools/test.sh content`
+- Draw the generated world as a map: `cd tools/headless/WorldPreview && dotnet run -c Release -- <seed> <out.bmp>`
 Editor control goes through the Unity CLI (`winget install Unity.CLI`) and the `com.unity.pipeline` package; the Editor must be open on this project. `unity status` confirms the connection. The same commands are exposed as MCP tools by `unity mcp` (server `unity-editor-mcp`).
 
 - Recompile and list compile errors: `unity recompile`

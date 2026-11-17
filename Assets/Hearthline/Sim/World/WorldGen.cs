@@ -438,17 +438,34 @@ namespace Hearthline.Sim.World
         private static void Carve(WorldMap map)
         {
             int n = map.N;
+            // Every channel is cut from the land as it was before any carving, so overlapping cuts don't dig
+            // themselves ever deeper.
+            var original = (float[])map.Height.Clone();
+            double Original(double x, double z)
+            {
+                double fx = Math.Max(0, Math.Min(n - 1.001, (x - map.Origin) / map.Cell)), fz = Math.Max(0, Math.Min(n - 1.001, (z - map.Origin) / map.Cell));
+                int i = (int)fx, j = (int)fz;
+                double tx = fx - i, tz = fz - j;
+                return (original[map.Index(i, j)] * (1 - tx) + original[map.Index(i + 1, j)] * tx) * (1 - tz)
+                     + (original[map.Index(i, j + 1)] * (1 - tx) + original[map.Index(i + 1, j + 1)] * tx) * tz;
+            }
             foreach (Waterway st in map.Streams)
             {
-                double lastSurface = double.MaxValue;
+                // The bed: below the original ground, and never rising downstream (water runs downhill).
+                var bed = new double[st.Points.Count];
+                for (int c = 0; c < bed.Length; c++)
+                {
+                    PathPoint q = st.Points[c];
+                    bed[c] = Original(q.P.X, q.P.Z) - (0.7 + q.Width * 0.15);
+                    if (c > 0) bed[c] = Math.Min(bed[c], bed[c - 1]);
+                }
                 for (int c = 0; c < st.Points.Count; c++)
                 {
                     PathPoint q = st.Points[c];
-                    double depth = 0.5 + q.Width * 0.12;
-                    double bank = q.Width / 2 + 2.5;
+                    double depth = 0.7 + q.Width * 0.15;
+                    double bank = q.Width / 2 + 4;
                     int ci = (int)Math.Round((q.P.X - map.Origin) / map.Cell), cj = (int)Math.Round((q.P.Z - map.Origin) / map.Cell);
                     int r = (int)Math.Ceiling(bank / map.Cell) + 1;
-                    double bed = map.HeightAt(q.P.X, q.P.Z) - depth;
                     for (int b = -r; b <= r; b++)
                     for (int a = -r; a <= r; a++)
                     {
@@ -458,13 +475,10 @@ namespace Hearthline.Sim.World
                         if (d > bank) continue;
                         double t = Smooth(q.Width / 2 * 0.6, bank, d); // 0 in the bed, 1 at the top of the bank
                         int k = map.Index(i, j);
-                        double target = bed + (map.Height[k] - bed) * t;
+                        double target = bed[c] + (original[k] - bed[c]) * t;
                         if (target < map.Height[k]) map.Height[k] = (float)target;
                     }
-                    // Water runs downhill: the surface never rises along the stream.
-                    double surface = Math.Min(lastSurface, bed + depth * 0.7);
-                    lastSurface = surface;
-                    q.Surface = surface;
+                    q.Surface = Math.Min(bed[c] + depth * 0.55, c > 0 ? st.Points[c - 1].Surface : double.MaxValue);
                     st.Points[c] = q;
                 }
             }
@@ -525,6 +539,7 @@ namespace Hearthline.Sim.World
             Grade(map, map.Road, 4.5);
             // Bridges: where the road runs over a stream.
             Bridges(map);
+            Ramps(map);
             // A track from the homestead down to the road.
             double best = double.MaxValue; Vec2 join = default;
             foreach (PathPoint q in map.Road) { double d = q.P.Length; if (d < best) { best = d; join = q.P; } }
@@ -635,6 +650,39 @@ namespace Hearthline.Sim.World
             }
         }
 
+        // Earth ramps raise the road to each bridge's deck, falling away 1 in 8 and to the sides.
+        private static void Ramps(WorldMap map)
+        {
+            int n = map.N;
+            foreach (Bridge br in map.Bridges)
+            {
+                Vec2 dir = br.To - br.From;
+                dir = dir * (1 / Math.Max(1e-6, dir.Length));
+                foreach ((Vec2 end, double sign) in new[] { (br.From, -1.0), (br.To, 1.0) })
+                {
+                    double rise = br.DeckHeight - map.HeightAt(end.X, end.Z);
+                    if (rise <= 0) continue;
+                    double length = rise * 8 + 2;
+                    int ci = (int)Math.Round((end.X - map.Origin) / map.Cell), cj = (int)Math.Round((end.Z - map.Origin) / map.Cell);
+                    int r = (int)Math.Ceiling((length + 8) / map.Cell);
+                    for (int b = -r; b <= r; b++)
+                    for (int a = -r; a <= r; a++)
+                    {
+                        int i = ci + a, j = cj + b;
+                        if (i < 0 || j < 0 || i >= n || j >= n) continue;
+                        Vec2 p = map.PositionOf(i, j), off = p - end;
+                        double along = (off.X * dir.X + off.Z * dir.Z) * sign; // metres away from the bridge
+                        double across = Math.Abs(off.X * -dir.Z + off.Z * dir.X);
+                        if (along < -1 || along > length || across > 8) continue;
+                        if (map.DistanceToWater(p.X, p.Z, out _) < 1.5) continue;
+                        double top = br.DeckHeight - Math.Max(0, along) / 8 - Math.Max(0, across - 4) * 0.5;
+                        int k = map.Index(i, j);
+                        if (top > map.Height[k]) map.Height[k] = (float)top;
+                    }
+                }
+            }
+        }
+
         private static void Bridges(WorldMap map)
         {
             // A bridge runs straight from the last dry point before the water to the first dry one after it;
@@ -661,7 +709,11 @@ namespace Hearthline.Sim.World
                         r.P = from + (to - from) * ((double)(k - begin) / (c - begin));
                         map.Road[k] = r;
                     }
-                    map.Bridges.Add(new Bridge { From = from, To = to, DeckHeight = deck + 0.4 });
+                    // Clear the water by a metre at least.
+                    double water = double.MinValue;
+                    for (int k = begin; k <= c; k++)
+                        if (map.DistanceToWater(map.Road[k].P.X, map.Road[k].P.Z, out PathPoint w) < 3) water = Math.Max(water, w.Surface);
+                    map.Bridges.Add(new Bridge { From = from, To = to, DeckHeight = Math.Max(deck + 0.2, water + 1.0) });
                 }
             }
         }
