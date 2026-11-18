@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hearthline.Bridge;
 using Hearthline.Sim.Content;
 using Hearthline.Sim.World;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
@@ -95,10 +96,12 @@ namespace Hearthline.EditorTools
         {
             float g = f.GroundAt(x, z) - f.Root.position.y;
             var local = new Vector3(x, g + (size.y - Sink) / 2f, z);
-            GameObject go = SceneBuildKit.Block(PrimitiveType.Cube, name, Vector3.zero, Vector3.one, GreyboxKit.Mat(mat), f.Root, collider);
+            GameObject go = Piece(f, name, mat, collider, out bool turned);
             go.transform.localPosition = local;
-            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
-            go.transform.localScale = new Vector3(size.x, size.y + Sink, size.z);
+            Vector3 scale = new Vector3(size.x, size.y + Sink, size.z);
+            // Wall runs are modelled lying along x; RuinKit's walls run along z.
+            go.transform.localRotation = Quaternion.Euler(0f, yaw + (turned ? 90f : 0f), 0f);
+            go.transform.localScale = turned ? new Vector3(scale.z, scale.y, scale.x) : scale;
             return go;
         }
 
@@ -106,10 +109,46 @@ namespace Hearthline.EditorTools
         private static GameObject Lay(Frame f, string name, float x, float y, float z, Vector3 size, Vector3 euler, string mat, bool collider = true)
         {
             float g = f.GroundAt(x, z) - f.Root.position.y;
-            GameObject go = SceneBuildKit.Block(PrimitiveType.Cube, name, Vector3.zero, Vector3.one, GreyboxKit.Mat(mat), f.Root, collider);
+            GameObject go = Piece(f, name, mat, collider, out bool turned);
             go.transform.localPosition = new Vector3(x, g + y, z);
-            go.transform.localRotation = Quaternion.Euler(euler);
-            go.transform.localScale = size;
+            go.transform.localRotation = Quaternion.Euler(euler) * Quaternion.Euler(0f, turned ? 90f : 0f, 0f);
+            go.transform.localScale = turned ? new Vector3(size.z, size.y, size.x) : size;
+            return go;
+        }
+
+        /// <summary>
+        /// The modelled piece for a part (ADR 0029): a unit-sized kit model chosen by what the part is and what
+        /// it's made of, so ruins keep their layout but lose the primitive boxes. Falls back to a box for anything
+        /// the kit doesn't cover. <paramref name="turned"/>: the piece is modelled along x and must turn 90°.
+        /// </summary>
+        private static GameObject Piece(Frame f, string name, string mat, bool collider, out bool turned)
+        {
+            turned = false;
+            string lower = name.ToLowerInvariant();
+            string material = mat.StartsWith("HL_") ? mat.Substring(3) : mat;
+            string model = null;
+            if (lower == "wall")
+            {
+                turned = true;
+                model = mat == "HL_Stone" ? "Unit_Wall_Stone" : mat == "HL_WoodWeathered" ? "Unit_Wall_PlanksWeathered"
+                    : mat == "HL_WoodDark" ? "Unit_Wall_PlanksDark" : mat == "HL_Concrete" ? "Unit_Wall_Concrete" : null;
+            }
+            else if (lower.Contains("roof") || lower.Contains("hayloft") || lower.Contains("ramp") || lower.Contains("rafter") || lower.Contains("pew") || lower.Contains("desk") || lower.Contains("steeple") || lower.Contains("dock"))
+                model = mat == "HL_TinRust" ? "Unit_Tin" : mat == "HL_WoodWeathered" ? "Unit_Boards_Weathered" : mat == "HL_WoodDark" ? "Unit_Boards_Dark" : null;
+            else if (lower == "standing stone" || lower == "wrong shadow")
+                model = "Unit_StandingStone";
+            if (model == null) model = "Unit_Block_" + material;
+            GameObject go;
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(GreyboxKit.Folder + "/" + model + ".fbx") != null)
+            {
+                go = GreyboxKit.Place(model, Vector3.zero, 0f, 1f, f.Root, collider);
+                go.name = name;
+            }
+            else
+            {
+                turned = false;
+                go = SceneBuildKit.Block(PrimitiveType.Cube, name, Vector3.zero, Vector3.one, GreyboxKit.Mat(mat), f.Root, collider);
+            }
             return go;
         }
 
@@ -297,24 +336,20 @@ namespace Hearthline.EditorTools
                     Stand(f, "Hall stone", side, z + 1f, new Vector3(0.6f, 2.6f, 2.05f), 0f, "HL_Stone");
             Stand(f, "Back stone", 0f, -9.3f, new Vector3(3.8f, 2.6f, 0.6f), 0f, "HL_Stone");
             for (float z = -9f; z < 7f; z += 2f) Lay(f, "Capstone", 0f, 2.75f, z + 1f, new Vector3(4.2f, 0.4f, 1.95f), new Vector3(0f, f.R(-3, 3), 0f), "HL_Stone");
-            // The mound over it.
-            // Two earth slopes meeting in a ridge 4.6 m up, clear of the hall inside, with solid earth under them
-            // so there's no hollow showing at the ends, and a hipped slope at the back.
-            foreach (float side in new[] { -1f, 1f })
+            // The mound over it (Unit_Mound, ADR 0029): a long earth shell, closed and rounded at the back, its
+            // open face toward home filled with stones around the doorway.
             {
-                Lay(f, "Mound", side * 4.73f, 1.85f, -1f, new Vector3(10.9f, 1f, 19f), new Vector3(0f, 0f, -side * 25f), "HL_GrassDry");
-                Stand(f, "Mound core", side * 3.2f, -1f, new Vector3(2.6f, 2.2f, 18.6f), 0f, "HL_Soil", collider: false);
-                Stand(f, "Mound core", side * 5.35f, -1f, new Vector3(1.7f, 1f, 18.6f), 0f, "HL_Soil", collider: false);
-                // Stones filling the face beside the doorway.
-                Stand(f, "Facade stone", side * 3.6f, 8.2f, new Vector3(2.4f, 2.6f, 0.7f), side * 6f, "HL_Stone");
-                Stand(f, "Facade stone", side * 5.9f, 8.3f, new Vector3(2.2f, 1.3f, 0.7f), side * 10f, "HL_Stone");
+                float g = f.GroundAt(0f, -1.5f) - f.Root.position.y;
+                GameObject shell = GreyboxKit.Place("Unit_Mound", Vector3.zero, 0f, 1f, f.Root, collider: true);
+                shell.name = "Mound";
+                shell.transform.localPosition = new Vector3(0f, g + 2.1f, -1.5f);
+                shell.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                shell.transform.localScale = new Vector3(13f, 5.4f, 20f);
             }
-            // A kerb of stones closing the back.
-            Lay(f, "Gable stone", 0f, 3.6f, -10.8f, new Vector3(3.6f, 2f, 0.7f), Vector3.zero, "HL_Stone");
             foreach (float side in new[] { -1f, 1f })
             {
-                Stand(f, "Kerb stone", side * 2.6f, -10.8f, new Vector3(2.6f, 3f, 0.7f), side * -4f, "HL_Stone");
-                Stand(f, "Kerb stone", side * 5.4f, -10.7f, new Vector3(3f, 1.7f, 0.7f), side * 8f, "HL_Stone");
+                Stand(f, "Facade stone", side * 3.6f, 8.2f, new Vector3(2.4f, 2.6f, 0.7f), side * 6f, "HL_Stone");
+                Stand(f, "Facade stone", side * 5.6f, 8.3f, new Vector3(2.2f, 1.4f, 0.7f), side * 10f, "HL_Stone");
             }
             Lay(f, "Gable stone", 0f, 4f, 7.9f, new Vector3(3.2f, 1.2f, 0.7f), Vector3.zero, "HL_Stone");
             // The doorway toward home.

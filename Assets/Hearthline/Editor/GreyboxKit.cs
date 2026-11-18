@@ -132,7 +132,7 @@ namespace Hearthline.EditorTools
                 material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             }
             // Thin leaves and grass blades are single quads; draw both sides.
-            bool thin = name.StartsWith("HL_Grass") || name.StartsWith("HL_Flower") || name.StartsWith("HL_Cloth") || name == "HL_LeavesLight";
+            bool thin = name.StartsWith("HL_Grass") || name.StartsWith("HL_Flower") || name.StartsWith("HL_Cloth") || name == "HL_LeavesLight" || name == "HL_TentCanvas";
             material.SetFloat("_Cull", thin ? 0f : 2f);
 
             // Surface detail (ADR 0018): a near-white tiling map multiplies the palette colour, plus relief.

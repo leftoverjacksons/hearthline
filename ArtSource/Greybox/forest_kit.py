@@ -319,12 +319,15 @@ def stump(name, at):
 
 
 # ---- Build and export -------------------------------------------------------------------------------------
+# Other kit scripts reuse Builder by running this file with LIBRARY_ONLY = True; then nothing below runs.
 
 def tree(fn, name, seed, x, far_crowns, trunk_h, trunk_r, cards, size, droop=0.0):
     near = fn(name, seed, (x, -200, 0))
     far_version(name + "_Far", near, far_crowns, trunk_h, trunk_r, cards, size, (x, -215, 0), droop)
 
 V = Vector
+if globals().get("LIBRARY_ONLY"):
+    raise SystemExit  # library use: stop here (caught by the caller)
 tree(white_oak, "Tree_WhiteOak_A", 11, 0, [(V((0, 0, 11.5)), V((5.4, 5.0, 3.6)))], 8, 0.5, 46, (3.0, 4.0))
 tree(white_oak, "Tree_WhiteOak_B", 23, 14, [(V((0, 0, 11.5)), V((5.4, 5.0, 3.6)))], 8, 0.5, 46, (3.0, 4.0))
 tree(poplar, "Tree_Poplar_A", 5, 28, [(V((0, 0, 18)), V((3.0, 3.0, 4.8)))], 14, 0.4, 36, (2.6, 3.4))
