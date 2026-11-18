@@ -1,6 +1,13 @@
 # Spec: the look pass (M2)
 
-Status: **draft 2026-11-18**, waiting for Travis's approval. Three questions are at the end.
+Status: **approved 2026-11-18** (Travis):
+- **Valheim** is the reference.
+- The photo-scanned direction is dropped.
+- We make our own models, above all for the environment.
+- **The land is forest:** North Georgia and southern Appalachia, so you're mostly under trees. This adds a
+  forest step (step 3 below) and changes the generator.
+
+Recorded in ADR 0027.
 
 ## Goal
 
@@ -17,6 +24,24 @@ The look should be judgeable **without playing**. Every step ends with the same 
 before and after, sent to Travis.
 
 ## Direction
+
+**Valheim** is the reference (Travis's choice): chunky low-poly shapes, crunchy and simple textures, and
+dramatic light and fog doing most of the work.
+
+**The land is a forest** (Travis, 2026-11-18). The region is North Georgia and southern Appalachia, so most of
+the time you are under trees:
+- the canopy is closed;
+- an understory of rhododendron and mountain laurel;
+- ferns and leaf litter;
+- creeks in laurel-choked hollows;
+- old, rounded ridges forested to the top, with rock outcrops rather than bare slopes.
+
+Open ground is the exception and means something:
+- the homestead's clearing;
+- old fields going back to scrub around the ruins;
+- the highway's cut;
+- a grassy bald up high;
+- the river's edge.
 
 - **Shapes:** chunky, slightly exaggerated, hand-made rather than procedural:
   - walls lean;
@@ -57,25 +82,46 @@ Each step is committed and judged from screenshots before the next.
      the canopy (sprites and a screen-space pass; URP has no built-in volumetrics);
    - warm interior lights and window glow at the homestead, on at dusk;
    - the sky horizon fixed (it goes pinkish-purple in fog, ADR 0022).
-3. **Painterly materials:**
+3. **The forest** (Travis, 2026-11-18):
+   - **Trees:** modelled low-poly Appalachian trees in the Valheim manner:
+     - white oak and tulip poplar (tall, straight);
+     - hickory;
+     - shortleaf pine;
+     - hemlock along creeks;
+     - dogwood and redbud as small trees.
+     - Each tree has two or three shapes and a far LOD (a cross-quad billboard), so tens of thousands stay
+       cheap.
+   - **Understory:** rhododendron and mountain laurel thickets (which block walking and sight, like real
+     laurel hells), ferns, saplings, fallen logs, leaf litter on the ground.
+   - **The generator:**
+     - forest becomes the default;
+     - clearings come from people and water (the homestead, ruins, the road, the river bank) and from a
+       few balds;
+     - the mountain becomes rounder ridges forested to the top, with rock outcrops.
+
+     The world tests change with it.
+   - **Performance:** GPU instancing as now, plus distance culling and LODs; the frame-time log in
+     `StyleFrames` watches it.
+   - **How it plays:** sight lines get short, so hunting and ambushes happen at closer range in woods and
+     at longer range across clearings. The deer's senses and the enemy AI may need retuning (Travis tunes).
+4. **Painterly materials:**
    - `TextureForge` gets a painterly mode: big soft colour blotches, brush-direction strokes, and light
      edges from curvature.
    - All `HL_*` materials move to a shared **Hearthline/Painted** shader: wrapped diffuse, softened
      specular, edge highlight, and the existing wetness and fog.
    - The palette is retuned.
-4. **A modelled kit** (Blender, through the Blender connection), replacing primitive boxes:
+5. **A modelled kit** (Blender, through the Blender connection), replacing primitive boxes:
    - **Ruin pieces:** wall runs with broken tops, timber frames, gable ends, roof sheets, rubble, a door
      frame, window frames, a chimney. `RuinKit` builds from these instead of cubes.
    - **Homestead:** tent, cabin and farmhouse redone in the same hand.
    - **Elder Works:** standing stones, capstones and a proper mound mesh.
-   - **Nature:** rocks and boulders, stumps and logs, and stylised trees to replace the blob trees (the
-     leaf-card oak question in NEEDS is settled by this).
+   - **Nature:** rocks, outcrops, boulders, stumps and logs (the trees are step 3).
 
    Everything goes into `ArtSource/Greybox/*.blend`, exported to `Assets/Hearthline/Art/Greybox`, as the
    kit does now.
-5. **Ground and grass:** a painterly ground colour map (dirt paths, worn yards, moss under trees), grass
+6. **Ground and grass:** a painterly ground colour map (dirt paths, worn yards, moss under trees), grass
    coloured to match, and a palette by area (golden fields, dark woods, a grey Thin).
-6. **Characters:** the homesteader's materials moved to the painted shader so he sits in the world. His
+7. **Characters:** the homesteader's materials moved to the painted shader so he sits in the world. His
    shape stays until a character direction is picked. This last step also unblocks M1's Mark visuals
    (ADR 0012 was waiting for an art direction).
 
@@ -117,7 +163,15 @@ for each shot, so a regression shows up in the same report.
 - **Docs:** ADR 0027 (style direction, superseding ADR 0022's realism), DESIGN *Visual direction*, SETUP and
   NEEDS.
 
-## Questions for Travis
+## Questions for Travis (answered 2026-11-18)
+
+Answers:
+- Valheim.
+- Drop the photo scans.
+- Our own models, especially the environment.
+- Much more forest (see step 3).
+
+The original questions:
 
 1. **Which reference is closest to what you want?**
    - **(a) The Long Dark:** painterly, graphic, flat colour, very strong light.

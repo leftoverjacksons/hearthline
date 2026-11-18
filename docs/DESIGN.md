@@ -381,14 +381,16 @@ Polish comes from **art direction, light, sound and feel**, not from raw fidelit
 
 ### Visual direction
 
-- **Look:** painterly realism. Slightly simplified shapes and textures, rich color, strong atmosphere. References: The Witcher 3's foliage density, the light of RDR2, and a touch of Ghibli-like greenery.
+- **Look (ADR 0027):** Valheim-like: chunky low-poly shapes, simple crunchy textures, dramatic light and fog. The land is Appalachian forest: closed canopy, laurel understory, open ground rare and meaningful.
+- **Look (first draft):** painterly realism. Slightly simplified shapes and textures, rich color, strong atmosphere. References: The Witcher 3's foliage density, the light of RDR2, and a touch of Ghibli-like greenery.
 - **Palette:** saturated greens and golds near home. Desaturated, colder tones with one unnatural accent hue (pale blue-violet) in the Thin.
 - **Lighting:** time of day, weather (rain, fog, storms), volumetric fog in hollows, warm interior light at home. Coming home at dusk to lit windows is a key image.
 - **The strange:** shown through light, sound and wrongness (shadows in the wrong direction, silent birds, repeated geometry), not creature designs. Seeing too much ruins it.
 
 ### Asset strategy
 
-- Buy, don't build, for environments, foliage, props, modular buildings, animals and the locomotion and animation base. Pick **one** environment art family and conform everything else to it with shared materials and post-processing.
+- **The environment is made by us** (ADR 0027): low-poly models in one hand, Valheim-like, built in Blender. Buy only what making is unreasonable for: the locomotion and animation base, and perhaps animals.
+- (Earlier default, superseded for the environment:) buy, don't build, for environments, foliage, props, modular buildings, animals and the locomotion and animation base. Pick **one** environment art family and conform everything else to it with shared materials and post-processing.
 - Budget real money for assets. For a solo developer, the Asset Store is the main lever on polish.
 - Characters: a modular human system with swappable clothing layers and support for skin-detail layers (for marks). Evaluate candidate packs in M0 specifically for this.
 - Custom work, done yourself or commissioned: mark decals, exposure materials, the family chronicle UI, key storybook illustrations.

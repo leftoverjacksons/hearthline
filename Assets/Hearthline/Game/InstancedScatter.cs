@@ -54,6 +54,15 @@ namespace Hearthline.Game
         {
             Camera cam = Camera.main;
             if (cam == null) return;
+            Draw(cam, false);
+        }
+
+        /// <summary>
+        /// Queues this frame's instances around a camera. With <paramref name="onlyFor"/>, they're drawn for that
+        /// camera alone, so a camera rendered by hand (style frames, captures) gets them on its next Render().
+        /// </summary>
+        public void Draw(Camera cam, bool onlyFor)
+        {
             Vector3 eye = cam.transform.position;
             float limit = drawDistance * drawDistance;
             ShadowCastingMode shadows = castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
@@ -65,7 +74,7 @@ namespace Hearthline.Game
                 if (d.sqrMagnitude > limit) continue;
                 for (int sub = 0; sub < group.mesh.subMeshCount && sub < group.materials.Length; sub++)
                 {
-                    var rp = new RenderParams(group.materials[sub]) { shadowCastingMode = shadows, receiveShadows = true };
+                    var rp = new RenderParams(group.materials[sub]) { shadowCastingMode = shadows, receiveShadows = true, camera = onlyFor ? cam : null };
                     for (int start = 0; start < group.matrices.Count; start += _batch.Length)
                     {
                         int count = Mathf.Min(_batch.Length, group.matrices.Count - start);

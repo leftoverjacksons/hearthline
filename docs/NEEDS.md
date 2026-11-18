@@ -105,7 +105,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
   birds, insects and fireflies around you, and birds going silent in Thin places.
 - [x] **OK to download CC0 sounds?** (yes: OpenGameArt CC0, credits in `Assets/Hearthline/Art/Audio/CREDITS.md`) Rain, wind, birdsong, insects and thunder from a free CC0 library
   (Freesound CC0 or the Sonniss GDC bundles). Until then, the audio sources are in place but silent.
-- [ ] 🔴 **Approve the look-pass spec** (`docs/specs/look-pass.md`): one look in the family of Valheim, The
+- [x] **Approve the look-pass spec** (approved 2026-11-18: Valheim, no photo scans, our own models, forest; ADR 0027) (`docs/specs/look-pass.md`): one look in the family of Valheim, The
   Long Dark and Medieval Dynasty, judged from fixed screenshots after each step. Three questions at the end:
   which reference is closest, dropping the photo-scanned direction, and our own Blender kit vs free packs.
 - [x] **Approve the ruins-and-places spec** (approved 2026-11-18 with Claude's picks) (`docs/specs/ruins-and-places.md`): place kinds, searching that
@@ -116,7 +116,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
 - [x] Commit homestead, shading, crouch and leaf-card oak (7b844a9)
 - [x] Approve the hunt spec: a deer first, from the job board
 - [x] Approve the combat and ambush spec (docs/specs/combat-and-ambush.md), with sticky cover
-- [ ] 🟡 Leaf-card oak vs the old blob trees: convert the rest, or change direction? (ADR 0020)
+- [x] Leaf-card oak vs the old blob trees (settled by ADR 0027: modelled low-poly Appalachian trees replace both)
 - [ ] 🟡 **Play a fight and tune its feel.** Cheat panel (F1), Combat tab: "Start reavers_road here". Or at the
   ford, refuse the toll and draw. These are all starting guesses, in the Inspector:
   - aim: camera distance, field of view and aim speed on the Player (AimController);
