@@ -41,7 +41,7 @@ namespace Hearthline.EditorTools
         {
             switch (kind)
             {
-                case "farmstead": return new Vector2(26f, 34f);
+                case "farmstead": return new Vector2(26f, 42f);
                 case "chapel": return new Vector2(22f, 30f);
                 case "filling_station": return new Vector2(24f, 26f);
                 case "schoolhouse": return new Vector2(18f, 20f);
@@ -298,9 +298,25 @@ namespace Hearthline.EditorTools
             Stand(f, "Back stone", 0f, -9.3f, new Vector3(3.8f, 2.6f, 0.6f), 0f, "HL_Stone");
             for (float z = -9f; z < 7f; z += 2f) Lay(f, "Capstone", 0f, 2.75f, z + 1f, new Vector3(4.2f, 0.4f, 1.95f), new Vector3(0f, f.R(-3, 3), 0f), "HL_Stone");
             // The mound over it.
+            // Two earth slopes meeting in a ridge 4.6 m up, clear of the hall inside, with solid earth under them
+            // so there's no hollow showing at the ends, and a hipped slope at the back.
             foreach (float side in new[] { -1f, 1f })
-                Lay(f, "Mound", side * 3.4f, 0.9f, -1f, new Vector3(5.2f, 3.6f, 19f), new Vector3(0f, 0f, side * -32f), "HL_RockMoss");
-            Lay(f, "Mound back", 0f, 0.8f, -11.2f, new Vector3(9f, 3.4f, 4f), new Vector3(-30f, 0f, 0f), "HL_RockMoss");
+            {
+                Lay(f, "Mound", side * 4.73f, 1.85f, -1f, new Vector3(10.9f, 1f, 19f), new Vector3(0f, 0f, -side * 25f), "HL_GrassDry");
+                Stand(f, "Mound core", side * 3.2f, -1f, new Vector3(2.6f, 2.2f, 18.6f), 0f, "HL_Soil", collider: false);
+                Stand(f, "Mound core", side * 5.35f, -1f, new Vector3(1.7f, 1f, 18.6f), 0f, "HL_Soil", collider: false);
+                // Stones filling the face beside the doorway.
+                Stand(f, "Facade stone", side * 3.6f, 8.2f, new Vector3(2.4f, 2.6f, 0.7f), side * 6f, "HL_Stone");
+                Stand(f, "Facade stone", side * 5.9f, 8.3f, new Vector3(2.2f, 1.3f, 0.7f), side * 10f, "HL_Stone");
+            }
+            // A kerb of stones closing the back.
+            Lay(f, "Gable stone", 0f, 3.6f, -10.8f, new Vector3(3.6f, 2f, 0.7f), Vector3.zero, "HL_Stone");
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Stand(f, "Kerb stone", side * 2.6f, -10.8f, new Vector3(2.6f, 3f, 0.7f), side * -4f, "HL_Stone");
+                Stand(f, "Kerb stone", side * 5.4f, -10.7f, new Vector3(3f, 1.7f, 0.7f), side * 8f, "HL_Stone");
+            }
+            Lay(f, "Gable stone", 0f, 4f, 7.9f, new Vector3(3.2f, 1.2f, 0.7f), Vector3.zero, "HL_Stone");
             // The doorway toward home.
             foreach (float side in new[] { -2f, 2f }) Stand(f, "Door stone", side, 7.6f, new Vector3(1f, 3.4f, 0.8f), 0f, "HL_Stone");
             Lay(f, "Lintel", 0f, 3.3f, 7.6f, new Vector3(5f, 0.6f, 1f), Vector3.zero, "HL_Stone");
@@ -385,6 +401,12 @@ namespace Hearthline.EditorTools
                 searched = GreyboxKit.Place(s.Model, go.transform.position, go.transform.eulerAngles.y + 40f, 1f, go.transform, collider: false);
                 searched.name = "Gone through";
                 searched.transform.localScale = new Vector3(1.15f, 0.35f, 1.15f);
+                if (s.Model.StartsWith("Rock"))
+                {
+                    // A loose stone in a niche, small enough not to block the hall.
+                    full.transform.localScale = Vector3.one * 0.35f;
+                    searched.transform.localScale = new Vector3(0.4f, 0.12f, 0.4f);
+                }
             }
             searched.SetActive(false);
             go.AddComponent<PlaceSpot>().Configure(place.Id, place.Kind, index, s.What, full, searched);
