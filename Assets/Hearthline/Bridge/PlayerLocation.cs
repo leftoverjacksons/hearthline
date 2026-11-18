@@ -24,6 +24,9 @@ namespace Hearthline.Bridge
         public int ThinLevel { get; private set; }
         public bool AtHome { get; private set; }
         public double DistanceFromHome { get; private set; }
+        /// <summary>The place the player is at (Content/places), or empty out in the open.</summary>
+        public string PlaceId { get; private set; } = "";
+        public string PlaceKind { get; private set; } = "";
 
         private void Update() => Refresh();
 
@@ -32,7 +35,7 @@ namespace Hearthline.Bridge
             _tags.Clear();
             ThinLevel = 0;
             AtHome = false;
-            AreaVolume smallest = null;
+            AreaVolume smallest = null, place = null;
             Vector3 p = transform.position;
             foreach (AreaVolume v in AreaVolume.All)
             {
@@ -42,7 +45,10 @@ namespace Hearthline.Bridge
                 ThinLevel = Mathf.Max(ThinLevel, v.ThinLevel);
                 AtHome |= v.IsHomestead;
                 if (smallest == null || v.Volume < smallest.Volume) smallest = v;
+                if (v.PlaceKind.Length > 0 && (place == null || v.Volume < place.Volume)) place = v;
             }
+            PlaceId = place != null ? place.PlaceId : "";
+            PlaceKind = place != null ? place.PlaceKind : "";
             PlaceName = smallest != null && smallest.PlaceName.Length > 0 ? smallest.PlaceName : wildernessName;
 
             if (home == null) DistanceFromHome = 0;
@@ -65,6 +71,7 @@ namespace Hearthline.Bridge
                 AtHome = AtHome,
                 DistanceFromHome = DistanceFromHome,
                 PlaceName = PlaceName,
+                PlaceKind = PlaceKind.Length > 0 ? PlaceKind : null,
             };
             context.AreaTags.AddRange(_tags);
             return context;

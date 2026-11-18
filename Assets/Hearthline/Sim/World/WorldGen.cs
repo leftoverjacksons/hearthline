@@ -746,7 +746,7 @@ namespace Hearthline.Sim.World
             var candidates = new List<(double score, Vec2 p)>();
             for (int tries = 0; tries < 4000; tries++)
             {
-                double x = (rng.NextDouble() - 0.5) * map.Settings.Size * 0.6, z = (rng.NextDouble() - 0.5) * map.Settings.Size * 0.6;
+                double x = (rng.NextDouble() - 0.5) * map.Settings.Size * 0.44, z = (rng.NextDouble() - 0.5) * map.Settings.Size * 0.44;  // inside the playable square
                 var p = new Vec2(x, z);
                 if (p.Length < 110) continue;
                 double slope = map.SlopeAt(x, z);

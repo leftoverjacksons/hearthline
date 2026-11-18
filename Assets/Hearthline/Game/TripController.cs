@@ -205,6 +205,8 @@ namespace Hearthline.Game
                 WeatherSpell next = sim.Forecast(clock.Hour);
                 if (next != null) line += " (" + WeatherWord(next.Kind) + " by " + ((int)next.FromHour).ToString("00") + ":00, the joints say)";
             }
+            if (sim.Rumour != null && _host.Content.Places.TryGetValue(sim.Rumour.Kind, out PlaceDef goal))
+                line += "   ·   after the rumour at " + goal.Name + (PlaceDiscovery.Bearing(goal.Id, location.transform.position) is string where ? " (" + where + ")" : "");
             if (sim.OnTrip)
                 line += "   ·   pack " + sim.PackWeight.ToString("0.#") + " / " + sim.CarryCapacity.ToString("0.#") + (sim.Overloaded ? "  OVERLOADED" : "");
             line += "   ·   " + campKey + ": make camp";

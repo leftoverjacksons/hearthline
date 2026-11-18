@@ -416,6 +416,7 @@ namespace Hearthline.Game
         {
             _scroll = GUILayout.BeginScrollView(_scroll);
             DrawWeather(sim);
+            DrawPlaces(sim);
             foreach (SettlementState town in sim.State.Settlements)
             {
                 GUILayout.Label(town.Id + "   (changes apply when the season turns)");
@@ -474,6 +475,50 @@ namespace Hearthline.Game
                 GUILayout.EndHorizontal();
             }
             GUILayout.Space(8);
+        }
+
+        // Places (docs/specs/ruins-and-places.md): go there, mark them known, make them new again, run their events.
+        private void DrawPlaces(Simulation sim)
+        {
+            ContentDatabase content = SimHost.Instance.Content;
+            GUILayout.Label("Places" + (sim.Rumour != null ? "   (following the rumour about " + sim.Rumour.Kind + ")" : ""));
+            var places = new List<AreaVolume>();
+            foreach (AreaVolume v in AreaVolume.All) if (v.PlaceId.Length > 0) places.Add(v);
+            places.Sort((a, b) => string.CompareOrdinal(a.PlaceId, b.PlaceId));
+            foreach (AreaVolume v in places)
+            {
+                PlaceState state = sim.Place(v.PlaceId);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(v.PlaceName + (state == null ? "" : "  (" + (state.DiscoveredDay >= 0 ? "known" : "unknown") + ", " + state.Searched.Count + " searched" + (state.FindTaken ? ", find taken" : "") + ")"), GUILayout.Width(300));
+                if (GUILayout.Button("Go", GUILayout.Width(40))) GoTo(Front(v));
+                if (state != null && GUILayout.Button("Reset", GUILayout.Width(50))) Run(sim, new ResetPlace { PlaceId = v.PlaceId });
+                GUILayout.EndHorizontal();
+                foreach (EventDef e in content.Events.Values)
+                    if (e.When.PlaceAny.Contains(v.PlaceKind) && GUILayout.Button("   Start " + e.Id + " here") && _roadEvents != null)
+                    {
+                        GoTo(Front(v));
+                        _status = _roadEvents.StartHere(e.Id) ?? "Started " + e.Id + ".";
+                    }
+            }
+            if (places.Count > 0 && GUILayout.Button("Discover all places"))
+                foreach (AreaVolume v in places)
+                    if (!sim.IsDiscovered(v.PlaceId)) Run(sim, new DiscoverPlace { PlaceId = v.PlaceId, Kind = v.PlaceKind });
+            GUILayout.Space(8);
+        }
+
+        /// <summary>Just inside the front of a place (the road side; the Elder Works door).</summary>
+        private static Vector3 Front(AreaVolume v) => v.transform.position + v.transform.forward * Mathf.Max(0f, v.Size.z * 0.5f - 4f);
+
+        private static void GoTo(Vector3 p)
+        {
+            GameObject player = GameObject.Find("Player");
+            if (player == null) return;
+            var body = player.GetComponent<CharacterController>();
+            if (body != null) body.enabled = false;
+            if (Physics.Raycast(new Vector3(p.x, p.y + 200f, p.z + 3f), Vector3.down, out RaycastHit hit, 500f, ~0, QueryTriggerInteraction.Ignore)) p = hit.point + Vector3.up * 0.1f;
+            player.transform.position = p;
+            if (body != null) body.enabled = true;
+            Physics.SyncTransforms();
         }
 
         private void Run(Simulation sim, Command command)

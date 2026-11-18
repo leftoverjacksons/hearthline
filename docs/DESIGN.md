@@ -216,6 +216,7 @@ The world is a handful of dense, hand-built regions. A data-driven **storyteller
 - **Full game:** 3 to 4 regions, each 3 to 4 km across, with strangeness rising the farther they are from home.
 - Each area carries **tags** (biome, danger, Thin level, faction control) that events query.
 - Points of interest: ruins to loot, camps, legendary animals, shrines, wrecks, strangers' homesteads.
+- **Places** (ADR 0026) are kinds in content (`Content/places`) sited on the generated land. Their search spots and hidden find stay taken for good, so the land empties over a lifetime and heirs find what their parents stripped. Rumours at the job board point at a place's find.
 
 ### The drift loop
 

@@ -4,7 +4,7 @@ What the YAML in `Content/` may contain. The loader (`Assets/Hearthline/Sim/Cont
 unknown field, a bad reference or a broken rule is an error, and all errors are reported in one run.
 Check with `tools/test.sh content`.
 
-Covered: `vocab.yaml`, `names.yaml`, `weather.yaml`, `marks/`, `traits/`, `factions/`, `items/`, `loot/`, `events/`.
+Covered: `vocab.yaml`, `names.yaml`, `weather.yaml`, `marks/`, `traits/`, `factions/`, `items/`, `loot/`, `places/`, `events/`.
 YAML anywhere else is rejected.
 
 ## vocab.yaml
@@ -184,6 +184,28 @@ entries:
   - { item: bandage }      # count 1, weight 1
 ```
 
+## places/<kind>.yaml
+
+A kind of place in the land (ADR 0026). The generator's ruin sites each get a kind by siting; the overpass and
+the Elder Works are placed by their own rule.
+
+```yaml
+id: chapel
+name: the fallen chapel           # starts lower case: it reads mid-sentence
+area_tags: [ruin]                 # added to the place's area, for events (from vocab.yaml)
+thin_level: 0                     # 0..3
+siting: { slope_max: 0.15, rise: true }   # also road_min/road_max, water_min/water_max, home_min (m),
+                                          # or fixed: overpass | elder_works
+search_spots: [3, 5]              # how many, min and max (1..8)
+loot: chapel_salvage              # loot table rolled once per spot; salvage never comes back
+find:                             # optional: the one better thing hidden here
+  item: old_coin                  # goods, or one piece of gear (made with a ledger line)
+  count: [4, 9]
+  check: { stat: tracking, difficulty: 2 }  # optional: at or above, always found; below, a chance
+  text: "Under the altar step, a tin box someone meant to come back for."
+rumour: "An old woman at the Ford swears ..."  # optional (needs a find): offered at the job board
+```
+
 ## events/<id>.yaml
 
 ```yaml
@@ -199,6 +221,7 @@ when:                                   # all optional; every condition given mu
   thin_level_max: 1
   time_of_day: [dusk, night]            # dawn | day | dusk | night
   weather_any: [rain, storm]            # clear | overcast | fog | rain | storm
+  place_any: [chapel]                   # kinds of place from places/ (the party must be at one)
   at_home: false
   flags_all: []
   flags_none: []

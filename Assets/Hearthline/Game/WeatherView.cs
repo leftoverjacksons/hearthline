@@ -70,6 +70,14 @@ namespace Hearthline.Game
         /// <summary>Rain drops per second right now (after blending).</summary>
         public float RainRate { get; private set; }
         public float WindBoost { get; private set; }
+
+        /// <summary>
+        /// 0 to 1: how much a Thin place holds its breath (set by <see cref="ThinAura"/>). The wind drops away, the fog
+        /// thickens, and no gusts come.
+        /// </summary>
+        public float Hush { get; set; }
+        [Tooltip("How much thicker the fog gets at full hush (0.6 = 60% denser).")]
+        [SerializeField] private float hushFog = 0.6f;
         public ParticleSystem Rain => _rain;
 
         private Look _look;
@@ -164,7 +172,6 @@ namespace Hearthline.Game
             _look.rain = Mathf.Lerp(_look.rain, target.rain, k);
             if (Mathf.Abs(_look.rain - target.rain) < 5f) _look.rain = target.rain;
             RainRate = _look.rain;
-            WindBoost = _look.wind;
 
             bool raining = Current == WeatherKind.Rain || Current == WeatherKind.Storm;
             float wetRate = Current == WeatherKind.Storm ? wetPerSecond * 2f : wetPerSecond;
@@ -181,7 +188,7 @@ namespace Hearthline.Game
             {
                 atmosphere.WeatherSun = _look.sun;
                 atmosphere.WeatherAmbient = _look.ambient;
-                atmosphere.WeatherFog = _look.fog;
+                atmosphere.WeatherFog = _look.fog * (1f + Hush * hushFog);
                 atmosphere.Flash = _flash;
             }
             if (_sky != null)
@@ -189,7 +196,9 @@ namespace Hearthline.Game
                 if (_sky.HasProperty("_CloudCoverage")) _sky.SetFloat("_CloudCoverage", _look.clouds);
                 if (_sky.HasProperty("_CloudShadow")) _sky.SetFloat("_CloudShadow", Mathf.Lerp(_skyShadow, 0.85f, Mathf.InverseLerp(0.6f, 1f, _look.clouds)));
             }
-            Shader.SetGlobalFloat(WindId, _look.wind);
+            float wind = _look.wind * (1f - Hush);
+            WindBoost = wind;
+            Shader.SetGlobalFloat(WindId, wind);
             Shader.SetGlobalFloat(WetId, Wetness);
             for (int i = 0; i < _wetMaterials.Length; i++)
             {
@@ -213,14 +222,14 @@ namespace Hearthline.Game
                 var splashEmission = _splash.emission;
                 splashEmission.rateOverTime = RainRate * 0.12f;
                 var velocity = _rain.velocityOverLifetime;
-                velocity.x = new ParticleSystem.MinMaxCurve(_look.wind * 2.5f);
+                velocity.x = new ParticleSystem.MinMaxCurve(wind * 2.5f);
             }
             float rainLevel = Mathf.InverseLerp(0f, storm.rain, RainRate);
             float heavy = Mathf.InverseLerp(rain.rain, storm.rain, RainRate);
             if (_rainAudio != null) _rainAudio.volume = rainVolume * Mathf.Clamp01(rainLevel * 2.5f) * (1f - heavy * 0.6f);
             if (_stormAudio != null) _stormAudio.volume = rainVolume * heavy;
             // Gusts: the windier, the more often and the louder.
-            if (windGusts.Length > 0 && Time.time >= _nextGust && _windAudio != null)
+            if (windGusts.Length > 0 && Time.time >= _nextGust && _windAudio != null && Hush < 0.5f)
             {
                 _nextGust = Time.time + gustEvery / (1f + _look.wind * 2f) * Random.Range(0.6f, 1.4f);
                 _windAudio.PlayOneShot(windGusts[Random.Range(0, windGusts.Length)], windVolume * Mathf.Clamp01(0.35f + _look.wind * 0.3f));

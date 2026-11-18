@@ -18,6 +18,9 @@ namespace Hearthline.Bridge
         [SerializeField] private string[] areaTags = new string[0];
         [SerializeField, Min(0)] private int thinLevel;
         [SerializeField] private bool homestead;
+        [Tooltip("Set when this box is a place (docs/specs/ruins-and-places.md): its id and kind from Content/places.")]
+        [SerializeField] private string placeId = "";
+        [SerializeField] private string placeKind = "";
         [Tooltip("Size of the box in local space, centred on this transform.")]
         [SerializeField] private Vector3 size = new Vector3(20f, 40f, 20f);
 
@@ -28,6 +31,8 @@ namespace Hearthline.Bridge
         public IReadOnlyList<string> AreaTags => areaTags;
         public int ThinLevel => thinLevel;
         public bool IsHomestead => homestead;
+        public string PlaceId => placeId;
+        public string PlaceKind => placeKind;
         public float Volume => Mathf.Abs(size.x * size.y * size.z * transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z);
 
         /// <summary>Used by scene builders.</summary>
@@ -38,6 +43,13 @@ namespace Hearthline.Bridge
             size = boxSize;
             thinLevel = thin;
             homestead = isHomestead;
+        }
+
+        /// <summary>Used by scene builders: marks this box as a place the simulation remembers.</summary>
+        public void SetPlace(string id, string kind)
+        {
+            placeId = id;
+            placeKind = kind;
         }
 
         public bool Contains(Vector3 worldPoint)

@@ -38,6 +38,8 @@ namespace Hearthline.Tests
             var kinds = Layout.Where(p => p.Kind != "elder_works").Select(p => p.Kind).ToList();
             Assert.That(kinds.Distinct().Count(), Is.EqualTo(System.Math.Min(ruinKinds, kinds.Count)));
             Assert.That(Layout.Select(p => p.Id).Distinct().Count(), Is.EqualTo(Layout.Count), "Ids are unique.");
+            foreach (PlacedPlace p in Layout)
+                Assert.That(System.Math.Max(System.Math.Abs(p.P.X), System.Math.Abs(p.P.Z)), Is.LessThan(285), p.Id + " is inside the playable square, so it gets built.");
         }
 
         [Test]

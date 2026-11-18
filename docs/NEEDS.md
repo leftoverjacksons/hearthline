@@ -105,7 +105,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
   birds, insects and fireflies around you, and birds going silent in Thin places.
 - [x] **OK to download CC0 sounds?** (yes: OpenGameArt CC0, credits in `Assets/Hearthline/Art/Audio/CREDITS.md`) Rain, wind, birdsong, insects and thunder from a free CC0 library
   (Freesound CC0 or the Sonniss GDC bundles). Until then, the audio sources are in place but silent.
-- [ ] 🔴 **Approve the ruins-and-places spec** (`docs/specs/ruins-and-places.md`): place kinds, searching that
+- [x] **Approve the ruins-and-places spec** (approved 2026-11-18 with Claude's picks) (`docs/specs/ruins-and-places.md`): place kinds, searching that
   stays searched, place events, and the Elder Works site. Three questions at the end: does salvage come back,
   a salvage goal at the job board now or later, and OK to download one CC0 hum for the Elder Works?
 - [ ] 🟡 **Play a trip** (the M2 gate: is one out-and-back trip fun in greybox?). Weather and sound are in;

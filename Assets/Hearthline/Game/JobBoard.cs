@@ -74,6 +74,45 @@ namespace Hearthline.Game
             if (!any) GUILayout.Label("No talk of game worth chasing.");
         }
 
+        // Rumours (docs/specs/ruins-and-places.md): a place's hidden find as the trip's goal.
+        private void DrawRumours(Simulation sim)
+        {
+            GUILayout.Space(6);
+            GUILayout.Label("Rumours");
+            if (sim.Rumour != null)
+            {
+                PlaceDef on = _host.Content.Places.TryGetValue(sim.Rumour.Kind, out PlaceDef d) ? d : null;
+                GUILayout.Label("Following the talk about " + (on != null ? on.Name : sim.Rumour.Kind) + ".");
+                if (GUILayout.Button("Let the rumour go", GUILayout.Height(24))) _status = DropRumour() ?? "Probably nothing in it anyway.";
+                return;
+            }
+            List<string> rumours = sim.Rumours();
+            foreach (string kind in rumours)
+            {
+                PlaceDef def = _host.Content.Places[kind];
+                GUILayout.Label(def.Rumour);
+                if (GUILayout.Button("Look into " + def.Name, GUILayout.Height(26)))
+                {
+                    _status = FollowRumour(kind) ?? "";
+                    if (_status.Length == 0) Close();
+                }
+            }
+            if (rumours.Count == 0) GUILayout.Label("No talk worth chasing.");
+        }
+
+        /// <summary>Takes up a rumour about a kind of place. Returns why not, or null.</summary>
+        public string FollowRumour(string kind)
+        {
+            CommandResult r = _host.Sim.Execute(new FollowRumour { Kind = kind });
+            return r.Ok ? null : r.Error;
+        }
+
+        public string DropRumour()
+        {
+            CommandResult r = _host.Sim.Execute(new DropRumour());
+            return r.Ok ? null : r.Error;
+        }
+
         /// <summary>Takes up a hunt. Returns why not, or null.</summary>
         public string TakeHunt(string huntId)
         {
@@ -92,7 +131,7 @@ namespace Hearthline.Game
             Simulation sim = _host.Sim;
             List<JobDef> jobs = _host.Content.Jobs.Values.OrderBy(j => j.Name).ToList();
             string[] labels = new[] { "None" }.Concat(jobs.Select(j => j.Name)).ToArray();
-            _scroll = GUILayout.BeginScrollView(_scroll, GUILayout.Height(260));
+            _scroll = GUILayout.BeginScrollView(_scroll, GUILayout.Height(200));
             bool any = false;
             foreach (int memberId in sim.State.Household.MemberIds)
             {
@@ -108,6 +147,7 @@ namespace Hearthline.Game
             if (!any) GUILayout.Label("Nobody else lives here yet. People join through events on the road and at the gate.");
             GUILayout.EndScrollView();
             DrawHunts(sim);
+            DrawRumours(sim);
             if (_status.Length > 0) GUILayout.Label(_status);
             if (GUILayout.Button("Close", GUILayout.Height(24))) Close();
         }

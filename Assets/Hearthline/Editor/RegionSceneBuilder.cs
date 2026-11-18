@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hearthline.Bridge;
 using Hearthline.Game;
+using Hearthline.Sim.Content;
 using Hearthline.Sim.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -46,6 +47,11 @@ namespace Hearthline.EditorTools
         public static WorldMap Map => _map ??= WorldGen.Generate(new WorldSettings { Seed = Seed });
         private static Fields F => _fields ??= new Fields(Map);
         private static Vector3 _overpass;
+        private static ContentDatabase _content;
+        private static List<PlacedPlace> _places;
+        /// <summary>The region's places (docs/specs/ruins-and-places.md): one per ruin site, plus the Elder Works.</summary>
+        public static List<PlacedPlace> Places => _places ??= PlaceLayout.Assign(Map, Content.Places.Values);
+        private static ContentDatabase Content => _content ??= ContentLoader.LoadDirectory(SimHost.ContentRoot).Database;
 
         [MenuItem("Hearthline/Rebuild M2 region scene")]
         private static void Menu() => Debug.Log(Build());
@@ -54,6 +60,8 @@ namespace Hearthline.EditorTools
         {
             _map = null;
             _fields = null;
+            _places = null;
+            _content = null;
             GreyboxKit.Setup();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             SceneBuildKit.EnsureFolder(Generated);
@@ -112,6 +120,8 @@ namespace Hearthline.EditorTools
             var life = new GameObject("Ambient Life").AddComponent<AmbientLife>();
             life.Configure(rig.Player.transform, clock, location);
             life.SetSounds(Clip("Birds_And_Wind.ogg"), Clip("Crickets.mp3"));
+            new GameObject("Place Discovery").AddComponent<PlaceDiscovery>().Configure(location);
+            new GameObject("Thin Aura").AddComponent<ThinAura>().Configure(location, weatherView, Clip("Hum_Elder.wav"));
             int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
             CombatSceneKit.BuildEnemyPrefab();
             CombatSceneKit.AddSpawner(rig.Player.transform);
@@ -578,27 +588,16 @@ namespace Hearthline.EditorTools
             }
         }
 
-        // What's left at each ruin site: heaps of rubble and scrap, half under kudzu. (Proper ruins come later.)
+        // Each place built by its kind (RuinKit), with its search spots and find. The overpass's own spots go in
+        // BuildGathering, where its structure is.
         private static void BuildRuins(Transform props)
         {
-            var root = new GameObject("Ruins").transform;
+            var root = new GameObject("Places").transform;
             root.SetParent(props, false);
-            var rnd = new Random(77);
-            float R(double a, double b) => (float)(a + rnd.NextDouble() * (b - a));
-            foreach (Vec2 site in Map.RuinSites)
+            foreach (PlacedPlace place in Places)
             {
-                float cx = (float)site.X, cz = (float)site.Z;
-                if (!InRegion(cx, cz, 100f)) continue;
-                for (int i = 0; i < 4; i++)
-                {
-                    float x = cx + R(-10, 10), z = cz + R(-10, 10);
-                    GreyboxKit.Place("Rubble", new Vector3(x, HeightAt(x, z) + 0.3f, z), R(0, 360), R(0.7, 1.2), root, collider: true);
-                }
-                for (int i = 0; i < 3; i++)
-                {
-                    float x = cx + R(-14, 14), z = cz + R(-14, 14);
-                    GreyboxKit.Place("Kudzu_Mound", new Vector3(x, HeightAt(x, z), z), R(0, 360), R(0.8, 1.3), root, collider: false);
-                }
+                if (!InRegion((float)place.P.X, (float)place.P.Z, -10f)) continue;
+                RuinKit.Build(place, Content.Places[place.Kind], root, HeightAt);
             }
         }
 
@@ -606,7 +605,11 @@ namespace Hearthline.EditorTools
 
         private static bool NearRuin(float x, float z, float within)
         {
-            foreach (Vec2 r in Map.RuinSites) if (Vector2.Distance(new Vector2(x, z), new Vector2((float)r.X, (float)r.Z)) < within) return true;
+            foreach (PlacedPlace p in Places)
+            {
+                Vector2 size = RuinKit.Footprint(p.Kind);
+                if (Vector2.Distance(new Vector2(x, z), new Vector2((float)p.P.X, (float)p.P.Z)) < within + Mathf.Max(size.x, size.y) * 0.5f - 12f) return true;
+            }
             return false;
         }
 
@@ -778,16 +781,15 @@ namespace Hearthline.EditorTools
             Spot("deadfall", "firewood", "Gather", "Deadfall", -22f, -20f, 40f); // one just outside the yard
             Vector3 o = _overpass;
             Vector2 dir = RoadDirection(NearestRoadIndex(o)), side = new Vector2(-dir.y, dir.x);
-            foreach (float along in new[] { -12f, 10f })
+            // The overpass is a place: its heaps are search spots that stay searched.
+            var overpassSpots = new List<Vector3>();
+            foreach (float along in new[] { -12f, 10f, -2f })
             {
                 Vector2 p = new Vector2(o.x, o.z) + dir * along + side * (along < 0 ? 7f : -7f);
-                Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", p.x, p.y, R(0, 360));
+                overpassSpots.Add(new Vector3(p.x, 0f, p.y));
             }
-            foreach (Vec2 site in Map.RuinSites)
-            {
-                if (!InRegion((float)site.X, (float)site.Z, -10f)) continue;
-                Spot("salvage", "scrap_metal", "Search", "Salvage_Pile", (float)site.X + R(-4, 4), (float)site.Z + R(-4, 4), R(0, 360));
-            }
+            if (Content.Places.TryGetValue("overpass", out PlaceDef overpassDef))
+                RuinKit.AddSpotsAt(new PlacedPlace { Id = "overpass", Kind = "overpass", P = new Vec2(o.x, o.z) }, overpassDef, props, HeightAt, overpassSpots, "the wreckage");
             float walked = 0f;
             for (int i = 1; i < Map.Road.Count; i++)
             {
@@ -940,13 +942,15 @@ namespace Hearthline.EditorTools
             var root = new GameObject("Areas").transform;
             int made = 0;
             float baseY = (float)Map.HomeHeight;
-            void Area(string name, string place, string[] tags, Vector3 centre, Vector3 size, float yaw = 0f, int thin = 0, bool homestead = false)
+            AreaVolume Area(string name, string place, string[] tags, Vector3 centre, Vector3 size, float yaw = 0f, int thin = 0, bool homestead = false)
             {
                 var go = new GameObject("Area " + name);
                 go.transform.SetParent(root, false);
                 go.transform.SetPositionAndRotation(centre, Quaternion.Euler(0f, yaw, 0f));
-                go.AddComponent<AreaVolume>().Configure(place, tags, size, thin, homestead);
+                var volume = go.AddComponent<AreaVolume>();
+                volume.Configure(place, tags, size, thin, homestead);
                 made++;
+                return volume;
             }
 
             // The land: tiles by majority of what grows there, merged into rectangles.
@@ -1023,15 +1027,18 @@ namespace Hearthline.EditorTools
                 if (!InRegion(mid.x, mid.y, 20f)) continue;
                 Area("Bridge " + bridgeCount++, "the guardrail bridge", new[] { "creek", "river_crossing" }, new Vector3(mid.x, HeightAt(mid.x, mid.y), mid.y), new Vector3(12f, 20f, Vector2.Distance(from, to) + 10f), Yaw(to - from));
             }
-            Area("Overpass", "the fallen overpass", new[] { "road", "ruin" }, _overpass + Vector3.up * 4f, new Vector3(40f, 20f, 50f), Yaw(RoadDirection(NearestRoadIndex(_overpass))) - 90f);
+            if (Content.Places.TryGetValue("overpass", out PlaceDef overpassPlace))
+                Area("Overpass", overpassPlace.Name, overpassPlace.AreaTags.ToArray(), _overpass + Vector3.up * 4f, new Vector3(40f, 20f, 50f), Yaw(RoadDirection(NearestRoadIndex(_overpass))) - 90f)
+                    .SetPlace("overpass", "overpass");
 
-            string[] ruinNames = { "the burned farmstead", "the old feed store", "the fallen chapel", "the schoolhouse", "the filling station" };
-            int r = 0;
-            foreach (Vec2 site in Map.RuinSites)
+            foreach (PlacedPlace place in Places)
             {
-                if (!InRegion((float)site.X, (float)site.Z, -10f)) continue;
-                Area("Ruin " + r, ruinNames[r % ruinNames.Length], new[] { "ruin" }, new Vector3((float)site.X, HeightAt((float)site.X, (float)site.Z), (float)site.Z), new Vector3(40f, 120f, 40f));
-                r++;
+                if (!InRegion((float)place.P.X, (float)place.P.Z, -10f)) continue;
+                PlaceDef def = Content.Places[place.Kind];
+                Vector2 size = RuinKit.Footprint(place.Kind);
+                float y = HeightAt((float)place.P.X, (float)place.P.Z);
+                Area("Place " + place.Id, def.Name, def.AreaTags.ToArray(), new Vector3((float)place.P.X, y, (float)place.P.Z), new Vector3(size.x, 60f, size.y), (float)place.Facing, def.ThinLevel)
+                    .SetPlace(place.Id, place.Kind);
             }
 
             Area("Homestead", "the homestead", new[] { "homestead" }, new Vector3(0f, baseY, 0f), new Vector3(HomeRadius * 2f, 60f, HomeRadius * 2f), homestead: true);

@@ -1,6 +1,6 @@
 # Spec: ruins and places (M2)
 
-Status: **draft 2026-11-18**, waiting for Travis's approval. Three questions are at the end.
+Status: **approved 2026-11-18** (Travis, with Claude's picks: salvage never comes back, rumours in this spec, the hum downloaded). **Built** (ADR 0026): `PlaceTests`, `PlacePlayTests`, seven place events. Changes from this draft are listed in the ADR.
 
 ## Goal
 

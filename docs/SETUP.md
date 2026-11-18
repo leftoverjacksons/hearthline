@@ -120,6 +120,14 @@ appears in Thin places. The HUD shows the weather, and a forecast if someone in 
 joints. Cheats are in the World tab: set the weather, lightning, send a flock, skip to an hour. Look and sound values
 are on the `Weather` and `Ambient Life` objects; the sounds are CC0 (`Assets/Hearthline/Art/Audio/CREDITS.md`). `WeatherPlayTests` covers it.
 
+Places (ADR 0026): each ruin site is a kind of place from `Content/places`: the burned farmstead, the fallen
+chapel, the filling station, the schoolhouse, the feed store, plus the fallen overpass and the Elder Works on the
+mountain front. Walk in and its name fades in. Press E at a heap to search it (once, ever), and at its hidden
+find (some need a skill). The job board's Rumours section sets a place's find as the trip's goal; the HUD shows
+where it is. In Thin places the wind drops and the fog thickens; at the Elder Works a low hum comes up (values
+on the `Thin Aura` object). Cheats in the World tab: go to a place, reset it, discover all, start its events.
+`PlacePlayTests` covers it.
+
 Rebuild it with **Hearthline → Rebuild M2 region scene** or
 `unity command script eval --code "return Hearthline.EditorTools.RegionSceneBuilder.Build();" --timeout 900`.
 A practice target stands in the yard in front of the spawn: hits show where they landed and how bad they'd be on a person, and never reach the simulation. `WeaponTests` (PlayMode) covers aiming, firing, reloading and jams.
