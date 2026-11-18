@@ -7,6 +7,16 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: HL_Bark
+    second: {fileID: 2100000, guid: 1cd26f2c1f4e1b145b78504b50391142, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: HL_LeafCardDark
+    second: {fileID: 2100000, guid: 82436385f0b3d2549b24fd4a6bbc3717, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: HL_Leaves
     second: {fileID: 2100000, guid: dd554a0ae545b0840bf703efbb9f25e2, type: 2}
   - first:

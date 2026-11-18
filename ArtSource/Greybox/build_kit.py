@@ -464,6 +464,99 @@ def grass_card(name, height, width, material, seed, cards=4):
     return ob
 
 
+# ---- Homestead and gathering props (ADR 0032): same names and footprints as the blockouts -----------------
+
+def card_bush(name, seed, w, h, leaf, at=(0, 0, 0), berries=0):
+    """A leaf-card bush; berries add red clusters among the leaves (the gathering bush)."""
+    b = Builder(seed); r = b.rng
+    b.crown((0, 0, h * 0.55), (w * 0.5, w * 0.5, h * 0.5))
+    for i in range(5):
+        a = r.uniform(0, math.tau)
+        tip = Vector((math.cos(a) * w * 0.3, math.sin(a) * w * 0.3, h * r.uniform(0.45, 0.8)))
+        b.limb([Vector((0, 0, -0.1)), tip], 0.05, 0.02, 4)
+        b.tips.append(tip)
+    b.leaves(per_tip=9, shell=int(28 * w), size=(0.8, 1.2), spread=0.5)
+    for i in range(berries):
+        a = r.uniform(0, math.tau); rr = r.uniform(0.3, 0.95) * w * 0.5
+        c = Vector((math.cos(a) * rr, math.sin(a) * rr, h * r.uniform(0.35, 0.85)))
+        for k in range(4):
+            tmp = bmesh.new()
+            bmesh.ops.create_icosphere(tmp, subdivisions=1, radius=0.05)
+            bmesh.ops.translate(tmp, verts=tmp.verts, vec=c + Vector((r.uniform(-0.07, 0.07), r.uniform(-0.07, 0.07), r.uniform(-0.05, 0.05))))
+            for f in tmp.faces: f.material_index = 2
+            me = bpy.data.meshes.new("_tmp"); tmp.to_mesh(me); tmp.free(); b.bm.from_mesh(me); bpy.data.meshes.remove(me)
+    ob = b.build(name, "HL_Bark", leaf, collection="Cover", at=at)
+    if berries:
+        ob.data.materials.append(mat("HL_Berry"))
+    return ob
+
+
+def split_rail(name, seed):
+    """An Appalachian split-rail run (4 m along y): two posts and three rough split rails, sagging a little."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    for y in (0.0, 4.0):
+        rod(bm, (0, y, -0.1), (rng.uniform(-0.03, 0.03), y, 1.2), 0.08, 0, 5, 0.012, rng)
+    for k, z in enumerate((0.35, 0.72, 1.08)):
+        sag = rng.uniform(0.02, 0.06)
+        mid = Vector((rng.uniform(-0.03, 0.03), 2.0, z - sag))
+        rod(bm, (0.05, -0.15, z + rng.uniform(-0.02, 0.02)), mid, 0.055, 0, 4, 0.01, rng)
+        rod(bm, mid, (0.05, 4.15, z + rng.uniform(-0.02, 0.02)), 0.055, 0, 4, 0.01, rng)
+    return finish_bm(name, bm, ["HL_WoodWeathered"])
+
+
+def salvage_pile(name, seed):
+    """A heap of what the old world left: tin sheets, a tyre, boards, a crate, scrap."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    for i in range(3):
+        slab(bm, (rng.uniform(-0.4, 0.4), rng.uniform(-0.3, 0.4), 0.1 + i * 0.12), (rng.uniform(0.8, 1.2), rng.uniform(0.5, 0.8), 0.03), (rng.uniform(-0.3, 0.3), rng.uniform(-0.3, 0.3), rng.uniform(0, 3)), 1, rng)
+    tmp = bmesh.new()
+    bmesh.ops.create_cone(tmp, cap_ends=False, segments=10, radius1=0.38, radius2=0.38, depth=0.22)
+    inner = bmesh.new()
+    me = bpy.data.meshes.new("_t")
+    bmesh.ops.rotate(tmp, verts=tmp.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(70), 3, 'X'))
+    bmesh.ops.translate(tmp, verts=tmp.verts, vec=(0.45, -0.25, 0.3))
+    for f in tmp.faces: f.material_index = 2
+    tmp.to_mesh(me); tmp.free(); bm.from_mesh(me); bpy.data.meshes.remove(me); inner.free()
+    for i in range(4):
+        slab(bm, (rng.uniform(-0.6, 0.6), rng.uniform(-0.5, 0.6), 0.08 + i * 0.06), (rng.uniform(0.9, 1.4), 0.14, 0.04), (0, 0, rng.uniform(0, 3)), 3, rng)
+    slab(bm, (-0.5, 0.35, 0.22), (0.5, 0.42, 0.42), (0, 0, 0.4), 3, rng)
+    for i in range(6):
+        slab(bm, (rng.uniform(-0.7, 0.7), rng.uniform(-0.6, 0.7), rng.uniform(0.05, 0.4)), (rng.uniform(0.1, 0.35), rng.uniform(0.08, 0.25), rng.uniform(0.05, 0.2)), (rng.uniform(0, 3), rng.uniform(0, 3), rng.uniform(0, 3)), 0, rng, 0.02)
+    return finish_bm(name, bm, ["HL_Tin", "HL_TinRust", "HL_Rubber", "HL_WoodWeathered"])
+
+
+def fire_pit(name, seed):
+    """The hearth's fire pit: a ring of fieldstones, crossed logs and flames, a tripod with a pot, two log benches."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    for i in range(10):
+        a = i / 10 * math.tau
+        chunk(bm, (math.cos(a) * 0.75, math.sin(a) * 0.75, 0.12), (rng.uniform(0.32, 0.42), rng.uniform(0.28, 0.36), rng.uniform(0.22, 0.3)), rng, 0, bevel=0, cuts=0, jitter=0.03)
+    for i in range(4):
+        a = i / 4 * math.pi + 0.3
+        rod(bm, (math.cos(a) * 0.55, math.sin(a) * 0.55, 0.08), (-math.cos(a) * 0.55, -math.sin(a) * 0.55, 0.22), 0.07, 1, 6, 0.01, rng)
+    for i in range(5):
+        a = i / 5 * math.tau
+        tmp = bmesh.new()
+        bmesh.ops.create_cone(tmp, cap_ends=True, segments=5, radius1=0.16, radius2=0.0, depth=rng.uniform(0.5, 0.8))
+        bmesh.ops.translate(tmp, verts=tmp.verts, vec=(math.cos(a) * 0.15, math.sin(a) * 0.15, 0.45))
+        for f in tmp.faces: f.material_index = 2
+        me = bpy.data.meshes.new("_t"); tmp.to_mesh(me); tmp.free(); bm.from_mesh(me); bpy.data.meshes.remove(me)
+    for a in (0.3, 2.4, 4.4):
+        rod(bm, (math.cos(a) * 0.9, math.sin(a) * 0.9, 0.0), (0, 0, 1.5), 0.035, 3, 5)
+    tmp = bmesh.new()
+    bmesh.ops.create_cone(tmp, cap_ends=True, segments=8, radius1=0.17, radius2=0.2, depth=0.26)
+    bmesh.ops.translate(tmp, verts=tmp.verts, vec=(0, 0, 0.95))
+    for f in tmp.faces: f.material_index = 3
+    me = bpy.data.meshes.new("_t"); tmp.to_mesh(me); tmp.free(); bm.from_mesh(me); bpy.data.meshes.remove(me)
+    rod(bm, (0, 0, 1.08), (0, 0, 1.5), 0.01, 3, 4)
+    for side in (-1, 1):
+        rod(bm, (side * 1.85, -1.2, 0.22), (side * 1.85, 1.2, 0.22), 0.2, 1, 7, 0.02, rng)
+    return finish_bm(name, bm, ["HL_Stone", "HL_BarkLight", "HL_Fire", "HL_Steel"])
+
+
 # ---- Build ------------------------------------------------------------------------------------------------
 
 ROW = -260
@@ -493,6 +586,12 @@ pieces = [
     lambda: grass_card("Grass_Card_Tall", 0.8, 1.3, "HL_GrassCard", 51),
     lambda: grass_card("Grass_Card_Short", 0.45, 1.1, "HL_GrassCard", 52),
     lambda: grass_card("Grass_Card_Dry", 0.7, 1.2, "HL_GrassCardDry", 53),
+    lambda: card_bush("Bush_A", 61, 2.1, 1.25, "HL_LeafCard"),
+    lambda: card_bush("Bush_B", 62, 2.9, 1.6, "HL_LeafCardDark"),
+    lambda: card_bush("Berry_Bush", 63, 2.2, 1.2, "HL_LeafCard", berries=14),
+    lambda: split_rail("Fence_Rail", 64),
+    lambda: salvage_pile("Salvage_Pile", 65),
+    lambda: fire_pit("Hearth_FirePit", 66),
 ]
 for i, build_piece in enumerate(pieces):
     ob = build_piece()

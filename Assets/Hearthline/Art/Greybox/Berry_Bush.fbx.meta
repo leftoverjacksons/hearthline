@@ -7,8 +7,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: HL_Bark
+    second: {fileID: 2100000, guid: 1cd26f2c1f4e1b145b78504b50391142, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: HL_Berry
     second: {fileID: 2100000, guid: 23ec3d03515708d4aae86f37bb027c99, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: HL_LeafCard
+    second: {fileID: 2100000, guid: 07a8f36f04469bc4da74c6c33c88231e, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule

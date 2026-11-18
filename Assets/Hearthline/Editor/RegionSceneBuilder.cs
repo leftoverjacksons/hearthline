@@ -650,6 +650,17 @@ namespace Hearthline.EditorTools
             Mesh tall = GreyboxKit.MeshOf("Grass_Card_Tall"), shortGrass = GreyboxKit.MeshOf("Grass_Card_Short"), dry = GreyboxKit.MeshOf("Grass_Card_Dry");
             Material[] tallM = GreyboxKit.MaterialsOf("Grass_Card_Tall"), shortM = GreyboxKit.MaterialsOf("Grass_Card_Short"), dryM = GreyboxKit.MaterialsOf("Grass_Card_Dry");
             const float step = 1.0f;
+            // Nothing grows through what's built or fallen (walls, roofs, stones, trunks, thickets), and search
+            // spots stay clear so you can see them (ADR 0032).
+            Physics.SyncTransforms();
+            var spots = new List<Vector2>();
+            foreach (PlaceSpot spot in Object.FindObjectsByType<PlaceSpot>(FindObjectsInactive.Include))
+                spots.Add(new Vector2(spot.transform.position.x, spot.transform.position.z));
+            bool Blocked(float x, float z)
+            {
+                foreach (Vector2 sp in spots) if ((sp - new Vector2(x, z)).sqrMagnitude < 1.4f * 1.4f) return true;
+                return Physics.CheckSphere(new Vector3(x, HeightAt(x, z) + 0.45f, z), 0.3f, ~0, QueryTriggerInteraction.Ignore);
+            }
             for (float gx = -Size / 2f - 15f; gx < Size / 2f + 15f; gx += step)
             for (float gz = -Size / 2f - 15f; gz < Size / 2f + 15f; gz += step)
             {
@@ -660,7 +671,7 @@ namespace Hearthline.EditorTools
                 if (d < 9f) continue;
                 float open = 1f - Smooth(0.3f, 0.7f, forest);
                 double chance = open * 0.9 + 0.05;
-                if (rnd.NextDouble() > chance) continue;
+                if (rnd.NextDouble() > chance || Blocked(x, z)) continue;
                 float high = HeightAt(x, z) - (float)Map.HomeHeight;
                 bool isDry = moist < 0.28f + (float)(rnd.NextDouble() * 0.12) || high > 130f;
                 bool yard = d < HomeRadius;
