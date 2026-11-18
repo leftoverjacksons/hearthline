@@ -121,6 +121,7 @@ namespace Hearthline.EditorTools
             life.Configure(rig.Player.transform, clock, location);
             life.SetSounds(Clip("Birds_And_Wind.ogg"), Clip("Crickets.mp3"));
             new GameObject("Place Discovery").AddComponent<PlaceDiscovery>().Configure(location);
+            BuildHomeLights(clock);
             new GameObject("Thin Aura").AddComponent<ThinAura>().Configure(location, weatherView, Clip("Hum_Elder.wav"));
             int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
             CombatSceneKit.BuildEnemyPrefab();
@@ -915,6 +916,32 @@ namespace Hearthline.EditorTools
 
         // ---- Sky, fog, post-processing ---------------------------------------------------------------
 
+        // The fire and lamps that come up at dusk (ADR 0028): the key image of coming home.
+        private static void BuildHomeLights(TravelClock clock)
+        {
+            var root = new GameObject("Home Lights").transform;
+            Light Point(string name, Vector3 at, Color colour, float range)
+            {
+                var l = new GameObject(name).AddComponent<Light>();
+                l.transform.SetParent(root, false);
+                l.transform.position = new Vector3(at.x, HeightAt(at.x, at.z) + at.y, at.z);
+                l.type = LightType.Point;
+                l.color = colour;
+                l.range = range;
+                l.shadows = LightShadows.Soft;
+                l.intensity = 0f;
+                l.enabled = false;
+                return l;
+            }
+            StructureView View(string id) { GameObject s = GameObject.Find("Structure " + id); return s != null ? s.GetComponent<StructureView>() : null; }
+            var fire = Point("Hearth Fire", new Vector3(-16f, 1.0f, 2f), new Color(1f, 0.55f, 0.22f), 20f);
+            var dwelling = Point("Dwelling Lamp", new Vector3(0f, 2.2f, 13.5f), new Color(1f, 0.7f, 0.38f), 14f);
+            var infirmary = Point("Infirmary Lamp", new Vector3(15.5f, 2.2f, 10f), new Color(1f, 0.72f, 0.42f), 11f);
+            dwelling.shadows = LightShadows.None;
+            infirmary.shadows = LightShadows.None;
+            root.gameObject.AddComponent<HomeLights>().Configure(clock, fire, dwelling, infirmary, View("hearth"), View("dwelling"), View("infirmary"));
+        }
+
         private static void BuildAtmosphere(Light sun, Light moon, TravelClock clock, PlayerLocation location)
         {
             string skyPath = Generated + "/M2_Region_Sky.mat";
@@ -928,7 +955,10 @@ namespace Hearthline.EditorTools
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.ambientMode = AmbientMode.Trilight;
 
+            LookKit.InstallHeightFog();
             var atmosphere = new GameObject("Atmosphere").AddComponent<Atmosphere>();
+            // Fog lies on the valley floor and in the creek bottoms below it (ADR 0028).
+            atmosphere.Configure((float)Map.HomeHeight - 4f, atmosphere.gameObject.AddComponent<ColourGrade>());
             SceneBuildKit.SetRef(atmosphere, "clock", clock);
             SceneBuildKit.SetRef(atmosphere, "sun", sun);
             SceneBuildKit.SetRef(atmosphere, "moon", moon);

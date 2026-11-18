@@ -19,6 +19,19 @@ namespace Hearthline.Bridge
         public string StructureId => structureId;
         public int Tier { get; private set; }
 
+        /// <summary>
+        /// True when a built model (any tier above 0) is on show. Unlike <see cref="Tier"/>, this also holds in the
+        /// editor, where the sim isn't running and the scene shows what it was built with.
+        /// </summary>
+        public bool ShowsBuilt
+        {
+            get
+            {
+                for (int i = 1; i < tiers.Length; i++) if (tiers[i] != null && tiers[i].activeSelf) return true;
+                return false;
+            }
+        }
+
         /// <summary>The model on show for the current tier, or null.</summary>
         public GameObject Current => Tier < tiers.Length ? tiers[Tier] : null;
 

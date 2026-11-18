@@ -10,6 +10,7 @@ namespace Hearthline.Bridge
     /// Boxes may overlap; the smallest one containing a point names the place.
     /// It has no collider, so it never gets in the way of movement or shots.
     /// </summary>
+    [ExecuteAlways] // registered in the editor too, so tools (style frames) see where the player is
     public sealed class AreaVolume : MonoBehaviour
     {
         private static readonly List<AreaVolume> Registry = new List<AreaVolume>();

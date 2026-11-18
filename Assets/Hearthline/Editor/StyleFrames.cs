@@ -74,6 +74,7 @@ namespace Hearthline.EditorTools
                         atmosphere.WeatherFog = shot.Fog;
                         atmosphere.Apply(shot.Hour, 100f);
                     }
+                    foreach (HomeLights lights in Object.FindObjectsByType<HomeLights>(FindObjectsInactive.Exclude)) lights.Preview(shot.Hour);
                     cam.fieldOfView = shot.Fov;
                     cam.transform.position = shot.Eye;
                     cam.transform.LookAt(shot.Target);
@@ -112,7 +113,7 @@ namespace Hearthline.EditorTools
             WorldMap map = RegionSceneBuilder.Map;
             var shots = new List<Shot>
             {
-                new Shot { Name = "1_homestead_dusk", Caption = "the homestead at dusk", Hour = 19.6f, Eye = Up(20f, -26f, 5f), Target = Up(0f, 0f, 2f), PlayerAt = new Vector3(4f, 0f, -8f) },
+                new Shot { Name = "1_homestead_dusk", Caption = "the homestead at dusk", Hour = 20.0f, Eye = Up(20f, -26f, 5f), Target = Up(0f, 0f, 2f), PlayerAt = new Vector3(4f, 0f, -8f) },
                 new Shot { Name = "2_homestead_noon", Caption = "the homestead at noon", Hour = 12.5f, Eye = Up(-24f, 20f, 6f), Target = Up(0f, 0f, 1.5f), PlayerAt = new Vector3(-6f, 0f, 6f) },
             };
 

@@ -157,7 +157,7 @@ namespace Hearthline.EditorTools
                 material.EnableKeyword("_ALPHATEST_ON");
                 material.SetFloat("_Cutoff", TextureForge.LeafCutoff);
                 material.SetFloat("_VertexAO", 1f);
-                material.SetFloat("_AOStrength", 0.7f);
+                material.SetFloat("_AOStrength", 0.55f);
                 material.SetFloat("_ShadowStrength", 0.55f);
                 material.EnableKeyword("_VERTEX_AO");
                 material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;

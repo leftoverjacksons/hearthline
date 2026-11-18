@@ -76,6 +76,9 @@ namespace Hearthline.Game
         /// thickens, and no gusts come.
         /// </summary>
         public float Hush { get; set; }
+
+        /// <summary>The scene's weather view, if any (the atmosphere reads its hush).</summary>
+        public static WeatherView Active { get; private set; }
         [Tooltip("How much thicker the fog gets at full hush (0.6 = 60% denser).")]
         [SerializeField] private float hushFog = 0.6f;
         public ParticleSystem Rain => _rain;
@@ -111,6 +114,8 @@ namespace Hearthline.Game
             atmosphere = atmo;
             wettable = wet;
         }
+
+        private void OnEnable() => Active = this;
 
         private void Start()
         {
@@ -371,6 +376,7 @@ namespace Hearthline.Game
 
         private void OnDisable()
         {
+            if (Active == this) Active = null;
             Shader.SetGlobalFloat(WindId, 0f);
             Shader.SetGlobalFloat(WetId, 0f);
         }
