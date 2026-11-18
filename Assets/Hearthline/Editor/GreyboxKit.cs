@@ -122,7 +122,7 @@ namespace Hearthline.EditorTools
             material.SetColor("_BaseColor", color);
             material.color = color;
             bool metal = name == "HL_Steel" || name == "HL_Tin";
-            material.SetFloat("_Smoothness", metal ? 0.55f : name == "HL_BarrelBlue" ? 0.4f : 0.12f);
+            material.SetFloat("_Smoothness", metal ? 0.35f : name == "HL_BarrelBlue" ? 0.3f : 0.04f); // painted, matte (ADR 0029)
             material.SetFloat("_Metallic", metal ? 0.6f : 0f);
             material.enableInstancing = true;
             if (name == "HL_WindowGlow" || name == "HL_Fire")
@@ -142,7 +142,7 @@ namespace Hearthline.EditorTools
             material.SetTexture("_BaseMap", albedo);
             material.SetTexture("_BumpMap", normal);
             material.SetTextureScale("_BaseMap", Vector2.one * tiling);
-            material.SetFloat("_BumpScale", 0.9f);
+            material.SetFloat("_BumpScale", 0.7f);
             if (normal != null) material.EnableKeyword("_NORMALMAP"); else material.DisableKeyword("_NORMALMAP");
             ApplyWind(material, name);
             if (IsCard(name))

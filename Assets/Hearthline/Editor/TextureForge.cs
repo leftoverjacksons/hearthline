@@ -262,8 +262,10 @@ namespace Hearthline.EditorTools
                 height[x, y] = h;
                 shade[x, y] = a;
             }
+            Painterly(surface, height, shade);
             Write(surface + "_albedo.png", (x, y) => { float a = shade[x, y]; return new Color(a, a, a, 1f); });
-            float strength = surface == "canvas" || surface == "leaves" ? 2f : surface == "tin" ? 5f : 4f;
+            // Gentle relief (ADR 0029): the painted albedo carries the detail; light should fall softly.
+            float strength = surface == "canvas" || surface == "leaves" ? 0.8f : surface == "tin" ? 2.2f : 1.4f;
             Write(surface + "_normal.png", (x, y) =>
             {
                 float l = height[(x + Size - 1) % Size, y], r = height[(x + 1) % Size, y];
@@ -271,6 +273,67 @@ namespace Hearthline.EditorTools
                 var n = new Vector3((l - r) * strength, (d - u) * strength, 1f).normalized;
                 return new Color(n.x * 0.5f + 0.5f, n.y * 0.5f + 0.5f, n.z * 0.5f + 0.5f, 1f);
             });
+        }
+
+        // ---- Painterly treatment (ADR 0029, the look pass) ------------------------------------------------
+
+        /// <summary>
+        /// Turns a surface's photographic-ish noise into something that looks hand-painted, Valheim-like: fine
+        /// grain blurred away, tone broken into soft flat bands, big soft colour blotches, brush streaks in one
+        /// direction, raised edges picked out lighter and crevices darker. Works on the arrays in place; both stay
+        /// seamless (every step wraps).
+        /// </summary>
+        private static void Painterly(string surface, float[,] height, float[,] shade)
+        {
+            int n = Size;
+            float[,] Blur(float[,] src, int r)
+            {
+                var tmp = new float[n, n];
+                var dst = new float[n, n];
+                for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float s = 0f;
+                    for (int k = -r; k <= r; k++) s += src[(x + k + n) % n, y];
+                    tmp[x, y] = s / (2 * r + 1);
+                }
+                for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float s = 0f;
+                    for (int k = -r; k <= r; k++) s += tmp[x, (y + k + n) % n];
+                    dst[x, y] = s / (2 * r + 1);
+                }
+                return dst;
+            }
+            float[,] soft = Blur(shade, 2);
+            float[,] hSoft = Blur(height, 2);
+            float[,] hWide = Blur(height, 7);
+            // Brush strokes run along the grain: vertical for bark, along the boards for planks, at a slant
+            // elsewhere.
+            float angle = surface == "bark" ? 90f : surface == "planks" ? 0f : 35f;
+            float ca = Mathf.Cos(angle * Mathf.Deg2Rad), sa = Mathf.Sin(angle * Mathf.Deg2Rad);
+            const float bands = 5f;
+            for (int y = 0; y < n; y++)
+            for (int x = 0; x < n; x++)
+            {
+                float u = x / (float)n, v = y / (float)n;
+                // Soft posterise: snap toward bands, keeping a little of the slope between them.
+                float t = soft[x, y] * bands;
+                float f = t - Mathf.Floor(t);
+                float banded = (Mathf.Floor(t) + Mathf.SmoothStep(0.3f, 0.7f, f)) / bands;
+                float paint = Mathf.Lerp(soft[x, y], banded, 0.65f);
+                // Big soft blotches of lighter and darker colour, as if painted in a few broad passes.
+                float blotch = Fbm(u, v, 2, 3, 300 + surface.Length) - 0.5f;
+                // Brush streaks: noise stretched along the stroke direction.
+                float su = u * ca + v * sa, sv = -u * sa + v * ca;
+                float streak = Fbm(Mathf.Repeat(su * 1f, 1f), Mathf.Repeat(sv * 6f, 1f), 6, 3, 310) - 0.5f;
+                // Edges catch the light, hollows hold shadow.
+                float curvature = hSoft[x, y] - hWide[x, y];
+                paint += blotch * 0.16f + streak * 0.07f + Mathf.Clamp(curvature * 1.6f, -0.12f, 0.14f);
+                shade[x, y] = Mathf.Clamp(paint, 0.35f, 1f);
+                height[x, y] = hSoft[x, y];
+            }
         }
 
         // Height (0..1) and albedo brightness for one surface at (u, v) in [0,1).
