@@ -73,6 +73,7 @@ namespace Hearthline.EditorTools
 
             GameObject player = Spawn("PlayerArmature");
             player.name = "Player";
+            if (PlayerWearsHomesteader) UseHomesteader(player);
             player.transform.position = Vector3.zero; // anchors and zones are placed facing +Z at the origin
             rig.Player = player;
             rig.InputRelease = player.AddComponent<PlayerInputRelease>();
@@ -329,6 +330,42 @@ namespace Hearthline.EditorTools
         }
 
         // ---- Player rig pieces -----------------------------------------------------------------------
+
+        /// <summary>
+        /// Off for now (ADR 0031): the player stays the Starter Assets robot until a better character model
+        /// arrives (made outside, e.g. image-to-3D from the reference turnarounds). Any humanoid model can go
+        /// through <see cref="UseHomesteader"/>; with it on, all 81 PlayMode tests passed.
+        /// </summary>
+        public static bool PlayerWearsHomesteader = false;
+
+        /// <summary>
+        /// The player wears the homesteader (ADR 0031) instead of the Starter Assets robot: his meshes and rig
+        /// replace the robot's Geometry and Skeleton under the same Animator, which takes his humanoid avatar, so
+        /// every animation, hit zone and Mark anchor (found by humanoid bone) carries over. Skipped, leaving the
+        /// robot, if his model or avatar isn't there.
+        /// </summary>
+        private static void UseHomesteader(GameObject player)
+        {
+            if (!CharacterKit.AvatarIsValid()) return;
+            GameObject model = CharacterKit.SetUpHomesteader();
+            Avatar avatar = null;
+            foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(CharacterKit.HomesteaderModel))
+                if (o is Avatar a && a.isHuman) avatar = a;
+            if (model == null || avatar == null) return;
+            if (PrefabUtility.IsPartOfPrefabInstance(player))
+                PrefabUtility.UnpackPrefabInstance(player, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            foreach (string robot in new[] { "Geometry", "Skeleton" })
+            {
+                Transform t = player.transform.Find(robot);
+                if (t != null) Object.DestroyImmediate(t.gameObject);
+            }
+            var copy = Object.Instantiate(model);
+            while (copy.transform.childCount > 0) copy.transform.GetChild(0).SetParent(player.transform, false);
+            Object.DestroyImmediate(copy);
+            var animator = player.GetComponent<Animator>();
+            animator.avatar = avatar;
+            animator.Rebind();
+        }
 
         private static GameObject Spawn(string prefabName)
         {
