@@ -1,0 +1,8 @@
+# Where the highway's overpass came down across the road.
+id: overpass
+name: the fallen overpass
+area_tags: [road, ruin]
+thin_level: 0
+siting: { fixed: overpass }
+search_spots: [2, 3]
+loot: overpass_salvage

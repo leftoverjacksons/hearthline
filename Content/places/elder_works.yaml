@@ -1,0 +1,9 @@
+# Older than the old world: a mound ringed with stones on the mountain front, a short buried hall.
+# Thin. Its far end belongs to the humming stone (events/the_humming_stone.yaml).
+id: elder_works
+name: the Elder Works
+area_tags: [elder_works]
+thin_level: 2
+siting: { fixed: elder_works, home_min: 220 }
+search_spots: [1, 2]
+loot: elder_relics

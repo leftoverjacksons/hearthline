@@ -1,0 +1,5 @@
+id: hand_tools
+name: Hand tools
+weight: 2
+value: 5
+tags: [salvage, trade]

@@ -272,5 +272,9 @@ namespace Hearthline.Sim
         public List<DroppedLoot> Dropped = new List<DroppedLoot>();
         /// <summary>Today's weather. Null in saves from before weather (it starts with the next day).</summary>
         public WeatherState Weather;
+        /// <summary>Place id -> what the family knows of it and what has been taken (docs/specs/ruins-and-places.md).</summary>
+        public SortedDictionary<string, PlaceState> Places = new SortedDictionary<string, PlaceState>();
+        /// <summary>The rumour being followed, or null.</summary>
+        public FollowedRumour Rumour;
     }
 }

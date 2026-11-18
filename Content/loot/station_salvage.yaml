@@ -1,0 +1,8 @@
+id: station_salvage
+rolls: 2
+entries:
+  - { item: scrap_metal, count_min: 1, count_max: 3, weight: 3 }
+  - { item: copper_wire, count_min: 1, count_max: 2, weight: 3 }
+  - { item: lamp_oil, weight: 2 }
+  - { item: hand_tools, weight: 1 }
+  - { item: cartridges, count_min: 1, count_max: 2, weight: 1 }

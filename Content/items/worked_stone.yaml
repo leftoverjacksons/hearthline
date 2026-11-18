@@ -1,0 +1,5 @@
+id: worked_stone
+name: Worked stone
+weight: 0.8
+value: 3
+tags: [artifact, trade]

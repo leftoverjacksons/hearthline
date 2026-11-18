@@ -36,6 +36,19 @@ namespace Hearthline.Sim.World
         public double DeckHeight;
     }
 
+    /// <summary>A place where a ruin makes sense, and what's around it, so content can say which kind belongs here.</summary>
+    public sealed class RuinSite
+    {
+        public Vec2 P;
+        /// <summary>Metres to the old road's centre line, to the water's edge, and to home.</summary>
+        public double Road, Water, Home;
+        public double Slope;
+        /// <summary>Height above the ground 40 m around (m): positive on a rise.</summary>
+        public double Rise;
+        /// <summary>Degrees about the vertical (0 = +z) that the site faces: toward the road.</summary>
+        public double Facing;
+    }
+
     public sealed class WorldSettings
     {
         public ulong Seed = 1;
@@ -78,6 +91,12 @@ namespace Hearthline.Sim.World
         public readonly List<PathPoint> Track = new List<PathPoint>();
         public readonly List<Bridge> Bridges = new List<Bridge>();
         public readonly List<Vec2> RuinSites = new List<Vec2>();
+        /// <summary>The ruin sites with what's around them, in the same order as <see cref="RuinSites"/>.</summary>
+        public readonly List<RuinSite> Sites = new List<RuinSite>();
+        /// <summary>The Elder Works: a flat bench on the mountain front, far from home and the road.</summary>
+        public Vec2 ElderWorks;
+        public double ElderWorksHeight;
+        public const double ElderWorksRadius = 16;
         public double HomeHeight;
 
         public WorldMap(WorldSettings settings)
@@ -134,6 +153,7 @@ namespace Hearthline.Sim.World
         public string AreaAt(double x, double z)
         {
             if (Math.Sqrt(x * x + z * z) < Settings.HomeRadius * 1.5) return "homestead";
+            if (Vec2.Distance(ElderWorks, new Vec2(x, z)) < ElderWorksRadius * 1.6) return "elder_works";
             foreach (Vec2 r in RuinSites) if (Vec2.Distance(r, new Vec2(x, z)) < 28) return "ruin";
             foreach (Bridge b in Bridges) if (Vec2.Distance((b.From + b.To) * 0.5, new Vec2(x, z)) < 22) return "river_crossing";
             if (DistanceToPath(Road, x, z) < 10) return "road";
@@ -190,7 +210,9 @@ namespace Hearthline.Sim.World
             Plants(map, noise);
             Roads(map);
             Ruins(map, new SimRandom(SimRandom.Seed(seed, 93)));
+            ElderWorks(map);
             ComputeSlope(map);
+            DescribeSites(map);
             return map;
         }
 
@@ -741,6 +763,78 @@ namespace Hearthline.Sim.World
                 if (map.RuinSites.Exists(r => Vec2.Distance(r, c.p) < 120)) continue;
                 map.RuinSites.Add(c.p);
                 if (map.RuinSites.Count >= 5) break;
+            }
+        }
+
+        // The Elder Works: older than the old world, so not where people built. A bench high on the mountain
+        // front inside the playable square, as far from home as it gets, off the road and out of the gullies.
+        private static void ElderWorks(WorldMap map)
+        {
+            const double reach = 270;
+            double best = double.MaxValue;
+            Vec2 at = new Vec2(0, reach);
+            for (double z = 120; z <= reach; z += 5)
+            for (double x = -reach; x <= reach; x += 5)
+            {
+                double h = map.HeightAt(x, z) - map.HomeHeight;
+                if (h < 20) continue;
+                double rough = 0;
+                for (int a = 0; a < 8; a++)
+                {
+                    double t = a * Math.PI / 4;
+                    rough = Math.Max(rough, Math.Abs(map.HeightAt(x + Math.Cos(t) * 12, z + Math.Sin(t) * 12) - map.HeightAt(x, z)));
+                }
+                if (rough > 6) continue;
+                if (map.DistanceToWater(x, z, out _) < 25 || WorldMap.DistanceToPath(map.Road, x, z) < 50) continue;
+                if (map.RuinSites.Exists(r => Vec2.Distance(r, new Vec2(x, z)) < 90)) continue;
+                double score = rough * 4 - Math.Sqrt(x * x + z * z) * 0.12 - Math.Min(h, 60) * 0.2;
+                if (score < best) { best = score; at = new Vec2(x, z); }
+            }
+            map.ElderWorks = at;
+            // Level a pad for the mound and its ring of stones, blending into the slope.
+            double target = map.HeightAt(at.X, at.Z);
+            double r0 = WorldMap.ElderWorksRadius, r1 = WorldMap.ElderWorksRadius * 2.2;
+            for (int j = 0; j < map.N; j++)
+            for (int i = 0; i < map.N; i++)
+            {
+                double d = Vec2.Distance(map.PositionOf(i, j), at);
+                if (d >= r1) continue;
+                double w = 1 - Smooth(r0, r1, d);
+                int k = map.Index(i, j);
+                map.Height[k] = (float)(map.Height[k] * (1 - w) + target * w);
+            }
+            map.ElderWorksHeight = target;
+        }
+
+        // What's around each ruin site, so content siting can choose a kind for it.
+        private static void DescribeSites(WorldMap map)
+        {
+            map.Sites.Clear();
+            foreach (Vec2 p in map.RuinSites)
+            {
+                double around = 0;
+                for (int a = 0; a < 8; a++)
+                {
+                    double t = a * Math.PI / 4;
+                    around += map.HeightAt(p.X + Math.Cos(t) * 40, p.Z + Math.Sin(t) * 40);
+                }
+                Vec2 toRoad = new Vec2(0, 1);
+                double nearest = double.MaxValue;
+                foreach (PathPoint q in map.Road)
+                {
+                    double d = Vec2.Distance(p, q.P);
+                    if (d < nearest) { nearest = d; toRoad = q.P - p; }
+                }
+                map.Sites.Add(new RuinSite
+                {
+                    P = p,
+                    Road = WorldMap.DistanceToPath(map.Road, p.X, p.Z),
+                    Water = map.DistanceToWater(p.X, p.Z, out _),
+                    Home = p.Length,
+                    Slope = map.SlopeAt(p.X, p.Z),
+                    Rise = map.HeightAt(p.X, p.Z) - around / 8,
+                    Facing = Math.Atan2(toRoad.X, toRoad.Z) * 180 / Math.PI,
+                });
             }
         }
 

@@ -1,0 +1,7 @@
+id: school_salvage
+rolls: 2
+entries:
+  - { item: old_book, weight: 3 }
+  - { item: candles, count_min: 1, count_max: 2, weight: 2 }
+  - { item: cloth, weight: 2 }
+  - { item: bandage, count_min: 1, count_max: 2, weight: 2 }

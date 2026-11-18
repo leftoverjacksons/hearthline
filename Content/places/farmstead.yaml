@@ -1,0 +1,13 @@
+# A homestead from before, burned out. Flat open ground near water, off the road.
+id: farmstead
+name: the burned farmstead
+area_tags: [ruin]
+thin_level: 0
+siting: { slope_max: 0.1, water_max: 40, road_min: 20 }
+search_spots: [3, 4]
+loot: farmstead_salvage
+find:
+  item: seed_corn
+  count: [5, 8]
+  text: "In the root cellar, under fallen boards: crocks of seed corn, waxed shut and still dry."
+rumour: "Folk say the people at the burned farmstead had a root cellar, and nobody ever dug it out."

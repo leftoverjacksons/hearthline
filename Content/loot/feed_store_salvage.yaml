@@ -1,0 +1,7 @@
+id: feed_store_salvage
+rolls: 2
+entries:
+  - { item: seed_corn, count_min: 1, count_max: 3, weight: 3 }
+  - { item: cloth, count_min: 1, count_max: 2, weight: 3 }
+  - { item: cornmeal, count_min: 1, count_max: 2, weight: 2 }
+  - { item: scrap_metal, weight: 1 }

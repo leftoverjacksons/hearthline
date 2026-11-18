@@ -56,6 +56,8 @@ namespace Hearthline.Sim.Content
         public readonly List<TimeOfDay> TimeOfDay = new List<TimeOfDay>();
         /// <summary>The weather where the party is must be one of these.</summary>
         public readonly List<WeatherKind> Weather = new List<WeatherKind>();
+        /// <summary>The party must be at one of these kinds of place (Content/places).</summary>
+        public readonly List<string> PlaceAny = new List<string>();
         public bool? AtHome;
         public readonly List<string> FlagsAll = new List<string>();
         public readonly List<string> FlagsNone = new List<string>();

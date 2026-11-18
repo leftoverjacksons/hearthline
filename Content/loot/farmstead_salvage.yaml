@@ -1,0 +1,7 @@
+id: farmstead_salvage
+rolls: 2
+entries:
+  - { item: scrap_metal, count_min: 1, count_max: 2, weight: 3 }
+  - { item: cloth, count_min: 1, count_max: 2, weight: 3 }
+  - { item: hand_tools, weight: 1 }
+  - { item: lamp_oil, weight: 1 }

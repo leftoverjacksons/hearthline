@@ -138,6 +138,7 @@ namespace Hearthline.Sim.Content
         public readonly Dictionary<string, JobDef> Jobs = new Dictionary<string, JobDef>();
         public readonly Dictionary<string, EncounterDef> Encounters = new Dictionary<string, EncounterDef>();
         public readonly Dictionary<string, HuntDef> Hunts = new Dictionary<string, HuntDef>();
+        public readonly Dictionary<string, PlaceDef> Places = new Dictionary<string, PlaceDef>();
         /// <summary>The climate, from weather.yaml (built-in defaults when it is absent).</summary>
         public readonly WeatherDef Weather = new WeatherDef();
 

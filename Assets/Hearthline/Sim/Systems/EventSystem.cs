@@ -18,6 +18,8 @@ namespace Hearthline.Sim
         public double DistanceFromHome;
         /// <summary>Used in the names of marks gained here: "at Miller's Ford". Optional.</summary>
         public string PlaceName;
+        /// <summary>The kind of place the party is at (Content/places), or null out in the open.</summary>
+        public string PlaceKind;
         /// <summary>The settlement the party is in or nearest to. Null means the home settlement.</summary>
         public string SettlementId;
         /// <summary>Who is on the trip. Empty means the head alone. The head is always included.</summary>
@@ -118,6 +120,7 @@ namespace Hearthline.Sim
             if (w.TimeOfDay.Count > 0 && !w.TimeOfDay.Contains(where.TimeOfDay)) return false;
             if (w.Weather.Count > 0 && !w.Weather.Contains(WeatherSystem.At(ctx.State.Weather, where.Hour >= 0 ? where.Hour : WeatherSystem.HourOf(where.TimeOfDay)))) return false;
             if (w.AtHome.HasValue && w.AtHome.Value != where.AtHome) return false;
+            if (w.PlaceAny.Count > 0 && (where.PlaceKind == null || !w.PlaceAny.Contains(where.PlaceKind))) return false;
             if (!w.FlagsAll.TrueForAll(ctx.State.Flags.Contains)) return false;
             if (w.FlagsNone.Exists(ctx.State.Flags.Contains)) return false;
             IDictionary<string, int> rep = ctx.State.Household.Reputation;

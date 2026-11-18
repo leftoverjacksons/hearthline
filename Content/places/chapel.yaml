@@ -1,0 +1,14 @@
+# A country chapel with its steeple down. On a rise, where it could be seen.
+id: chapel
+name: the fallen chapel
+area_tags: [ruin]
+thin_level: 0
+siting: { slope_max: 0.15, rise: true }
+search_spots: [3, 5]
+loot: chapel_salvage
+find:
+  item: old_coin
+  count: [4, 9]
+  check: { stat: tracking, difficulty: 2 }
+  text: "Under the altar step, a tin box someone meant to come back for."
+rumour: "An old woman at the Ford swears the chapel collection was hidden, not taken, the year it fell."

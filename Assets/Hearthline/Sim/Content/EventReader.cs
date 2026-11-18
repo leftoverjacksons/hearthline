@@ -200,6 +200,7 @@ namespace Hearthline.Sim.Content
                 def.When.ThinLevelMax = when.Int("thin_level_max");
                 def.When.TimeOfDay.AddRange(when.EnumList<TimeOfDay>("time_of_day"));
                 def.When.Weather.AddRange(when.EnumList<WeatherKind>("weather_any"));
+                def.When.PlaceAny.AddRange(when.StrList("place_any"));
                 def.When.AtHome = when.Bool("at_home");
                 def.When.FlagsAll.AddRange(when.StrList("flags_all"));
                 def.When.FlagsNone.AddRange(when.StrList("flags_none"));
@@ -438,6 +439,7 @@ namespace Hearthline.Sim.Content
             if (def.CooldownDays < 0) Err("cooldown_days must not be negative");
             if (def.Intensity < 1 || def.Intensity > 3) Err("intensity must be 1..3");
             foreach (string tag in def.When.AreaTagsAny) Known(db.Vocab.AreaTags.Contains(tag), "area tag", tag, "when");
+            foreach (string place in def.When.PlaceAny) Known(db.Places.ContainsKey(place), "kind of place", place, "when");
             foreach (string tag in def.When.AreaTagsAll) Known(db.Vocab.AreaTags.Contains(tag), "area tag", tag, "when");
 
             foreach (string f in def.When.ReputationMin.Keys) Known(db.Factions.ContainsKey(f), "faction", f, "when");

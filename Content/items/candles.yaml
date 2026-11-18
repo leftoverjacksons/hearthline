@@ -1,0 +1,5 @@
+id: candles
+name: Candles
+weight: 0.3
+value: 1
+tags: [supply, salvage]

@@ -1,0 +1,12 @@
+# A feed and seed store by the road, half its roof on the floor.
+id: feed_store
+name: the old feed store
+area_tags: [ruin]
+thin_level: 0
+siting: { road_max: 45, slope_max: 0.1 }
+search_spots: [3, 5]
+loot: feed_store_salvage
+find:
+  item: cartridges
+  count: [8, 14]
+  text: "Under the counter, a crate of shells nobody thought to look for behind the sacks."

@@ -1,0 +1,5 @@
+id: seed_corn
+name: Seed corn
+weight: 1
+value: 2
+tags: [supply, trade]

@@ -1,0 +1,5 @@
+id: elder_relics
+rolls: 1
+entries:
+  - { item: worked_stone, weight: 3 }
+  - { item: old_coin, count_min: 1, count_max: 2, weight: 1 }

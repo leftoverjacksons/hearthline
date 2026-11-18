@@ -207,6 +207,23 @@ namespace Hearthline.Sim
         /// <summary>The hunt in progress, or null. Read it, never write it.</summary>
         public ActiveHunt Hunt => State.Hunt;
 
+        /// <summary>What the family knows of a place, or null if nothing yet. Read it, never write it.</summary>
+        public PlaceState Place(string placeId) => PlaceSystem.Get(State, placeId);
+        public bool IsDiscovered(string placeId) => PlaceSystem.Get(State, placeId)?.DiscoveredDay >= 0;
+        public bool IsSearched(string placeId, int spot) => PlaceSystem.Get(State, placeId)?.Searched.Contains(spot) == true;
+        public bool IsFindTaken(string placeId) => PlaceSystem.Get(State, placeId)?.FindTaken == true;
+        /// <summary>Kinds of place the job board has a rumour about.</summary>
+        public List<string> Rumours() => PlaceSystem.Rumours(State, Content);
+        /// <summary>The rumour being followed, or null.</summary>
+        public FollowedRumour Rumour => State.Rumour;
+        /// <summary>The chance the head finds a place's checked find today (1 without a check).</summary>
+        public double FindChance(string kind)
+        {
+            if (!Content.Places.TryGetValue(kind ?? "", out PlaceDef def) || def.Find == null || def.Find.CheckStat == null) return 1;
+            Character head = State.Household.HeadId.HasValue ? State.Characters.Find(c => c.Id == State.Household.HeadId.Value) : null;
+            return head == null ? 0 : PlaceSystem.FindChance(StatSystem.GetStat(Content, head, def.Find.CheckStat), def.Find.CheckDifficulty);
+        }
+
         /// <summary>The weather at this hour today.</summary>
         public WeatherKind WeatherAt(double hour) => WeatherSystem.At(State.Weather, hour);
 

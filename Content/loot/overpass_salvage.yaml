@@ -1,0 +1,6 @@
+id: overpass_salvage
+rolls: 2
+entries:
+  - { item: scrap_metal, count_min: 1, count_max: 3, weight: 4 }
+  - { item: copper_wire, weight: 2 }
+  - { item: cartridges, count_min: 1, count_max: 2, weight: 1 }

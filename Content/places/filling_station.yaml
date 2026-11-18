@@ -1,0 +1,13 @@
+# A filling station on the old highway: canopy, pumps, a back office.
+id: filling_station
+name: the filling station
+area_tags: [ruin, road]
+thin_level: 0
+siting: { road_max: 20 }
+search_spots: [3, 5]
+loot: station_salvage
+find:
+  item: revolver
+  check: { stat: smithing, difficulty: 1 }
+  text: "The back-office safe gives at the hinge. Inside, wrapped in an oily rag, a revolver."
+rumour: "They say the filling station's safe was never opened. Too heavy to carry off, too stubborn to crack."

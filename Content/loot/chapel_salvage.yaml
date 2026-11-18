@@ -1,0 +1,7 @@
+id: chapel_salvage
+rolls: 2
+entries:
+  - { item: candles, count_min: 1, count_max: 3, weight: 4 }
+  - { item: lamp_oil, weight: 2 }
+  - { item: old_coin, count_min: 1, count_max: 3, weight: 2 }
+  - { item: cloth, weight: 1 }

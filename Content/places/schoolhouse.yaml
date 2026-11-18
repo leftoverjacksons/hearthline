@@ -1,0 +1,13 @@
+# A one-room schoolhouse, roof fallen in.
+id: schoolhouse
+name: the schoolhouse
+area_tags: [ruin]
+thin_level: 0
+siting: { slope_max: 0.12, road_max: 60 }
+search_spots: [2, 4]
+loot: school_salvage
+find:
+  item: medkit
+  check: { stat: medicine, difficulty: 1 }
+  text: "A tin nurse's cabinet behind the stove, its label rubbed off. Someone who knew medicine would know it."
+
