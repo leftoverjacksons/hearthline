@@ -79,6 +79,8 @@ namespace Hearthline.EditorTools
             SetScatter(trees, drawDistance: 650f, shadows: true);
             var cover = new GameObject("Ground Cover").AddComponent<InstancedScatter>();
             SetScatter(cover, drawDistance: 130f, shadows: false);
+            var grass = new GameObject("Grass").AddComponent<InstancedScatter>();
+            SetScatter(grass, drawDistance: 85f, shadows: false);
             var props = new GameObject("Props").transform;
 
             _overpass = PickOverpass();
@@ -86,6 +88,7 @@ namespace Hearthline.EditorTools
             BuildCrossings(props);
             BuildRuins(props);
             ScatterNature(trees, cover, props);
+            ScatterGrass(grass);
             BuildGathering(props);
             BuildStores(props);
             Transform home = BuildAreas(out int areaCount);
@@ -226,8 +229,8 @@ namespace Hearthline.EditorTools
             m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(GroundMapPath));
             m.SetFloat("_Smoothness", 0.05f);
             // Close-up detail over the painted map: grass blades and soil grain repeating every 2 m.
-            m.SetTexture("_DetailAlbedoMap", TextureForge.Albedo("grass"));
-            m.SetTexture("_DetailNormalMap", TextureForge.Normal("grass"));
+            m.SetTexture("_DetailAlbedoMap", TextureForge.Albedo("soil"));
+            m.SetTexture("_DetailNormalMap", TextureForge.Normal("soil"));
             m.SetTextureScale("_DetailAlbedoMap", Vector2.one * (WorldSize / 2f));
             m.SetFloat("_DetailAlbedoMapScale", 0.55f);
             m.SetFloat("_DetailNormalMapScale", 0.5f);
@@ -244,19 +247,30 @@ namespace Hearthline.EditorTools
             float moist = (float)Map.MoistureAt(x, z), forest = (float)Map.ForestAt(x, z), slope = (float)Map.SlopeAt(x, z);
             float high = HeightAt(x, z) - (float)Map.HomeHeight;
 
-            // Grass: golden where it's dry, lush where water gathers.
-            Color dry = Color.Lerp(new Color(0.5f, 0.47f, 0.25f), new Color(0.45f, 0.46f, 0.22f), n1);
-            Color lush = Color.Lerp(new Color(0.28f, 0.4f, 0.14f), new Color(0.36f, 0.45f, 0.18f), n1);
-            Color c = Color.Lerp(dry, lush, Smooth(0.2f, 0.65f, moist + (n2 - 0.5f) * 0.2f)) * (0.92f + fine * 0.16f);
+            // Open ground (ADR 0030): Valheim-lush green where water gathers, gold where it's dry and on the balds.
+            Color dry = Color.Lerp(new Color(0.47f, 0.45f, 0.21f), new Color(0.43f, 0.44f, 0.2f), n1);
+            Color lush = Color.Lerp(new Color(0.3f, 0.44f, 0.12f), new Color(0.38f, 0.48f, 0.15f), n1);
+            Color c = Color.Lerp(dry, lush, Smooth(0.2f, 0.6f, moist + (n2 - 0.5f) * 0.25f)) * (0.92f + fine * 0.16f);
+            float bald = Smooth(130f, 175f, high) * (1f - Smooth(0.3f, 0.6f, forest));
+            c = Color.Lerp(c, dry * 1.05f, bald);
 
-            // Under the trees: leaf litter and moss, darker where the forest is thick.
-            Color floor = Color.Lerp(new Color(0.27f, 0.31f, 0.14f), new Color(0.33f, 0.28f, 0.16f), n2) * (0.9f + fine * 0.2f);
-            c = Color.Lerp(c, floor, Smooth(0.3f, 0.6f, forest));
-            c = Color.Lerp(c, new Color(0.15f, 0.18f, 0.1f) * (0.9f + fine * 0.2f), Smooth(0.72f, 0.95f, forest) * 0.8f);
+            // The forest floor: warm leaf litter with patches of moss, rust needle litter on dry ridges where pines
+            // grow, deep green moss in the damp coves.
+            Color litter = Color.Lerp(new Color(0.4f, 0.29f, 0.15f), new Color(0.34f, 0.25f, 0.13f), n2);
+            Color moss = Color.Lerp(new Color(0.22f, 0.32f, 0.11f), new Color(0.27f, 0.36f, 0.13f), n1);
+            Color needles = new Color(0.44f, 0.26f, 0.13f);
+            Color floor = Color.Lerp(litter, moss, Smooth(0.45f, 0.7f, n1 * 0.6f + moist * 0.6f));
+            floor = Color.Lerp(floor, needles, Smooth(60f, 110f, high) * (1f - moist) * 0.7f);
+            if (Map.IsDeepCove(x, z)) floor = Color.Lerp(floor, new Color(0.14f, 0.22f, 0.1f), 0.6f);
+            c = Color.Lerp(c, floor * (0.9f + fine * 0.2f), Smooth(0.35f, 0.65f, forest));
 
-            // Bare rock on steep ground and up the mountain.
-            float rock = Mathf.Max(Smooth(0.55f, 0.95f, slope), Smooth(150f, 210f, high) * 0.85f);
+            // Rock only where it's genuinely steep: Appalachian ridges are wooded to the top.
+            float rock = Smooth(0.75f, 1.15f, slope);
             c = Color.Lerp(c, new Color(0.45f, 0.43f, 0.39f) * (0.8f + fine * 0.35f), rock);
+
+            // The Elder Works' pad: the grass gone grey.
+            float elder = Smooth(26f, 14f, Vector2.Distance(new Vector2(x, z), new Vector2((float)Map.ElderWorks.X, (float)Map.ElderWorks.Z)));
+            c = Color.Lerp(c, new Color(c.grayscale, c.grayscale, c.grayscale * 1.05f) * 0.95f, elder * 0.75f);
 
             // Stream banks: mud, then gravel at and under the water.
             float water = F.Water(x, z);
@@ -626,6 +640,40 @@ namespace Hearthline.EditorTools
             return Mathf.Abs(x) < WorldSize / 2f - 4f && Mathf.Abs(z) < WorldSize / 2f - 4f;
         }
 
+        // Grass (ADR 0030): dense card clumps wherever the ground is open, lush where it's damp and gold where it's
+        // dry or high, thinning into the forest's edge; a little under the trees. Not on the road, the track, the
+        // water or the trampled middle of the yard.
+        private static void ScatterGrass(InstancedScatter grass)
+        {
+            var rnd = new Random(2207);
+            float R(double a, double b) => (float)(a + rnd.NextDouble() * (b - a));
+            Mesh tall = GreyboxKit.MeshOf("Grass_Card_Tall"), shortGrass = GreyboxKit.MeshOf("Grass_Card_Short"), dry = GreyboxKit.MeshOf("Grass_Card_Dry");
+            Material[] tallM = GreyboxKit.MaterialsOf("Grass_Card_Tall"), shortM = GreyboxKit.MaterialsOf("Grass_Card_Short"), dryM = GreyboxKit.MaterialsOf("Grass_Card_Dry");
+            const float step = 1.0f;
+            for (float gx = -Size / 2f - 15f; gx < Size / 2f + 15f; gx += step)
+            for (float gz = -Size / 2f - 15f; gz < Size / 2f + 15f; gz += step)
+            {
+                float x = gx + R(0, step), z = gz + R(0, step);
+                float forest = (float)Map.ForestAt(x, z), moist = (float)Map.MoistureAt(x, z);
+                if (Map.SlopeAt(x, z) > 0.8 || F.Water(x, z) < 1.6f || F.Road(x, z) < 4.2f || F.Track(x, z) < 1.3f) continue;
+                float d = Mathf.Sqrt(x * x + z * z);
+                if (d < 9f) continue;
+                float open = 1f - Smooth(0.3f, 0.7f, forest);
+                double chance = open * 0.9 + 0.05;
+                if (rnd.NextDouble() > chance) continue;
+                float high = HeightAt(x, z) - (float)Map.HomeHeight;
+                bool isDry = moist < 0.28f + (float)(rnd.NextDouble() * 0.12) || high > 130f;
+                bool yard = d < HomeRadius;
+                Mesh mesh; Material[] mats;
+                if (isDry) { mesh = dry; mats = dryM; }
+                else if (yard || forest > 0.45f) { mesh = shortGrass; mats = shortM; }
+                else { mesh = tall; mats = tallM; }
+                float y = HeightAt(x, z) - 0.02f;
+                float scale = R(1.1, 1.6) * (yard ? 0.75f : 1f);
+                grass.Add(mesh, mats, Matrix4x4.TRS(new Vector3(x, y, z), Quaternion.Euler(0f, R(0, 360), 0f), new Vector3(scale, R(0.55, 0.85) * scale, scale)), 25f);
+            }
+        }
+
         private static void ScatterNature(InstancedScatter trees, InstancedScatter cover, Transform props)
         {
             var rnd = new Random(1789);
@@ -734,15 +782,11 @@ namespace Hearthline.EditorTools
                 float forest = (float)Map.ForestAt(x, z), moist = (float)Map.MoistureAt(x, z), water = F.Water(x, z);
                 if (Map.SlopeAt(x, z) > 0.9) continue;
                 double roll = rnd.NextDouble();
-                if (yard) { if (roll < 0.08) Cover("Grass_Clump", x, z, R(0.6, 0.9)); }
+                if (yard) { }
                 else if (forest > 0.72f) { if (roll < 0.2 + moist * 0.15) Cover("Fern", x, z, R(0.9, 1.5)); }
-                else if (forest > 0.35f) { if (roll < 0.14) Cover("Fern", x, z, R(0.8, 1.3)); else if (roll < 0.17) Cover("Grass_Clump", x, z, R(0.7, 1.0)); }
-                else if (water < 6f) { if (roll < 0.45) Cover("Grass_Clump", x, z, R(1.0, 1.6)); }
-                else
-                {
-                    if (roll < 0.26 + moist * 0.15) Cover("Grass_Clump", x, z, R(0.8, 1.4));
-                    else if (roll < 0.34 + (1f - moist) * 0.08) Cover("Wildflowers", x, z, R(0.8, 1.2));
-                }
+                else if (forest > 0.35f) { if (roll < 0.16) Cover("Fern", x, z, R(0.8, 1.3)); }
+                else if (water < 6f) { if (roll < 0.1) Cover("Fern", x, z, R(0.8, 1.2)); }
+                else if (roll < 0.07 + (1f - moist) * 0.05) Cover("Wildflowers", x, z, R(0.8, 1.2));
             }
             // Bushes along the forest's edge, kudzu swallowing edges and roadsides.
             for (float gx = -Size / 2f - 20f; gx < Size / 2f + 20f; gx += 7f)

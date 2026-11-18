@@ -26,6 +26,7 @@ namespace Hearthline.EditorTools
             foreach (string surface in Surfaces) Generate(surface);
             GenerateLeafCluster();
             GenerateNeedleCluster();
+            GenerateGrassBlades();
             AssetDatabase.Refresh();
             foreach (string surface in Surfaces)
             {
@@ -34,6 +35,7 @@ namespace Hearthline.EditorTools
             }
             ImportCutout(LeafClusterPath);
             ImportCutout(NeedleClusterPath);
+            ImportCutout(GrassBladesPath);
         }
 
         public const string LeafClusterPath = Folder + "/leafcluster_albedo.png";
@@ -41,6 +43,8 @@ namespace Hearthline.EditorTools
 
         public static Texture2D LeafCluster() => AssetDatabase.LoadAssetAtPath<Texture2D>(LeafClusterPath);
         public const string NeedleClusterPath = Folder + "/needlecluster_albedo.png";
+        public const string GrassBladesPath = Folder + "/grassblades_albedo.png";
+        public static Texture2D GrassBlades() => AssetDatabase.LoadAssetAtPath<Texture2D>(GrassBladesPath);
         public static Texture2D NeedleCluster() => AssetDatabase.LoadAssetAtPath<Texture2D>(NeedleClusterPath);
 
         /// <summary>Writes just the leaf and needle cluster textures (quicker than every surface).</summary>
@@ -49,9 +53,11 @@ namespace Hearthline.EditorTools
             SceneBuildKit.EnsureFolder(Folder);
             GenerateLeafCluster();
             GenerateNeedleCluster();
+            GenerateGrassBlades();
             AssetDatabase.Refresh();
             ImportCutout(LeafClusterPath);
             ImportCutout(NeedleClusterPath);
+            ImportCutout(GrassBladesPath);
         }
 
         // Cut-out textures keep their coverage in the small mips, or leaves thin out and vanish with distance.
@@ -70,6 +76,62 @@ namespace Hearthline.EditorTools
             importer.anisoLevel = 4;
             importer.maxTextureSize = Size;
             importer.SaveAndReimport();
+        }
+
+        // ---- Grass blades (grass cards, ADR 0030) -------------------------------------------------------------
+
+        /// <summary>
+        /// A tuft of grass on a transparent background: tapering blades rising from the bottom edge, leaning and
+        /// curving, darker at the root and lighter at the tip (Valheim's lush, lit meadows). Near-white, tinted by
+        /// the palette; alpha is the cut-out.
+        /// </summary>
+        private static void GenerateGrassBlades()
+        {
+            var rng = new System.Random(31);
+            var shade = new float[Size, Size];
+            var alpha = new float[Size, Size];
+            for (int b = 0; b < 120; b++)
+            {
+                float root = 0.04f + (float)rng.NextDouble() * 0.92f;
+                float height = 0.45f + (float)rng.NextDouble() * 0.5f;
+                float lean = ((float)rng.NextDouble() - 0.5f) * 0.45f;
+                float width = 0.012f + (float)rng.NextDouble() * 0.014f;
+                float tone = 0.72f + 0.28f * (float)rng.NextDouble();
+                for (int step = 0; step < 400; step++)
+                {
+                    float t = step / 399f;
+                    float x = root + lean * t * t;
+                    float y = t * height;
+                    float w = width * (1f - t * 0.92f);
+                    int x0 = Mathf.Max(0, (int)((x - w) * Size)), x1 = Mathf.Min(Size - 1, (int)((x + w) * Size));
+                    int yy = Mathf.Min(Size - 1, (int)(y * Size));
+                    for (int xx = x0; xx <= x1; xx++)
+                    {
+                        float s = tone * (0.55f + 0.45f * t);
+                        if (alpha[xx, yy] < 1f || s > shade[xx, yy]) shade[xx, yy] = s;
+                        alpha[xx, yy] = 1f;
+                    }
+                }
+            }
+            for (int pass = 0; pass < 8; pass++)
+            {
+                var next = (float[,])shade.Clone();
+                for (int y = 1; y < Size - 1; y++)
+                for (int x = 1; x < Size - 1; x++)
+                {
+                    if (alpha[x, y] > 0f || shade[x, y] > 0f) continue;
+                    float sum = 0f; int n = 0;
+                    for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++)
+                        if (shade[x + i, y + j] > 0f) { sum += shade[x + i, y + j]; n++; }
+                    if (n > 0) next[x, y] = sum / n;
+                }
+                shade = next;
+            }
+            Write(System.IO.Path.GetFileName(GrassBladesPath), (x, y) =>
+            {
+                float s = shade[x, y] > 0f ? shade[x, y] : 0.8f;
+                return new Color(s, s, s, alpha[x, y]);
+            }, withAlpha: true);
         }
 
         // ---- Needle cluster (pine and hemlock cards, ADR 0027) ----------------------------------------------

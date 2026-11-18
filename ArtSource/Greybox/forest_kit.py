@@ -19,6 +19,8 @@ PALETTE["HL_LeafCard"] = (0.13, 0.26, 0.06)
 PALETTE["HL_LeafCardLight"] = (0.20, 0.34, 0.05)
 PALETTE["HL_LeafCardDark"] = (0.06, 0.16, 0.05)
 PALETTE["HL_NeedleCard"] = (0.05, 0.15, 0.07)
+PALETTE["HL_GrassCard"] = (0.31, 0.45, 0.11)
+PALETTE["HL_GrassCardDry"] = (0.47, 0.43, 0.17)
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(bpy.data.filepath), "..", ".."))
 OUT = os.path.join(REPO, "Assets", "Hearthline", "Art", "Greybox")

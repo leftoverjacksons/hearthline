@@ -20,7 +20,7 @@ namespace Hearthline.EditorTools
         public const string LeafCardMaterial = "HL_LeafCard";
         public const string NeedleCardMaterial = "HL_NeedleCard";
         /// <summary>Leaf and needle card materials: HL_LeafCard, its Light and Dark tints, and HL_NeedleCard.</summary>
-        public static bool IsCard(string name) => name.StartsWith(LeafCardMaterial) || name == NeedleCardMaterial;
+        public static bool IsCard(string name) => name.StartsWith(LeafCardMaterial) || name == NeedleCardMaterial || name.StartsWith("HL_GrassCard");
 
         [Serializable] private sealed class Rgb { public float r, g, b; }
 
@@ -149,7 +149,7 @@ namespace Hearthline.EditorTools
             {
                 // Leaf cards (ADR 0020, 0027): a cut-out spray of leaves or needles per quad, crown shading baked
                 // into the mesh.
-                albedo = name == NeedleCardMaterial ? TextureForge.NeedleCluster() : TextureForge.LeafCluster();
+                albedo = name == NeedleCardMaterial ? TextureForge.NeedleCluster() : name.StartsWith("HL_GrassCard") ? TextureForge.GrassBlades() : TextureForge.LeafCluster();
                 material.SetTexture("_BaseMap", albedo);
                 material.SetTextureScale("_BaseMap", Vector2.one);
                 material.SetFloat("_Cull", 0f);
@@ -185,6 +185,7 @@ namespace Hearthline.EditorTools
                 case "HL_Pine": wind = (0.02f, 1f, 0.1f); break;
                 case LeafCardMaterial: case "HL_LeafCardLight": case "HL_LeafCardDark": wind = (0.018f, 2.5f, 0.3f); break;
                 case NeedleCardMaterial: wind = (0.012f, 3f, 0.15f); break;
+                case "HL_GrassCard": case "HL_GrassCardDry": wind = (0.2f, 0f, 0.3f); break;
                 case "HL_Kudzu": wind = (0.025f, 0.2f, 0.3f); break;
                 default:
                     if (material.shader.name == "Hearthline/Foliage") material.shader = SceneBuildKit.DefaultLitMaterial().shader;

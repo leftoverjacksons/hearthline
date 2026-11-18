@@ -7,7 +7,7 @@ Status: **approved 2026-11-18** (Travis):
 - **The land is forest:** North Georgia and southern Appalachia, so you're mostly under trees. This adds a
   forest step (step 3 below) and changes the generator.
 
-Recorded in ADR 0027. **Done:** step 1 (style frames, `docs/style-frames/0-baseline`) and step 3, the forest (`1-forest`, revised to leaf cards in `2-leaf-cards`), done before step 2 at Travis's say; step 2, light and colour (`3-light`, ADR 0028); steps 4 and 5, painted surfaces and the model kit (`4-painted`, `5-kit`, ADR 0029).
+Recorded in ADR 0027. **Done:** step 1 (style frames, `docs/style-frames/0-baseline`) and step 3, the forest (`1-forest`, revised to leaf cards in `2-leaf-cards`), done before step 2 at Travis's say; step 2, light and colour (`3-light`, ADR 0028); steps 4 and 5, painted surfaces and the model kit (`4-painted`, `5-kit`, ADR 0029); step 6, ground and grass (`6-ground`, ADR 0030). Step 7 (characters) is left.
 
 ## Goal
 

@@ -431,6 +431,39 @@ def farmhouse(name, seed):
     return finish_bm(name, bm, ["HL_WoodWeathered", "HL_Stone", "HL_TinRust", "HL_WoodDark", "HL_WindowGlow"])
 
 
+# ---- Grass cards (ADR 0030) --------------------------------------------------------------------------------
+
+def grass_card(name, height, width, material, seed, cards=4):
+    """A clump of grass: crossed cards showing the blade texture, dark at the root and light at the tip, with
+    normals pointing straight up so the grass is lit like the ground it grows from (Valheim's meadows)."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.verify()
+    col = bm.loops.layers.color.new("Col")
+    for i in range(cards):
+        a = i / cards * math.pi + rng.uniform(-0.2, 0.2)
+        dx, dy = math.cos(a) * width / 2, math.sin(a) * width / 2
+        lean = Vector((rng.uniform(-0.08, 0.08), rng.uniform(-0.08, 0.08), 0))
+        corners = [(-dx, -dy, -0.03), (dx, dy, -0.03), (dx + lean.x, dy + lean.y, height), (-dx + lean.x, -dy + lean.y, height)]
+        f = bm.faces.new([bm.verts.new(c) for c in corners])
+        for loop, t in zip(f.loops, [(0, 0), (1, 0), (1, 1), (0, 1)]):
+            loop[uv].uv = t
+            a_o = 0.68 + 0.32 * t[1]
+            loop[col] = (a_o, a_o, a_o, 1.0)
+    remove_existing(name)
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me); bm.free()
+    me.materials.append(mat("HL_Bark")); me.materials.append(mat(material))
+    for p in me.polygons:
+        p.material_index = 1
+        p.use_smooth = True
+    me.normals_split_custom_set([Vector((0, 0, 1))] * len(me.loops))
+    ob = bpy.data.objects.new(name, me)
+    coll("Cover").objects.link(ob)
+    made.append(ob)
+    return ob
+
+
 # ---- Build ------------------------------------------------------------------------------------------------
 
 ROW = -260
@@ -457,6 +490,9 @@ pieces = [
     lambda: tent("Dwelling_Tent", 41),
     lambda: cabin("Cabin", 42),
     lambda: farmhouse("Dwelling_Farmhouse", 43),
+    lambda: grass_card("Grass_Card_Tall", 0.8, 1.3, "HL_GrassCard", 51),
+    lambda: grass_card("Grass_Card_Short", 0.45, 1.1, "HL_GrassCard", 52),
+    lambda: grass_card("Grass_Card_Dry", 0.7, 1.2, "HL_GrassCardDry", 53),
 ]
 for i, build_piece in enumerate(pieces):
     ob = build_piece()
