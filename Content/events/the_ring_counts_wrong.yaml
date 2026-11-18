@@ -1,0 +1,43 @@
+id: the_ring_counts_wrong
+tags: [strange, elder_works]
+weight: 5
+cooldown_days: 120
+intensity: 2
+when:
+  place_any: [elder_works]
+  at_home: false
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "{hero.name} walks the stone ring sunwise and counts eleven stones. Walks it back and counts twelve. The wind has dropped. The shadows of the stones lie a little off from the shadows of the trees, all of them together, as if the stones keep a different hour."
+    choices:
+      - label: Walk it once more and count again
+        outcome:
+          flag_set: [counted_the_elder_ring]
+          goto: count
+      - label: Let the Knack find the extra one
+        requires: { mark_any: [knack_dowsing] }
+        outcome:
+          item: { worked_stone: 1 }
+          flag_set: [counted_the_elder_ring, found_the_twelfth_stone]
+          chronicle: "{hero.name} felt for the twelfth stone in the Elder Works ring and found a chip of it lying loose in the grass."
+      - label: Stop counting and leave the ring
+        outcome:
+          flag_set: [left_the_elder_ring_uncounted]
+  - id: count
+    text: "Twelve again, sunwise. Halfway round, {hero.name} looks down. {hero.name}'s own shadow has swung to lie the way the stones' do. No birds. No wind. {hero.name} cannot hear their own breath."
+    choices:
+      - label: Stand in the gap between two stones until it passes
+        outcome:
+          flag_set: [stood_in_the_elder_ring]
+          chance:
+            - p: 0.4
+              mark: { target: hero, def: exposure_pale_eyes, cause: "standing in the Elder Works ring" }
+              chronicle: "{hero.name} stood in the Elder Works ring while the shadows were wrong. {hero.name}'s eyes were paler after."
+            - p: 0.3
+              mark: { target: hero, def: knack_dowsing, cause: "standing in the Elder Works ring" }
+            - p: 0.2
+              trait: { target: hero, add: haunted }
+      - label: Step out and do not look at the ground
+        outcome:
+          flag_set: [stepped_out_of_the_elder_ring]

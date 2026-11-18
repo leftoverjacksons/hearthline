@@ -1,0 +1,29 @@
+id: the_last_notches
+tags: [salvage, memory]
+weight: 6
+cooldown_days: 90
+intensity: 1
+when:
+  place_any: [farmstead]
+  at_home: false
+  flags_none: [read_the_farmstead_doorframe]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The fire took the roof and most of the walls. One kitchen doorframe still stands, black on the outside, pale on the inside. Knife notches climb it, a name and a year by each. Three children. The notches stop at the same year for all three."
+    choices:
+      - label: Pry the frame loose and carry it home
+        outcome:
+          item: { lumber: 1 }
+          flag_set: [read_the_farmstead_doorframe, took_the_farmstead_doorframe]
+          chronicle: "{hero.name} brought home a doorframe from the burned farmstead, notches and all."
+      - label: Cut a notch of your own below theirs
+        outcome:
+          flag_set: [read_the_farmstead_doorframe, notched_the_farmstead_doorframe]
+          chronicle: "{hero.name} cut a notch in the doorframe at the burned farmstead, and the year beside it."
+      - label: Leave it standing
+        outcome:
+          flag_set: [read_the_farmstead_doorframe]
+          chance:
+            - p: 0.25
+              trait: { target: hero, add: haunted }

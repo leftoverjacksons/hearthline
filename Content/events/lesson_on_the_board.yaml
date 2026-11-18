@@ -1,0 +1,30 @@
+id: lesson_on_the_board
+tags: [salvage, memory]
+weight: 6
+cooldown_days: 120
+intensity: 1
+when:
+  place_any: [schoolhouse]
+  at_home: false
+  flags_none: [read_the_schoolhouse_board]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The roof is in, but the rain has missed the blackboard. A lesson is still on it in a teacher's square hand. Half the words {hero.name} knows. The other half name things nobody has seen in a lifetime. At the bottom: Tomorrow, chapter nine."
+    choices:
+      - label: Look for chapter nine
+        outcome:
+          item: { old_book: 1 }
+          flag_set: [read_the_schoolhouse_board]
+      - label: Copy the lesson out for the children at home
+        requires: { stat_min: { teaching: 1 } }
+        outcome:
+          item: { old_book: 1 }
+          flag_set: [read_the_schoolhouse_board, copied_the_schoolhouse_lesson]
+          chronicle: "{hero.name} copied the last lesson off the schoolhouse board and taught it at home."
+      - label: Wipe the board clean
+        outcome:
+          flag_set: [read_the_schoolhouse_board, wiped_the_schoolhouse_board]
+          chance:
+            - p: 0.2
+              mark: { target: hero, def: rite_guilt_shadow, cause: "wiping out the last lesson at the schoolhouse" }

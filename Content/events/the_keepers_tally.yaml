@@ -1,0 +1,29 @@
+id: the_keepers_tally
+tags: [salvage, memory]
+weight: 6
+cooldown_days: 120
+intensity: 1
+when:
+  place_any: [filling_station]
+  at_home: false
+  flags_none: [counted_the_station_tally]
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "Somebody kept the station after the end. A cot in the back office. A coffee can of lamp oil with the lid pressed down. On the wall, strokes in bundles of five, row on row, floor to ceiling. The last bundle has three."
+    choices:
+      - label: Take the oil
+        outcome:
+          item: { lamp_oil: 2 }
+          flag_set: [counted_the_station_tally]
+      - label: Add a fourth stroke
+        outcome:
+          flag_set: [counted_the_station_tally, added_to_the_station_tally]
+          chronicle: "{hero.name} added a stroke to the tally on the filling station wall."
+      - label: Strip the wire from the pumps instead
+        outcome:
+          item: { copper_wire: 2 }
+          flag_set: [counted_the_station_tally]
+          chance:
+            - p: 0.25
+              hit: { target: hero, damage: blade, severity: 1, region: hand_l, cause: "a sheared pump housing" }

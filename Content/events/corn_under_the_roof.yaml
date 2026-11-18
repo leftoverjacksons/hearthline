@@ -1,0 +1,28 @@
+id: corn_under_the_roof
+tags: [salvage, nature]
+weight: 7
+cooldown_days: 90
+intensity: 1
+when:
+  place_any: [feed_store]
+  at_home: false
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "Where the roof fell in, light comes straight down onto the floor. Seed spilled there years back and took. A stand of corn grows in the middle of the store, shoulder high, in a square the shape of the hole. Sparrows in the rafters. Nothing else moves."
+    choices:
+      - label: Pick the ears
+        outcome:
+          item: { cornmeal: 1, seed_corn: 1 }
+      - label: Dig some up to plant at home
+        requires: { stat_min: { husbandry: 1 } }
+        outcome:
+          item: { seed_corn: 3 }
+          flag_set: [planted_the_feed_store_corn]
+          chronicle: "{hero.name} brought home corn that had sown itself in the old feed store."
+      - label: Leave it for the sparrows
+        outcome:
+          flag_set: [left_the_feed_store_corn]
+          chance:
+            - p: 0.3
+              item: { seed_corn: 1 }

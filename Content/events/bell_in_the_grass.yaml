@@ -1,0 +1,35 @@
+id: bell_in_the_grass
+tags: [strange, salvage]
+weight: 6
+cooldown_days: 60
+intensity: 1
+when:
+  place_any: [chapel]
+  time_of_day: [dusk]
+  at_home: false
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The steeple came down whole and lies in the grass like a felled tree. The bell is still in it, lip to the ground. There is no wind. At dusk it rings once, low, and the swallows go up out of the nave."
+    choices:
+      - label: Light a candle on the altar step
+        requires: { item_any: [candles] }
+        outcome:
+          item: { candles: -1 }
+          flag_set: [lit_a_candle_at_the_chapel]
+          mark: { target: hero, def: knack_dowsing, chance: 0.15, cause: "the bell at the fallen chapel" }
+          chronicle: "{hero.name} lit a candle at the fallen chapel the evening the bell rang."
+      - label: Dig under the lip and look
+        outcome:
+          item: { scrap_metal: 1 }
+          flag_set: [looked_under_the_chapel_bell]
+          chance:
+            - p: 0.2
+              hit: { target: hero, damage: blunt, severity: 1, region: hand_r, cause: "the chapel bell settling" }
+      - label: Wait for it to ring again
+        outcome:
+          flag_set: [heard_the_chapel_bell]
+          chance:
+            - p: 0.3
+              trait: { target: hero, add: haunted }
+              chronicle: "{hero.name} waited by the fallen chapel bell until full dark. It did not ring again. {hero.name} is sure it did not."

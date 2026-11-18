@@ -1,0 +1,30 @@
+id: names_under_the_overpass
+tags: [salvage, memory]
+weight: 6
+cooldown_days: 90
+intensity: 1
+when:
+  place_any: [overpass]
+  at_home: false
+cast:
+  hero: { from: party, role: head }
+beats:
+  - text: "The pillar under the fallen deck is written over in charcoal and house paint, as high as a tall man can reach. Names, and where they were going. Mobile. The coast. Home. The newer ones are lower down and fewer. The newest says only: Turned back."
+    choices:
+      - label: Write the family name and where you are bound
+        outcome:
+          flag_set: [wrote_on_the_overpass]
+          reputation: { homesteaders: 1 }
+          chronicle: "{hero.name} wrote {hero.surname} on the pillar under the fallen overpass."
+      - label: Knock the rebar loose from the broken deck
+        outcome:
+          item: { scrap_metal: 2 }
+          chance:
+            - p: 0.2
+              hit: { target: hero, damage: blunt, severity: 1, cause: "concrete falling from the overpass" }
+      - label: Read them all, then go
+        outcome:
+          flag_set: [read_the_overpass_names]
+          chance:
+            - p: 0.2
+              trait: { target: hero, add: haunted }
