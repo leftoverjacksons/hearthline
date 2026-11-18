@@ -12,6 +12,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: HL_LeafCardLight
+    second: {fileID: 2100000, guid: d1636cea626d3dd48a6ffd0f90f4d7b7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: HL_LeavesLight
     second: {fileID: 2100000, guid: f615d275e8c16ac469bb1dbaea01ecfc, type: 2}
   materials:

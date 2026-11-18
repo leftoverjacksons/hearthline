@@ -25,6 +25,7 @@ namespace Hearthline.EditorTools
             SceneBuildKit.EnsureFolder(Folder);
             foreach (string surface in Surfaces) Generate(surface);
             GenerateLeafCluster();
+            GenerateNeedleCluster();
             AssetDatabase.Refresh();
             foreach (string surface in Surfaces)
             {
@@ -32,12 +33,26 @@ namespace Hearthline.EditorTools
                 Import(Folder + "/" + surface + "_normal.png", normal: true);
             }
             ImportCutout(LeafClusterPath);
+            ImportCutout(NeedleClusterPath);
         }
 
         public const string LeafClusterPath = Folder + "/leafcluster_albedo.png";
         public const float LeafCutoff = 0.5f;
 
         public static Texture2D LeafCluster() => AssetDatabase.LoadAssetAtPath<Texture2D>(LeafClusterPath);
+        public const string NeedleClusterPath = Folder + "/needlecluster_albedo.png";
+        public static Texture2D NeedleCluster() => AssetDatabase.LoadAssetAtPath<Texture2D>(NeedleClusterPath);
+
+        /// <summary>Writes just the leaf and needle cluster textures (quicker than every surface).</summary>
+        public static void GenerateCards()
+        {
+            SceneBuildKit.EnsureFolder(Folder);
+            GenerateLeafCluster();
+            GenerateNeedleCluster();
+            AssetDatabase.Refresh();
+            ImportCutout(LeafClusterPath);
+            ImportCutout(NeedleClusterPath);
+        }
 
         // Cut-out textures keep their coverage in the small mips, or leaves thin out and vanish with distance.
         private static void ImportCutout(string path)
@@ -55,6 +70,77 @@ namespace Hearthline.EditorTools
             importer.anisoLevel = 4;
             importer.maxTextureSize = Size;
             importer.SaveAndReimport();
+        }
+
+        // ---- Needle cluster (pine and hemlock cards, ADR 0027) ----------------------------------------------
+
+        /// <summary>
+        /// A conifer spray on a transparent background: a twig up the middle of the card with side shoots, each
+        /// bristling with short needles. Near-white, tinted by the palette; alpha is the cut-out.
+        /// </summary>
+        private static void GenerateNeedleCluster()
+        {
+            var rng = new System.Random(27);
+            var shade = new float[Size, Size];
+            var alpha = new float[Size, Size];
+            void Line(float x0, float y0, float x1, float y1, float tone, int thick)
+            {
+                float len = Mathf.Max(Mathf.Abs(x1 - x0), Mathf.Abs(y1 - y0)) * Size;
+                for (float k = 0f; k <= 1f; k += 0.5f / Mathf.Max(1f, len))
+                {
+                    int x = (int)(Mathf.Lerp(x0, x1, k) * Size), y = (int)(Mathf.Lerp(y0, y1, k) * Size);
+                    for (int w = -thick; w <= thick; w++)
+                    {
+                        int xx = Mathf.Clamp(x + w, 0, Size - 1), yy = Mathf.Clamp(y, 0, Size - 1);
+                        shade[xx, yy] = Mathf.Max(shade[xx, yy], tone);
+                        alpha[xx, yy] = 1f;
+                    }
+                }
+            }
+            // The twig, bottom to top, and side shoots fanning out and up.
+            Line(0.5f, 0.05f, 0.5f, 0.92f, 0.45f, 2);
+            for (int s = 0; s < 22; s++)
+            {
+                float y = 0.12f + s * 0.036f;
+                float side = s % 2 == 0 ? -1f : 1f;
+                float len = 0.34f * (1f - Mathf.Abs(y - 0.48f) * 1.1f) + 0.06f;
+                float ex = 0.5f + side * len, ey = y + len * 0.45f;
+                Line(0.5f, y, ex, ey, 0.5f, 1);
+                // Needles along the shoot, both sides, angled forward.
+                int count = (int)(len * 190f);
+                for (int i = 0; i < count; i++)
+                {
+                    float t = i / (float)count;
+                    float px = Mathf.Lerp(0.5f, ex, t), py = Mathf.Lerp(y, ey, t);
+                    float nl = 0.045f + (float)rng.NextDouble() * 0.03f;
+                    float tone = 0.68f + 0.32f * (float)rng.NextDouble();
+                    foreach (float up in new[] { -1f, 1f })
+                    {
+                        float ang = Mathf.Atan2(ey - y, ex - 0.5f) + up * (0.7f + (float)rng.NextDouble() * 0.5f);
+                        Line(px, py, px + Mathf.Cos(ang) * nl, py + Mathf.Sin(ang) * nl, tone, 1);
+                    }
+                }
+            }
+            // Bleed colour into the transparent pixels so filtering doesn't draw dark fringes.
+            for (int pass = 0; pass < 8; pass++)
+            {
+                var next = (float[,])shade.Clone();
+                for (int y = 1; y < Size - 1; y++)
+                for (int x = 1; x < Size - 1; x++)
+                {
+                    if (alpha[x, y] > 0f || shade[x, y] > 0f) continue;
+                    float sum = 0f; int n = 0;
+                    for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++)
+                        if (shade[x + i, y + j] > 0f) { sum += shade[x + i, y + j]; n++; }
+                    if (n > 0) next[x, y] = sum / n;
+                }
+                shade = next;
+            }
+            Write(System.IO.Path.GetFileName(NeedleClusterPath), (x, y) =>
+            {
+                float s = shade[x, y] > 0f ? shade[x, y] : 0.8f;
+                return new Color(s, s, s, alpha[x, y]);
+            }, withAlpha: true);
         }
 
         // ---- Leaf cluster (leaf cards, ADR 0020) ------------------------------------------------------------

@@ -75,3 +75,31 @@ look cheap.
     coves;
   - the deer-sight PlayMode test now finds a clear line of sight, because in the forest a trunk can block
     the straight one. That's the forest working, not a bug.
+
+## Revised: leaf-card crowns (Travis, 2026-11-18: "the trees could not be lollipops")
+
+The first forest had solid, faceted crowns, which read as lollipops next to Travis's Valheim reference. In
+that reference, crowns are clusters of cut-out leaf sprays on visible limbs, with light glowing through.
+So every tree now uses the ADR 0020 leaf-card method, generalised in `forest_kit.py` (`Builder`):
+- **Limbs and cards:** limbs reach into one or more crown ellipsoids per species. Cards cluster at the limb
+  ends, plus a shell that fills out the silhouette. Card normals bend outward from the nearest crown, crown
+  shading is baked into vertex colour, and the bark is wrapped round each limb.
+- **Species shapes:**
+  - oak: one broad crown;
+  - poplar: a tall, narrow crown;
+  - hickory: two masses;
+  - pine: five needle tufts on short limbs, plus dead stubs lower down;
+  - hemlock: seven drooping tiers;
+  - dogwood: flat layers.
+
+  Rhododendron, laurel and saplings are card bushes too.
+- **Far versions:** a few dozen big cards in the same silhouette, so distant trees stay ragged, not round.
+- **Card materials:**
+  - `HL_LeafCard` (oak, hickory, laurel), `HL_LeafCardLight` (poplar, dogwood, saplings),
+    `HL_LeafCardDark` (rhododendron) and `HL_NeedleCard` (pine, hemlock);
+  - `TextureForge` adds a needle spray, `needlecluster_albedo.png`;
+  - light through the leaves is raised from 0.35 to 0.6 on all cards, for the sunlit glow.
+- **Cost:** about 780 faces for an oak (330–650 for the others), 30–50 for the far versions. 66–71 fps in
+  editor Play Mode, the same as the solid crowns.
+- **Still to do in later steps:** the kudzu and old bushes are still solid blobs; the colour and the glow
+  through the leaves belong to the light-and-colour step; the grass is the ground step.

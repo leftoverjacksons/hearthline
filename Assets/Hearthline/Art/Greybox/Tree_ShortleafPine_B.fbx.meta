@@ -7,8 +7,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: HL_Bark
+    second: {fileID: 2100000, guid: 1cd26f2c1f4e1b145b78504b50391142, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: HL_BarkLight
     second: {fileID: 2100000, guid: 2ebef484142c4a849b014c3c297c8f74, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: HL_NeedleCard
+    second: {fileID: 2100000, guid: a2f42f186345c4b43b1f72ae7984be19, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule

@@ -17,6 +17,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: HL_NeedleCard
+    second: {fileID: 2100000, guid: a2f42f186345c4b43b1f72ae7984be19, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: HL_Pine
     second: {fileID: 2100000, guid: 7698bc5931baf9144ba9863a1c62c76f, type: 2}
   materials:

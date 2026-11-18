@@ -18,6 +18,9 @@ namespace Hearthline.EditorTools
         public const string Folder = "Assets/Hearthline/Art/Greybox";
         public const string MaterialFolder = Folder + "/Materials";
         public const string LeafCardMaterial = "HL_LeafCard";
+        public const string NeedleCardMaterial = "HL_NeedleCard";
+        /// <summary>Leaf and needle card materials: HL_LeafCard, its Light and Dark tints, and HL_NeedleCard.</summary>
+        public static bool IsCard(string name) => name.StartsWith(LeafCardMaterial) || name == NeedleCardMaterial;
 
         [Serializable] private sealed class Rgb { public float r, g, b; }
 
@@ -142,10 +145,11 @@ namespace Hearthline.EditorTools
             material.SetFloat("_BumpScale", 0.9f);
             if (normal != null) material.EnableKeyword("_NORMALMAP"); else material.DisableKeyword("_NORMALMAP");
             ApplyWind(material, name);
-            if (name == LeafCardMaterial)
+            if (IsCard(name))
             {
-                // Leaf cards (ADR 0020): a cut-out spray of leaves per quad, crown shading baked into the mesh.
-                albedo = TextureForge.LeafCluster();
+                // Leaf cards (ADR 0020, 0027): a cut-out spray of leaves or needles per quad, crown shading baked
+                // into the mesh.
+                albedo = name == NeedleCardMaterial ? TextureForge.NeedleCluster() : TextureForge.LeafCluster();
                 material.SetTexture("_BaseMap", albedo);
                 material.SetTextureScale("_BaseMap", Vector2.one);
                 material.SetFloat("_Cull", 0f);
@@ -179,7 +183,8 @@ namespace Hearthline.EditorTools
                 case "HL_Grass": case "HL_GrassDry": case "HL_Flower": case "HL_FlowerPink": wind = (0.22f, 0f, 0.35f); break;
                 case "HL_Leaves": case "HL_LeavesLight": case "HL_LeavesDark": case "HL_Berry": wind = (0.03f, 0.3f, 0.25f); break;
                 case "HL_Pine": wind = (0.02f, 1f, 0.1f); break;
-                case LeafCardMaterial: wind = (0.018f, 2.5f, 0.3f); break;
+                case LeafCardMaterial: case "HL_LeafCardLight": case "HL_LeafCardDark": wind = (0.018f, 2.5f, 0.3f); break;
+                case NeedleCardMaterial: wind = (0.012f, 3f, 0.15f); break;
                 case "HL_Kudzu": wind = (0.025f, 0.2f, 0.3f); break;
                 default:
                     if (material.shader.name == "Hearthline/Foliage") material.shader = SceneBuildKit.DefaultLitMaterial().shader;
@@ -192,7 +197,8 @@ namespace Hearthline.EditorTools
             material.SetFloat("_HeightStart", wind.start);
             material.SetFloat("_Flutter", wind.flutter);
             material.SetFloat("_Wrap", 0.65f);
-            material.SetFloat("_Translucency", 0.35f);
+            // Light through the leaves is what makes a sunlit canopy glow (ADR 0027, the Valheim reference).
+            material.SetFloat("_Translucency", IsCard(name) ? 0.6f : 0.35f);
         }
 
         // Which generated surface a palette material wears, and how many times it repeats per metre.
