@@ -640,11 +640,13 @@ namespace Hearthline.EditorTools
                 return options[options.Length - 1].name;
             }
 
-            // Trees are drawn instanced; in and near the playable region each gets an invisible trunk collider.
+            // Trees are drawn instanced, each with its far version; in and near the playable region each gets an
+            // invisible trunk collider.
             void Tree(string model, float x, float z, float scale)
             {
                 float y = HeightAt(x, z) - 0.15f;
-                trees.Add(GreyboxKit.MeshOf(model), GreyboxKit.MaterialsOf(model), Matrix4x4.TRS(new Vector3(x, y, z), Quaternion.Euler(0f, R(0, 360), 0f), Vector3.one * scale), 60f);
+                trees.Add(GreyboxKit.MeshOf(model), GreyboxKit.MaterialsOf(model), Matrix4x4.TRS(new Vector3(x, y, z), Quaternion.Euler(0f, R(0, 360), 0f), Vector3.one * scale), 60f,
+                    GreyboxKit.MeshOf(model + "_Far"), GreyboxKit.MaterialsOf(model + "_Far"));
                 if (!InRegion(x, z, 40f)) return;
                 var trunk = new GameObject("Trunk").AddComponent<CapsuleCollider>();
                 trunk.transform.SetParent(trunks, false);
@@ -656,25 +658,67 @@ namespace Hearthline.EditorTools
             void Cover(string model, float x, float z, float scale, float sink = 0.05f) =>
                 cover.Add(GreyboxKit.MeshOf(model), GreyboxKit.MaterialsOf(model), Matrix4x4.TRS(new Vector3(x, HeightAt(x, z) - sink, z), Quaternion.Euler(0f, R(0, 360), 0f), Vector3.one * scale), 40f);
 
-            // Trees where the land grows them: thick in the forest, pines up the mountain, broadleaf by the water,
-            // the odd lone oak in the meadows; none on cliffs.
-            for (float gx = -WorldSize / 2f; gx < WorldSize / 2f; gx += 8f)
-            for (float gz = -WorldSize / 2f; gz < WorldSize / 2f; gz += 8f)
+            // The forest (ADR 0027): southern Appalachian woods, closed canopy almost everywhere. Species follow the
+            // ground: hemlock and poplar along the creeks, poplar and oak in the damp coves, oak and hickory on the
+            // slopes, shortleaf pine on dry ridges and in old fields, dogwood at the edges. Close spacing in and
+            // around the playable square, wider in the backdrop (seen far off, as far versions).
+            string Species(float forest, float moist, float water, float high)
             {
-                float x = gx + R(0, 8), z = gz + R(0, 8);
-                float forest = (float)Map.ForestAt(x, z), slope = (float)Map.SlopeAt(x, z), high = HeightAt(x, z) - (float)Map.HomeHeight;
-                if (slope > 1.1f) continue;
-                double chance = forest * 0.85 + 0.025;
-                if (rnd.NextDouble() > chance || !Clear(x, z, 8f)) continue;
-                bool wet = F.Water(x, z) < 14f;
-                if (high > 90f) Tree(Pick(("Tree_Pine", 5), ("Tree_Broadleaf_C", 1)), x, z, R(0.8, 1.15));
-                else if (forest > 0.72f) Tree(Pick(("Tree_Tall_Hollow", 3), ("Tree_Pine", 2), ("Tree_Broadleaf_B", 1)), x, z, R(0.9, 1.3));
-                else if (wet) Tree(Pick(("Tree_Broadleaf_B", 3), ("Tree_Broadleaf_C", 3), ("Tree_Oak", 1)), x, z, R(0.9, 1.3));
-                else if (forest > 0.3f) Tree(Pick(("Tree_Oak", 3), ("Tree_Broadleaf_B", 3), ("Tree_Broadleaf_C", 2), ("Tree_Pine", 2)), x, z, R(0.8, 1.2));
-                else Tree(Pick(("Tree_Oak", 2), ("Tree_Broadleaf_B", 2), ("Tree_Broadleaf_C", 1)), x, z, R(1.0, 1.35));
+                if (forest < 0.4f) return Pick(("Tree_ShortleafPine_A", 3), ("Tree_ShortleafPine_B", 2), ("Tree_Dogwood_A", 2), ("Tree_Hickory_B", 1));
+                if (water < 16f) return Pick(("Tree_Hemlock_A", 5), ("Tree_Poplar_A", 2), ("Tree_Poplar_B", 2), ("Tree_WhiteOak_B", 1));
+                if (moist > 0.5f) return Pick(("Tree_Poplar_A", 3), ("Tree_Poplar_B", 3), ("Tree_WhiteOak_A", 2), ("Tree_Hemlock_A", 1), ("Tree_Hickory_A", 1), ("Tree_Dogwood_A", 1));
+                if (high > 70f || moist < 0.25f) return Pick(("Tree_ShortleafPine_A", 3), ("Tree_ShortleafPine_B", 3), ("Tree_WhiteOak_A", 2), ("Tree_Hickory_A", 2), ("Tree_Hickory_B", 1));
+                return Pick(("Tree_WhiteOak_A", 3), ("Tree_WhiteOak_B", 3), ("Tree_Hickory_A", 2), ("Tree_Hickory_B", 2), ("Tree_Poplar_A", 1), ("Tree_ShortleafPine_A", 1), ("Tree_Dogwood_A", 1));
             }
-            // A big shade tree at the edge of the yard, as in the references.
-            Tree("Tree_Broadleaf_B", -24f, -12f, 1.35f);
+            float near = Size / 2f + 60f;
+            for (float gx = -WorldSize / 2f; gx < WorldSize / 2f; gx += 6f)
+            for (float gz = -WorldSize / 2f; gz < WorldSize / 2f; gz += 6f)
+            {
+                bool backdrop = Mathf.Abs(gx) > near || Mathf.Abs(gz) > near;
+                // In the backdrop, one cell in two (offset rows), and bigger trees, so it reads as forest from afar.
+                if (backdrop && ((int)((gx + WorldSize) / 6f) + (int)((gz + WorldSize) / 6f)) % 2 == 1) continue;
+                float x = gx + R(0, 6), z = gz + R(0, 6);
+                float forest = (float)Map.ForestAt(x, z), slope = (float)Map.SlopeAt(x, z), high = HeightAt(x, z) - (float)Map.HomeHeight;
+                if (slope > 1.25f) continue;
+                if (rnd.NextDouble() > forest * 0.95 + 0.02 || !Clear(x, z, 6f)) continue;
+                float moist = (float)Map.MoistureAt(x, z), water = F.Water(x, z);
+                Tree(Species(forest, moist, water, high), x, z, R(0.85, 1.15) * (backdrop ? 1.15f : 1f));
+            }
+            // A big white oak shading the edge of the yard.
+            Tree("Tree_WhiteOak_A", -24f, -12f, 1.15f);
+
+            // The understory: rhododendron thickets along the creeks and in the coves (solid, like a real laurel
+            // hell), mountain laurel on the drier slopes, saplings and stumps under the canopy.
+            var thickets = new GameObject("Thickets").transform;
+            thickets.SetParent(props, false);
+            for (float gx = -Size / 2f - 30f; gx < Size / 2f + 30f; gx += 5f)
+            for (float gz = -Size / 2f - 30f; gz < Size / 2f + 30f; gz += 5f)
+            {
+                float x = gx + R(0, 5), z = gz + R(0, 5);
+                if (!Clear(x, z, 4f)) continue;
+                float forest = (float)Map.ForestAt(x, z), moist = (float)Map.MoistureAt(x, z), water = F.Water(x, z);
+                if (forest < 0.45f) continue;
+                double roll = rnd.NextDouble();
+                bool creek = water > 2.5f && water < 14f, cove = Map.IsDeepCove(x, z);
+                if ((creek && roll < 0.42) || (cove && roll < 0.25))
+                {
+                    string model = rnd.NextDouble() < 0.5 ? "Rhododendron_A" : "Rhododendron_B";
+                    float scale = R(0.8, 1.2);
+                    Cover(model, x, z, scale, 0.25f);
+                    if (InRegion(x, z, 10f))
+                    {
+                        var body = new GameObject("Thicket").AddComponent<CapsuleCollider>();
+                        body.transform.SetParent(thickets, false);
+                        body.transform.position = new Vector3(x, HeightAt(x, z) + 1.2f * scale, z);
+                        body.radius = 1.5f * scale;
+                        body.height = 2.6f * scale;
+                        body.gameObject.isStatic = true;
+                    }
+                }
+                else if (moist < 0.35f && roll < 0.16) Cover("Laurel_A", x, z, R(0.8, 1.2), 0.2f);
+                else if (roll < 0.06) Cover("Sapling_A", x, z, R(0.7, 1.3), 0.1f);
+                else if (roll < 0.075) Cover("Stump_A", x, z, R(0.8, 1.2), 0.15f);
+            }
 
             // Grass, flowers and ferns in the playable region: dense, instanced, no colliders.
             const float coverStep = 2.1f;
@@ -690,8 +734,8 @@ namespace Hearthline.EditorTools
                 if (Map.SlopeAt(x, z) > 0.9) continue;
                 double roll = rnd.NextDouble();
                 if (yard) { if (roll < 0.08) Cover("Grass_Clump", x, z, R(0.6, 0.9)); }
-                else if (forest > 0.72f) { if (roll < 0.18) Cover("Fern", x, z, R(0.9, 1.5)); }
-                else if (forest > 0.35f) { if (roll < 0.14) Cover("Fern", x, z, R(0.8, 1.3)); else if (roll < 0.2) Cover("Grass_Clump", x, z, R(0.8, 1.2)); }
+                else if (forest > 0.72f) { if (roll < 0.2 + moist * 0.15) Cover("Fern", x, z, R(0.9, 1.5)); }
+                else if (forest > 0.35f) { if (roll < 0.14) Cover("Fern", x, z, R(0.8, 1.3)); else if (roll < 0.17) Cover("Grass_Clump", x, z, R(0.7, 1.0)); }
                 else if (water < 6f) { if (roll < 0.45) Cover("Grass_Clump", x, z, R(1.0, 1.6)); }
                 else
                 {
@@ -709,7 +753,7 @@ namespace Hearthline.EditorTools
                 bool edge = forest > 0.2f && forest < 0.5f, roadside = road < 20f, woods = forest >= 0.5f;
                 double roll = rnd.NextDouble();
                 if ((edge || roadside) && roll < 0.2) Cover("Kudzu_Mound", x, z, R(0.7, 1.3), 0.3f);
-                else if (woods && roll < 0.3) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.7, 1.3), 0.2f);
+                else if (woods && roll < 0.06) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.7, 1.3), 0.2f);
                 else if (edge && roll < 0.35) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.6, 1.1), 0.2f);
                 else if (roll < 0.03) Cover(rnd.NextDouble() < 0.5 ? "Bush_A" : "Bush_B", x, z, R(0.6, 1.1), 0.2f);
             }
@@ -929,7 +973,7 @@ namespace Hearthline.EditorTools
         {
             if (HeightAt(x, z) > Map.HomeHeight + 55 || Map.SlopeAt(x, z) > 0.7) return Ground.Ridge;
             double f = Map.ForestAt(x, z);
-            return f > 0.72 ? Ground.DeepWoods : f > 0.35 ? Ground.Woods : Ground.Field;
+            return Map.IsDeepCove(x, z) ? Ground.DeepWoods : f > 0.35 ? Ground.Woods : Ground.Field;
         }
 
         /// <summary>
@@ -966,6 +1010,8 @@ namespace Hearthline.EditorTools
                     votes[(int)GroundAt(-Size / 2f + (i + (a + 0.5f) / 3f) * tile, -Size / 2f + (j + (b + 0.5f) / 3f) * tile)]++;
                 int best = 0;
                 for (int k = 1; k < 4; k++) if (votes[k] > votes[best]) best = k;
+                // Coves are narrow and damp; a third of the tile is enough to make it a hollow.
+                if (votes[(int)Ground.DeepWoods] >= 3) best = (int)Ground.DeepWoods;
                 kind[i, j] = (Ground)best;
             }
             var done = new bool[n, n];

@@ -87,5 +87,27 @@ namespace Hearthline.Tests
             Assert.That(seen, Has.Member("road"));
             Assert.That(seen, Has.Member("creek"));
         }
+
+        [Test]
+        public void TheLandIsForestWithClearingsWherePeopleMadeThem()
+        {
+            // ADR 0027: southern Appalachia is woods almost everywhere.
+            int cells = 0, wooded = 0, coves = 0;
+            for (double x = -280; x <= 280; x += 10)
+                for (double z = -280; z <= 280; z += 10)
+                {
+                    if (Map.DistanceToWater(x, z, out _) < 6 || WorldMap.DistanceToPath(Map.Road, x, z) < 12) continue;
+                    cells++;
+                    if (Map.ForestAt(x, z) > 0.5) wooded++;
+                    if (Map.IsDeepCove(x, z)) coves++;
+                }
+            Assert.That(wooded / (double)cells, Is.GreaterThan(0.75), "Mostly under trees.");
+            Assert.That(coves, Is.GreaterThan(0), "Some damp, deep coves.");
+            Assert.That(coves / (double)cells, Is.LessThan(0.2), "But deep woods (Thin 1) stay rare.");
+            Assert.That(Map.ForestAt(0, 0), Is.LessThan(0.1), "The homestead is a clearing.");
+            foreach (Vec2 r in Map.RuinSites) Assert.That(Map.ForestAt(r.X, r.Z), Is.LessThan(0.35), "Old fields around a ruin.");
+            Assert.That(Map.ForestAt(Map.ElderWorks.X, Map.ElderWorks.Z), Is.LessThan(0.2), "The Elder Works pad is open.");
+            Assert.That(Map.ForestAt(0, 230), Is.GreaterThan(0.4).Or.LessThan(0.1), "Up the ridges: forest, or now and then a bald.");
+        }
     }
 }

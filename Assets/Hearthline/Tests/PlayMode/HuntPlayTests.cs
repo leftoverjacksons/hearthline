@@ -57,6 +57,17 @@ namespace Hearthline.Tests.PlayMode
             Transform deer = _director.Deer.transform;
             Vector3 spot = deer.position + deer.forward * distance;
             if (NavMesh.SamplePosition(spot, out NavMeshHit hit, 6f, NavMesh.AllAreas)) spot = hit.position;
+            // In the forest (ADR 0027) a trunk or thicket can stand between: look around for a clear line of sight.
+            for (int turn = 0; turn < 24; turn++)
+            {
+                Vector3 dir = Quaternion.Euler(0f, turn * 15f, 0f) * deer.forward;
+                Vector3 tryAt = deer.position + dir * distance;
+                if (!NavMesh.SamplePosition(tryAt, out NavMeshHit near, 3f, NavMesh.AllAreas)) continue;
+                Vector3 eye = deer.position + Vector3.up * 1.2f, head = near.position + Vector3.up * 1.4f;
+                if (Physics.Linecast(eye, head, out RaycastHit block, ~0, QueryTriggerInteraction.Ignore) && block.transform.root != _player.transform.root && block.transform.root != deer.root) continue;
+                spot = near.position;
+                break;
+            }
             var body = _player.GetComponent<CharacterController>();
             body.enabled = false;
             _player.transform.position = spot + Vector3.up * 0.1f;

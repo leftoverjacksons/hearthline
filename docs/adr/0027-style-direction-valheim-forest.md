@@ -33,3 +33,45 @@ look cheap.
 - Closed forest shortens sight lines. Hunting distances, enemy AI ranges and the deer's senses will want
   retuning (Travis tunes).
 - NEEDS' "leaf-card oak vs blob trees" question is settled: both give way to the modelled trees.
+
+## Built: the forest (spec step 3, done before step 2 at Travis's say, 2026-11-18)
+
+- **The generator** makes forest the default:
+  - base forest density about 0.66–0.9, thickest where it's damp;
+  - thinned only on cliffs, on grassy balds above about 140 m, in a homestead clearing about 100 m
+    across, in the old fields round each ruin, and on the Elder Works pad.
+  - The northern mountain is now rounded Appalachian ridges running north-east, forested to the top.
+  - `WorldMap.IsDeepCove` (forest > 0.82, moisture > 0.47, about 8% of the region) is the only place
+    that counts as deep woods, which is Thin 1, silent and foggy. Everything else is ordinary woods, so the
+    forest isn't all hollows.
+  - Area tiles become a hollow when a third of their samples are cove.
+- **The trees** (`ArtSource/Greybox/forest_kit.py`, stored in `region_kit.blend` as `hl_forest`):
+  - species: white oak, tulip poplar, hickory, shortleaf pine (two shapes each), eastern hemlock and
+    flowering dogwood;
+  - each has a `_Far` version of about 20 vertices;
+  - understory: rhododendron (two shapes), mountain laurel, sapling and stump.
+
+  They're placed by site:
+  - hemlock and poplar along the creeks;
+  - poplar and oak in the coves;
+  - pine and oak on dry ridges and in old fields;
+  - oak and hickory elsewhere;
+  - dogwood at the edges.
+
+  Trees are about 6 m apart in and near the playable square, wider in the backdrop: 16,500 in all.
+  Rhododendron thickets along the creeks are solid (capsule colliders), like a real laurel hell.
+- **`InstancedScatter`:**
+  - far versions past 120 m;
+  - no shadows past 110 m (the pipeline's shadow distance);
+  - cells outside the camera's view are skipped;
+  - a lookup table makes building it fast.
+- **Performance** (editor Play Mode, RTX 2070, 1975×719 editor window):
+  - 47 fps before the culling, 63–69 after;
+  - 101–120 with the trees switched off.
+
+  A build runs faster than the editor. The trees are the biggest cost, so the next passes should watch it.
+- **Tests:**
+  - a new `WorldGenTests` check: the land is forest, with clearings where people made them and rare
+    coves;
+  - the deer-sight PlayMode test now finds a clear line of sight, because in the forest a trunk can block
+    the straight one. That's the forest working, not a bug.

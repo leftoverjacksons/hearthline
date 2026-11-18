@@ -159,11 +159,13 @@ namespace Hearthline.Sim.World
             if (DistanceToPath(Road, x, z) < 10) return "road";
             if (DistanceToWater(x, z, out _) < 8) return "creek";
             if (HeightAt(x, z) > HomeHeight + 55 || SlopeAt(x, z) > 0.7) return "ridge";
-            double f = ForestAt(x, z);
-            if (f > 0.72) return "deep_woods";
-            if (f > 0.35) return "woods";
+            if (IsDeepCove(x, z)) return "deep_woods";
+            if (ForestAt(x, z) > 0.35) return "woods";
             return "field";
         }
+
+        /// <summary>The deep woods: a damp cove under the thickest canopy. Rare; most of the land is ordinary woods.</summary>
+        public bool IsDeepCove(double x, double z) => ForestAt(x, z) > 0.82 && MoistureAt(x, z) > 0.47;
 
         public static double DistanceToPath(List<PathPoint> path, double x, double z)
         {
@@ -211,6 +213,7 @@ namespace Hearthline.Sim.World
             Roads(map);
             Ruins(map, new SimRandom(SimRandom.Seed(seed, 93)));
             ElderWorks(map);
+            Clearings(map);
             ComputeSlope(map);
             DescribeSites(map);
             return map;
@@ -234,11 +237,13 @@ namespace Hearthline.Sim.World
                 double x = p.X, z = p.Z;
                 // The valley floor: low rolling ground.
                 double h = 7 * n.Fbm(x / 200, z / 200, 4) + 2.5 * n.Fbm(x / 45 + 13, z / 45 + 7, 3);
-                // A mountain rising to the north, its front wandering; ridged so it has spurs and gullies.
+                // Old Appalachian ridges rising to the north: rounded, worn down, in long parallel ridges running
+                // north-east with coves between them (erosion cuts the gullies). Forested to the top.
                 double front = 190 + 60 * n.Fbm(x / 380 + 3, 1.7, 3);
                 double m = Smooth(front, front + 330, z);
-                double ridged = 1 - Math.Abs(n.Fbm(x / 260 + 9, z / 260 + 4, 5));
-                h += m * s.MountainHeight * (0.45 + 0.55 * ridged * ridged);
+                double rounded = 0.5 + 0.5 * n.Fbm(x / 300 + 9, z / 300 + 4, 4);
+                double ridges = 0.5 + 0.5 * Math.Sin((x * 0.55 + z) / 95 + 2.2 * n.Fbm(x / 400 + 2, z / 400 + 8, 2));
+                h += m * s.MountainHeight * (0.5 + 0.35 * rounded + 0.15 * ridges * ridges);
                 // Foothills between the valley and the mountain; low hills closing the valley east and west.
                 h += Smooth(front - 180, front, z) * 28 * (0.5 + 0.5 * n.Fbm(x / 110 + 21, z / 110 + 2, 4));
                 h += Smooth(260, 560, Math.Abs(x)) * 45 * (0.4 + 0.6 * n.Fbm(x / 160 + 5, z / 160 + 31, 4));
@@ -533,13 +538,16 @@ namespace Hearthline.Sim.World
                 double wet = Math.Min(1, Math.Log(1 + map.Flow[k]) / Math.Log(1 + s.StreamCells));
                 double low = 1 - Smooth(0, 40, map.Height[k] - map.HomeHeight);
                 map.Moisture[k] = (float)Math.Max(0, Math.Min(1, wet * 0.6 + low * 0.25 + 0.15 * n.Fbm(p.X / 90 + 40, p.Z / 90, 3)));
-                // Forest: patches and edges, thinner on steep rock and high up, thick along water; clear at home.
-                double patches = 0.5 + 0.5 * n.Fbm(p.X / 140 + 70, p.Z / 140 + 11, 4);
-                double steep = Smooth(0.6, 1.2, map.Slope[k]);
-                double alpine = Smooth(map.HomeHeight + 160, map.HomeHeight + 230, map.Height[k]);
-                double home = Smooth(s.HomeRadius * 1.6, s.HomeRadius * 3.2, p.Length);
-                double forest = (patches * 1.25 - 0.3) + map.Moisture[k] * 0.35;
-                forest *= (1 - steep * 0.85) * (1 - alpine * 0.9) * home;
+                // Forest (ADR 0027): southern Appalachia is woods almost everywhere. Closed canopy by default,
+                // thickest in damp coves; thinner on dry spurs; open only on cliffs, the odd grassy bald up high,
+                // and where people cleared it (home here; ruins and the road later).
+                double variety = n.Fbm(p.X / 140 + 70, p.Z / 140 + 11, 4);
+                double steep = Smooth(0.95, 1.5, map.Slope[k]);
+                double high = map.Height[k] - map.HomeHeight;
+                double bald = Smooth(140, 185, high) * Smooth(0.15, 0.45, n.Fbm(p.X / 120 + 5, p.Z / 120 + 51, 3));
+                double home = Smooth(s.HomeRadius * 1.25, s.HomeRadius * 2.1, p.Length);  // a clearing about 100 m across
+                double forest = 0.66 + 0.2 * variety + 0.25 * map.Moisture[k];
+                forest *= (1 - steep * 0.8) * (1 - bald * 0.9) * home;
                 map.Forest[k] = (float)Math.Max(0, Math.Min(1, forest));
             }
         }
@@ -804,6 +812,21 @@ namespace Hearthline.Sim.World
                 map.Height[k] = (float)(map.Height[k] * (1 - w) + target * w);
             }
             map.ElderWorksHeight = target;
+        }
+
+        // Old fields around each ruin going back to scrub, and the Elder Works' pad: thinner forest there.
+        private static void Clearings(WorldMap map)
+        {
+            for (int j = 0; j < map.N; j++)
+            for (int i = 0; i < map.N; i++)
+            {
+                Vec2 p = map.PositionOf(i, j);
+                double keep = 1;
+                foreach (Vec2 r in map.RuinSites) keep = Math.Min(keep, 0.25 + 0.75 * Smooth(22, 55, Vec2.Distance(p, r)));
+                keep = Math.Min(keep, 0.15 + 0.85 * Smooth(WorldMap.ElderWorksRadius * 1.3, WorldMap.ElderWorksRadius * 2.2, Vec2.Distance(p, map.ElderWorks)));
+                int k = map.Index(i, j);
+                map.Forest[k] *= (float)keep;
+            }
         }
 
         // What's around each ruin site, so content siting can choose a kind for it.

@@ -137,6 +137,7 @@ namespace Hearthline.EditorTools
             flash.intensity = 4f;
             flash.color = new Color(1f, 0.75f, 0.45f);
             flash.shadows = LightShadows.None;
+            flash.enabled = false; // lit only for a moment when a shot is fired
             rig.Weapon = player.AddComponent<PlayerWeapon>();
             rig.Weapon.Configure(tracer, flash);
         }
