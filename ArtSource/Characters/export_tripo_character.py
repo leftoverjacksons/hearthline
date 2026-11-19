@@ -24,6 +24,41 @@ bpy.ops.import_scene.fbx(filepath=SOURCE)
 arm = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
 meshes = [o for o in bpy.data.objects if o.type == 'MESH']
 
+# A rigid head. Tripo's auto-rig ties the mouth and chin about 30% to the neck, so when an animation turns or tilts
+# the head, the lower face lags and the face shears. Vertices above the throat go fully to the head bone, with a
+# blend across the throat so the neck still bends. Only vertices already on the head or neck change.
+bpy.context.view_layer.update()
+bones = arm.data.bones
+head_z = (arm.matrix_world @ bones["mixamorig:Head"].head_local).z
+neck_z = (arm.matrix_world @ bones["mixamorig:Neck"].head_local).z
+span = head_z - neck_z
+BLEND_FROM, BLEND_TO = neck_z + 0.1 * span, neck_z + 0.45 * span  # throat .. under the chin
+def smooth(a, b, x):
+    t = min(1.0, max(0.0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+for m in meshes:
+    head_g, neck_g = m.vertex_groups.get("mixamorig:Head"), m.vertex_groups.get("mixamorig:Neck")
+    if head_g is None or neck_g is None:
+        continue
+    changed = 0
+    for v in m.data.vertices:
+        ws = {g.group: g.weight for g in v.groups if g.weight > 0}
+        if not ws or not set(ws) <= {head_g.index, neck_g.index}:
+            continue
+        z = (m.matrix_world @ v.co).z
+        target = smooth(BLEND_FROM, BLEND_TO, z)
+        total = sum(ws.values())
+        h = ws.get(head_g.index, 0.0) / total
+        if target <= h:
+            continue
+        head_g.add([v.index], target, 'REPLACE')
+        if target >= 1.0:
+            neck_g.remove([v.index])
+        else:
+            neck_g.add([v.index], 1.0 - target, 'REPLACE')
+        changed += 1
+    print("RIGID HEAD: %d vertices moved to the head" % changed)
+
 # Scale so the top of the mesh is at HEIGHT, feet on the ground.
 bpy.context.view_layer.update()
 def bounds():
