@@ -3,9 +3,10 @@
 Drop reference images here for Claude (and anyone else) to work from. This folder sits outside `Assets/`,
 so Unity does not import it.
 
-**Only this README is in git.** The repository is public and most reference images belong to someone else,
-so everything else in this folder is git-ignored. Keep a copy elsewhere if you want it backed up. If you make
-something yourself and want it in the repo, move it under `docs/art/`.
+**New files here are git-ignored.** The repository is public and reference images often belong to someone
+else. The images Travis generated himself (the people turnarounds, places and style images from 2026-11-18)
+were added on purpose with `git add -f`. To publish another image you made yourself, add it the same way. Never
+force-add someone else's work.
 
 ## Folders
 
