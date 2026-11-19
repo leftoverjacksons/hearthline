@@ -24,15 +24,17 @@ bpy.ops.import_scene.fbx(filepath=SOURCE)
 arm = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
 meshes = [o for o in bpy.data.objects if o.type == 'MESH']
 
-# A rigid head. Tripo's auto-rig ties the mouth and chin about 30% to the neck, so when an animation turns or tilts
-# the head, the lower face lags and the face shears. Vertices above the throat go fully to the head bone, with a
-# blend across the throat so the neck still bends. Only vertices already on the head or neck change.
+# A rigid head. Tripo's auto-rig ties the mouth, chin and cheeks partly to the neck (and faintly to the shoulders),
+# and hair beside the eyes to an arm, so when an animation turns the head or raises an arm the face shears. Every
+# vertex above the throat and within reach of the head goes to the head bone alone, with a blend to the neck across
+# the throat so the neck still bends. Shoulders, the pack and anything else out of reach keep their weights.
 bpy.context.view_layer.update()
 bones = arm.data.bones
-head_z = (arm.matrix_world @ bones["mixamorig:Head"].head_local).z
+head_p = arm.matrix_world @ bones["mixamorig:Head"].head_local
 neck_z = (arm.matrix_world @ bones["mixamorig:Neck"].head_local).z
-span = head_z - neck_z
+span = head_p.z - neck_z
 BLEND_FROM, BLEND_TO = neck_z + 0.1 * span, neck_z + 0.45 * span  # throat .. under the chin
+REACH = 1.6 * span  # horizontal distance from the head joint that still counts as head and hair
 def smooth(a, b, x):
     t = min(1.0, max(0.0, (x - a) / (b - a)))
     return t * t * (3 - 2 * t)
@@ -42,22 +44,22 @@ for m in meshes:
         continue
     changed = 0
     for v in m.data.vertices:
-        ws = {g.group: g.weight for g in v.groups if g.weight > 0}
-        if not ws or not set(ws) <= {head_g.index, neck_g.index}:
+        if not any(g.weight > 0 for g in v.groups):
             continue
-        z = (m.matrix_world @ v.co).z
-        target = smooth(BLEND_FROM, BLEND_TO, z)
-        total = sum(ws.values())
-        h = ws.get(head_g.index, 0.0) / total
-        if target <= h:
+        p = m.matrix_world @ v.co
+        if p.z <= BLEND_FROM or ((p.x - head_p.x) ** 2 + (p.y - head_p.y) ** 2) ** 0.5 > REACH:
             continue
+        target = smooth(BLEND_FROM, BLEND_TO, p.z)
+        for g in list(v.groups):
+            if g.group not in (head_g.index, neck_g.index):
+                m.vertex_groups[g.group].remove([v.index])
         head_g.add([v.index], target, 'REPLACE')
         if target >= 1.0:
             neck_g.remove([v.index])
         else:
             neck_g.add([v.index], 1.0 - target, 'REPLACE')
         changed += 1
-    print("RIGID HEAD: %d vertices moved to the head" % changed)
+    print("RIGID HEAD: %d vertices moved to the head (reach %.3f)" % (changed, REACH))
 
 # Scale so the top of the mesh is at HEIGHT, feet on the ground.
 bpy.context.view_layer.update()

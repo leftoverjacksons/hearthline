@@ -9,8 +9,9 @@ fixed, tick it and give the commit.
 - [ ] **The player's face looks off: shifted, and not as good as in Tripo.** (Travis, 2026-11-19.) Partly fixed on 2026-11-19, so check it in game.
   - **Not the export:** in a side-by-side render under the same light, my Blender export and the Tripo bridge import look the same in T-pose. The textures and material match, and mine is a bit sharper (4K).
   - **The cause:** the animation sheared her face. Tripo's auto-rig tied the mouth and chin about 30% to the neck bone, so any head turn or tilt in an animation pulled the lower face lopsided.
-  - **The fix:** `export_tripo_character.py` now makes the face move entirely with the head, blending only across the throat (527 vertices).
-  - **Left:** locks of hair in front of the face follow other bones and can smear across the brow in some poses. If it still looks off, compare against Tripo's own viewer, which uses a studio light.
+  - **The fix:** `export_tripo_character.py` now makes the face move entirely with the head, blending only across the throat.
+  - **Second pass (still distorted, Travis, 2026-11-19):** the first pass skipped any vertex with a trace of shoulder weight, which covered her cheeks and temples. A lock of hair at eye height was also tied to her left arm. Now every vertex above the throat and within reach of the head follows only the head and neck (1,038 vertices).
+  - **Left: the mesh itself.** Tripo's rigged export has about 19,000 triangles and only about 200 vertices on the front of the face. The face detail is mostly painted into the texture, and hair cards lie on her cheeks. If her face in Tripo's viewer looks better, that viewer is probably showing the model before it was cut down for rigging. Try exporting with a higher face count.
 - [ ] **The rifle doesn't sit right in her hands.** (Travis, 2026-11-19.) `GunVisuals` (Bridge) places the gun procedurally:
   - at the right hand plus `handOffset`;
   - when shouldered, from the right upper arm plus `shoulderedOffset`.

@@ -183,6 +183,7 @@ namespace Hearthline.Game
             for (int i = Birds.Count - 1; i >= 0; i--)
             {
                 Bird b = Birds[i];
+                if (b == null) { Birds.RemoveAt(i); continue; } // flown off and destroyed itself
                 if (b.Perched && Flat(b.transform.position - p) < flush) b.Flush(p);
                 if (b.Gone || (b.Perched && Flat(b.transform.position - p) > birdRing.y * 1.4f) || (b.Perched && Density <= 0f))
                 {
