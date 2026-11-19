@@ -35,13 +35,40 @@ Shader "Hearthline/GrassBlade"
             half4 _DryTip;
             float _TipLift, _RootShade, _DryAmount, _ClumpVariation, _BladeVariation, _Translucency, _RootAO, _AOFadeDistance;
             float _GroundNormalNear, _GroundNormalFar, _CameraFacing, _Roundness, _Radius;
-            float _WindStrength, _WindSpeed, _WindScale, _GustStrength;
+            float _WindStrength, _WindSpeed, _WindScale, _GustStrength, _Trample;
             float4 _Pusher; // position, radius
         CBUFFER_END
 
         TEXTURE2D(_HL_GroundMap); SAMPLER(sampler_HL_GroundMap);
         float4 _HL_GroundMapRect;
         float _HL_WindBoost, _HL_Wetness;
+        // Matting (TrampleField): r how hard the grass was pressed, gb the way it was pushed (0.5 is none).
+        TEXTURE2D(_HL_TrampleMap); SAMPLER(sampler_HL_TrampleMap);
+        float4 _HL_TrampleRect; // origin x, origin z, size; size 0 means none
+        // Desire paths (WearView): r wear 0..1; levels are short, dirt, bare (WearRules).
+        TEXTURE2D(_HL_WearMap); SAMPLER(sampler_HL_WearMap);
+        float4 _HL_WearRect;
+        float4 _HL_WearLevels;
+        half4 _HL_DirtColor;
+
+        float TrampleAt(float2 xz, out float2 dir)
+        {
+            dir = 0;
+            if (_HL_TrampleRect.z <= 0.0) return 0;
+            float2 uv = (xz - _HL_TrampleRect.xy) / _HL_TrampleRect.z;
+            if (any(uv <= 0.0) || any(uv >= 1.0)) return 0;
+            float4 tr = SAMPLE_TEXTURE2D_LOD(_HL_TrampleMap, sampler_HL_TrampleMap, uv, 0);
+            dir = tr.gb * 2.0 - 1.0;
+            return tr.r;
+        }
+
+        float WearAt(float2 xz)
+        {
+            if (_HL_WearRect.z <= 0.0) return 0;
+            float2 uv = (xz - _HL_WearRect.xy) / _HL_WearRect.z;
+            if (any(uv <= 0.0) || any(uv >= 1.0)) return 0;
+            return SAMPLE_TEXTURE2D_LOD(_HL_WearMap, sampler_HL_WearMap, uv, 0).r;
+        }
 
         struct BladeVertex
         {
@@ -86,8 +113,20 @@ Shader "Hearthline/GrassBlade"
             float pushDist = length(away);
             float push = saturate(1.0 - pushDist / max(_Pusher.w, 0.01)) * step(abs(root.y - _Pusher.y), 2.5);
             tip += away / max(pushDist, 1e-3) * push * h * 1.1;
+
+            // Matted where something walked through: laid over the way it was pushed, each blade a little off
+            // that line so it doesn't look combed, and stood back up as the trample map recovers.
+            float2 mat;
+            float press = saturate(TrampleAt(root.xz, mat) * _Trample);
+            if (dot(mat, mat) < 0.01) mat = fwd;
+            float sa, ca;
+            sincos((b.shape.w - 0.5) * 1.4, sa, ca);
+            mat = normalize(float2(mat.x * ca - mat.y * sa, mat.x * sa + mat.y * ca));
+            tip = lerp(tip, mat * h * 0.9, press);
+
             float bendAmount = length(tip);
             float tipY = sqrt(max(h * h - bendAmount * bendAmount * 0.6, h * h * 0.08)); // keeps the blade's length
+            tipY *= lerp(1.0, 0.22, press);
 
             float3 p0 = root;
             float3 p1 = root + float3(0.0, tipY * 0.55, 0.0);
@@ -144,6 +183,9 @@ Shader "Hearthline/GrassBlade"
                 o.groundNormalWS = v.groundNormalWS;
                 float2 groundUv = (b.rootFacing.xz - _HL_GroundMapRect.xy) / max(_HL_GroundMapRect.z, 1.0);
                 o.ground = SAMPLE_TEXTURE2D_LOD(_HL_GroundMap, sampler_HL_GroundMap, groundUv, 0).rgb;
+                // On a worn path the ground is dirt, so the roots there are dusty too (as RegionGround.shader).
+                float worn = smoothstep(_HL_WearLevels.x, _HL_WearLevels.z, WearAt(b.rootFacing.xz));
+                o.ground = lerp(o.ground, _HL_DirtColor.rgb, worn * 0.85);
                 o.data = float4(v.t, b.extra.z, b.extra.w, b.shape.w);
                 o.distFog = float2(distance(_WorldSpaceCameraPos, b.rootFacing.xyz), ComputeFogFactor(o.positionCS.z));
                 return o;

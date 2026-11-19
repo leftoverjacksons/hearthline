@@ -30,6 +30,10 @@ float4 _Shape;      // min height, max height, width, clump size
 float4 _Distance;   // full-density distance, radius, thinning exponent, width growth
 float4 _Planes[6];  // camera frustum, normals pointing in
 float _Density;
+// Desire paths (WearView): wear 0..1 per metre; levels are short, dirt, bare. _WearRect.z 0 means none.
+Texture2D<float> _WearMap;
+float4 _WearRect;   // origin x, origin z, size
+float4 _WearLevels;
 uint _Capacity;
 uint _VertsPerBlade;
 
@@ -85,7 +89,15 @@ void Place(uint3 id : SV_DispatchThreadID)
 
     // Fewer blades further away, each wider, so the field keeps its cover (Ghost of Tsushima's trick).
     float thin = d < _Distance.x ? 1.0 : pow(abs(_Distance.x / d), _Distance.z);
-    if (Rand(Hash(h + 2)) >= g.r * _Density * thin) return;
+    // Worn ground: short and sparse once a path shows, nothing on bare dirt.
+    float wear = 0.0;
+    if (_WearRect.z > 0.0)
+    {
+        float2 wuv = (xz - _WearRect.xy) / _WearRect.z;
+        if (all(wuv > 0.0) && all(wuv < 1.0)) wear = _WearMap.SampleLevel(linearClampSampler, wuv, 0);
+    }
+    float keep = 1.0 - smoothstep(_WearLevels.y, _WearLevels.z + 0.08, wear);
+    if (Rand(Hash(h + 2)) >= g.r * _Density * thin * keep) return;
 
     // Clumps: blades near the same Voronoi point share height, lean and colour, so the field has patches.
     float2 p = xz / _Shape.w;
@@ -106,6 +118,7 @@ void Place(uint3 id : SV_DispatchThreadID)
 
     float rim = smoothstep(_Distance.y, _Distance.y * 0.5, d); // shrink into the ground toward the edge
     float height = lerp(_Shape.x, _Shape.y, g.g) * clumpScale * lerp(0.6, 1.1, Rand(Hash(h + 3))) * rim;
+    height *= lerp(1.0, 0.3, smoothstep(_WearLevels.x * 0.5, _WearLevels.y, wear));
     if (height < 0.03) return;
     float width = _Shape.z * lerp(0.7, 1.3, Rand(Hash(h + 4))) * lerp(0.85, 1.35, g.g) * pow(max(thin, 0.04), -_Distance.w);
 
@@ -126,7 +139,8 @@ void Place(uint3 id : SV_DispatchThreadID)
     float facing = lerp(Rand(Hash(h + 5)) * 6.2831853, clumpFacing, 0.45);
     Blade b;
     b.rootFacing = float4(root, facing);
-    b.shape = float4(height, width, lerp(0.12, 0.5, Rand(Hash(h + 6))), Rand(Hash(h + 7)));
+    // Trodden blades stay bent over.
+    b.shape = float4(height, width, lerp(0.12, 0.5, Rand(Hash(h + 6))) + smoothstep(0.0, _WearLevels.y, wear) * 0.5, Rand(Hash(h + 7)));
     b.extra = float4(normal.x, normal.z, g.b, Rand(Hash(clump + 4)));
     _Blades[index] = b;
 }

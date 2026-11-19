@@ -80,6 +80,8 @@ namespace Hearthline.Game
         [SerializeField] private float gustStrength = 0.8f;
         [Tooltip("Blades within this distance of the player bend away (metres).")]
         [SerializeField] private float pushRadius = 0.9f;
+        [Tooltip("How far matted grass lies over where something walked through (TrampleField). 0 is off.")]
+        [SerializeField, Range(0f, 1.5f)] private float trample = 1f;
 
         private const int VertsPerBlade = 24; // 4 segments of 2 triangles; the last narrows to the tip
         private const int BladeStride = 48;
@@ -105,6 +107,8 @@ namespace Hearthline.Game
             public static readonly int Distance = Shader.PropertyToID("_Distance"), Planes = Shader.PropertyToID("_Planes");
             public static readonly int Density = Shader.PropertyToID("_Density"), Capacity = Shader.PropertyToID("_Capacity");
             public static readonly int VertsPerBlade = Shader.PropertyToID("_VertsPerBlade");
+            public static readonly int WearMap = Shader.PropertyToID("_WearMap"), WearRect = Shader.PropertyToID("_WearRect"), WearLevels = Shader.PropertyToID("_WearLevels");
+            public static readonly int WearGlobal = Shader.PropertyToID("_HL_WearMap"), WearRectGlobal = Shader.PropertyToID("_HL_WearRect"), WearLevelsGlobal = Shader.PropertyToID("_HL_WearLevels");
         }
 
         public void Configure(Texture2D grass, Vector3 grassOriginAndSize, Texture2D heights, Vector3 heightOriginAndCell,
@@ -185,6 +189,11 @@ namespace Hearthline.Game
             placer.SetVector(Ids.Distance, new Vector4(Mathf.Max(0.5f, fullDensityDistance), radius, thinning, widthGrowth));
             placer.SetVectorArray(Ids.Planes, _planeVectors);
             placer.SetFloat(Ids.Density, density);
+            // Desire paths, published by WearView; none bound means no wear.
+            Texture wear = Shader.GetGlobalTexture(Ids.WearGlobal);
+            placer.SetTexture(_place, Ids.WearMap, wear != null ? wear : Texture2D.blackTexture);
+            placer.SetVector(Ids.WearRect, wear != null ? Shader.GetGlobalVector(Ids.WearRectGlobal) : Vector4.zero);
+            placer.SetVector(Ids.WearLevels, Shader.GetGlobalVector(Ids.WearLevelsGlobal));
             placer.SetInt(Ids.Capacity, capacity);
             placer.SetInt(Ids.VertsPerBlade, VertsPerBlade);
             placer.Dispatch(_reset, 1, 1, 1);
@@ -247,6 +256,7 @@ namespace Hearthline.Game
             _material.SetFloat("_GustStrength", gustStrength);
             Vector3 p = pusher != null ? pusher.position : new Vector3(0f, -10000f, 0f);
             _material.SetVector("_Pusher", new Vector4(p.x, p.y, p.z, pushRadius));
+            _material.SetFloat("_Trample", trample);
         }
     }
 }

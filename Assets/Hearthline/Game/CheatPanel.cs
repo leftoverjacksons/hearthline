@@ -412,10 +412,35 @@ namespace Hearthline.Game
             GUILayout.EndScrollView();
         }
 
+        // Desire paths (docs/specs/trampled-grass.md).
+        private bool _showWear;
+
+        private void DrawWear(Simulation sim)
+        {
+            var trample = FindAnyObjectByType<TrampleField>();
+            var wearView = FindAnyObjectByType<WearView>();
+            GameObject p = GameObject.Find("Player");
+            double here = p != null ? sim.WearAt(p.transform.position.x, p.transform.position.z) : 0;
+            GUILayout.Label("Paths: " + sim.State.Wear.Cells.Count + " worn cells, " + sim.State.Wear.Routes.Count + " household routes; wear here " + here.ToString("0.00"));
+            GUILayout.BeginHorizontal();
+            bool show = GUILayout.Toggle(_showWear, "Show wear", GUILayout.Width(110));
+            if (show != _showWear) { _showWear = show; Shader.SetGlobalFloat("_HL_WearDebug", show ? 1f : 0f); }
+            if (GUILayout.Button("Wear last 100 m", GUILayout.Width(130)) && trample != null && wearView != null && trample.RecentRoute.Count > 0)
+            {
+                var route = new List<Vector3>(trample.RecentRoute);
+                wearView.Walked(route, 0, 20);
+            }
+            if (GUILayout.Button("Clear wear", GUILayout.Width(90))) Run(sim, new ClearWear());
+            if (GUILayout.Button("Age 30 days", GUILayout.Width(100))) Run(sim, new AgeWear { Days = 30 });
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8);
+        }
+
         private void DrawWorld(Simulation sim)
         {
             _scroll = GUILayout.BeginScrollView(_scroll);
             DrawWeather(sim);
+            DrawWear(sim);
             DrawPlaces(sim);
             foreach (SettlementState town in sim.State.Settlements)
             {

@@ -112,6 +112,7 @@ namespace Hearthline.EditorTools
             SceneBuildKit.SetRef(roadEvents, "location", location);
             SceneBuildKit.SetRef(roadEvents, "clock", clock);
             BuildHomeUse(clock, roadEvents);
+            new GameObject("Trample").AddComponent<TrampleField>().Configure(rig.Player.transform, clock, Object.FindAnyObjectByType<WearView>());
             BuildPracticeTarget(new Vector3(4f, 0f, -10f));
 
             BuildAtmosphere(sun, moon, clock, location);
@@ -228,6 +229,8 @@ namespace Hearthline.EditorTools
             importer.SaveAndReimport();
 
             Material m = SceneBuildKit.ColorMaterial("Region_Ground", Color.white);
+            // Lit's look plus desire paths (ADR 0034); the property names are Lit's, so the settings below still apply.
+            m.shader = Shader.Find("Hearthline/RegionGround");
             m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(GroundMapPath));
             m.SetFloat("_Smoothness", 0.05f);
             // Close-up detail over the painted map: grass blades and soil grain repeating every 2 m.
@@ -475,6 +478,12 @@ namespace Hearthline.EditorTools
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/StarterAssets/Runtime/ThirdPersonController/Character/Models/Armature.fbx"),
                 AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/ThirdParty/StarterAssets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller"),
                 jobs, spots, idle);
+
+            // Desire paths: the household walks from the dwelling door to their work each day (ADR 0034).
+            var wear = new GameObject("Wear").AddComponent<WearView>();
+            wear.transform.SetParent(root, false);
+            int half = Mathf.RoundToInt(GrassMapSize / 2f);
+            wear.Configure(new Vector2Int(-half, -half), half * 2, GameObject.Find("Use dwelling").transform, jobs, spots, idle[0]);
         }
 
         // Places a model whose length runs along its local Z (or X) so it spans p0 to p1.

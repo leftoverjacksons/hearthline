@@ -127,6 +127,12 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
   - the gun stats in `Content/items/*.yaml`.
 - [ ] ⚪ Tune the look values in ADR 0018 by eye (they are starting points)
 - [ ] ⚪ **Walk the new grass and tune it** (ADR 0033). Select **Grass** in the M2_Region scene: density, reach, blade size, colours, wind and how far the player pushes it are all on `GrassField`. Changes there are live in Play Mode, but they reset when Play Mode ends; to keep a value, change it outside Play Mode. Rebuilding the scene resets them all to the code defaults, so tell me the values you like and I will make them the defaults.
+- [ ] ⚪ **Walk through tall grass and judge the matting and paths** (ADR 0034).
+  - **Matting** is on **Trample**: how long grass takes to stand back up, the size of the pressed oval, and how hard the player, deer and enemies press. How far blades lie over is `trample` on **Grass**.
+  - **Path colour** is the dirt colour on **Homestead → Wear**.
+  - **Path edges** are on the `Region_Ground` material: edge sharpness and breakup.
+  - **Seeing paths quickly:** the F1 World tab can show wear in red, wear in your last 100 m, clear all wear, or age it by 30 days.
+  - Paths are one metre wide. Tell me if they should be wider or softer.
 
 ---
 
