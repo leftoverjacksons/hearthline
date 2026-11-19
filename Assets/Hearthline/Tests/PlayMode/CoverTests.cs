@@ -76,14 +76,14 @@ namespace Hearthline.Tests.PlayMode
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
 
         [UnityTest]
-        public IEnumerator YouPressAgainstHighCoverFacingIt()
+        public IEnumerator YouPressYourBackAgainstHighCover()
         {
             CoverSurface wall = Box(high: true, minHalfWidth: 1.2f);
             yield return TakeCover(wall);
             Assert.That(_cover.InCover, Is.True);
             Assert.That(_cover.LowCover, Is.False);
             Assert.That(DistanceToCover(), Is.LessThan(0.5f), "Pressed against it.");
-            Assert.That(Vector3.Dot(_player.transform.forward, -_cover.CoverNormal), Is.GreaterThan(0.9f), "Facing the cover.");
+            Assert.That(Vector3.Dot(_player.transform.forward, _cover.CoverNormal), Is.GreaterThan(0.9f), "Back to the cover (DESIGN: Cover).");
             Assert.That(_crouch.IsCrouched, Is.False);
         }
 

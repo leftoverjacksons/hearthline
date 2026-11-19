@@ -63,6 +63,9 @@ namespace Hearthline.Game
         private CharacterController _body;
         private CinemachineImpulseSource _impulse;
         private Animator _animator;
+        /// <summary>Animator bool: the gun is shouldered (aim layer: Rifle Aiming Idle instead of the low ready).</summary>
+        public const string AimingParameter = "Aiming";
+        private bool _animatorHasAiming;
         private bool _animatorHasWeapon;
         private int _aimLayer = -1;
         private float _drawTimer, _cooldown, _flashTimer, _messageTimer, _hitMarkerTimer;
@@ -93,7 +96,11 @@ namespace Hearthline.Game
             _animator = GetComponent<Animator>();
             if (_animator != null)
             {
-                foreach (AnimatorControllerParameter p in _animator.parameters) _animatorHasWeapon |= p.name == "Weapon";
+                foreach (AnimatorControllerParameter p in _animator.parameters)
+                {
+                    _animatorHasWeapon |= p.name == "Weapon";
+                    _animatorHasAiming |= p.name == AimingParameter;
+                }
                 _aimLayer = _animator.GetLayerIndex("Aim");
             }
             if (tracer != null) tracer.enabled = false;
@@ -165,6 +172,7 @@ namespace Hearthline.Game
             _visuals.InHand = Drawn;
             _visuals.AimPoint = _aim.Amount > 0.5f && Ready ? AimRay(0f).GetPoint(40f) : (Vector3?)null;
             if (_animatorHasWeapon) _animator.SetInteger("Weapon", (int)Drawn);
+            if (_animatorHasAiming) _animator.SetBool(AimingParameter, _aim.Aiming);
             if (_aimLayer >= 0) _animator.SetLayerWeight(_aimLayer, Mathf.MoveTowards(_animator.GetLayerWeight(_aimLayer), Drawn != GunVisuals.Drawn.None ? 1f : 0f, dt * 6f));
         }
 

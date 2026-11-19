@@ -7,7 +7,7 @@ namespace Hearthline.Game
     /// <summary>
     /// Sticky cover for the player (combat spec, step 3; DESIGN: Cover).
     /// - **Q** snaps you to the nearest <see cref="CoverSurface"/> in front of you. You press against it,
-    ///   facing it: crouched behind low cover, standing behind high cover.
+    ///   crouched and facing low cover, standing with your back to high cover (backToHighCover).
     /// - **A / D** slide along it. You stop at a corner instead of walking off.
     /// - **Aiming** leans you out at an edge of high cover (or either side of a tree), or raises you over
     ///   low cover. Letting go of aim takes you back in. The camera's shoulder follows the side you lean from.
@@ -40,6 +40,17 @@ namespace Hearthline.Game
         [SerializeField] private float cornerMargin = 0.15f;
         [Tooltip("Hold back (S) this long to leave cover, seconds.")]
         [SerializeField] private float pullAwaySeconds = 0.3f;
+        [Tooltip("Behind high cover, stand with your back to it (matches the Mixamo cover clips). Off: face it.")]
+        [SerializeField] private bool backToHighCover = true;
+        [Tooltip("Swap which sneak clip plays for which slide direction, if the feet look backwards.")]
+        [SerializeField] private bool swapSlideClips;
+        [Tooltip("How fast the slide animation catches up with the slide, per second.")]
+        [SerializeField] private float slideBlendRate = 8f;
+
+        /// <summary>Animator int: 0 not in high cover (or leaning out), 1 pressed against high cover.</summary>
+        public const string CoverParameter = "Cover";
+        /// <summary>Animator float: -1 sliding to the body's left, 0 still, 1 to its right.</summary>
+        public const string SlideParameter = "CoverSlide";
 
         public enum Side { None, Left, Right }
 
@@ -55,6 +66,9 @@ namespace Hearthline.Game
         private float _snapTimer, _pullAway, _lean, _slideInput;
         private Vector3 _anchor;
         private bool _wasCrouched;
+        private Animator _animator;
+        private bool _animatorHasCover;
+        private float _slideBlend;
 
         public CoverSurface Surface { get; private set; }
         /// <summary>Movement used instead of the keyboard while non-zero (tests, scripted scenes).</summary>
@@ -77,6 +91,17 @@ namespace Hearthline.Game
             _aim = GetComponent<AimController>();
             _release = GetComponent<PlayerInputRelease>();
             if (_playerInput != null && _playerInput.actions != null) _move = _playerInput.actions.FindAction("Move");
+            _animator = GetComponent<Animator>();
+            if (_animator != null)
+                foreach (AnimatorControllerParameter p in _animator.parameters) _animatorHasCover |= p.name == CoverParameter;
+        }
+
+        private void Animate(int cover, float slide)
+        {
+            if (!_animatorHasCover) return;
+            _slideBlend = Mathf.MoveTowards(_slideBlend, slide, Time.deltaTime * slideBlendRate);
+            _animator.SetInteger(CoverParameter, cover);
+            _animator.SetFloat(SlideParameter, _slideBlend);
         }
 
         /// <summary>Takes the nearest cover in reach (in front, or anywhere if <paramref name="anyDirection"/>). False if there is none.</summary>
@@ -122,6 +147,7 @@ namespace Hearthline.Game
             Edge = Side.None;
             Exposed = false;
             _lean = 0f;
+            Animate(0, 0f);
             _crouch.Set(_wasCrouched);
             if (_move != null) _inputs.MoveInput(_move.ReadValue<Vector2>()); // hand movement back to the controller
         }
@@ -198,7 +224,13 @@ namespace Hearthline.Game
             }
             _body.Move(new Vector3(delta.x, 0f, delta.z));
 
-            if (!aiming) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(-_normal, Vector3.up), Mathf.Clamp01(Time.deltaTime * 14f));
+            bool backToWall = backToHighCover && !Surface.Low;
+            if (!aiming) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(backToWall ? _normal : -_normal, Vector3.up), Mathf.Clamp01(Time.deltaTime * 14f));
+
+            // Back to the wall, the body's right is the cover's left as the camera sees it.
+            float moved = Time.deltaTime > 0f ? slide / (slideSpeed * Time.deltaTime) : 0f;
+            float bodySlide = Mathf.Clamp(backToWall ? -moved : moved, -1f, 1f) * (swapSlideClips ? -1f : 1f);
+            Animate(!Surface.Low && _lean < 0.5f && !aiming ? 1 : 0, bodySlide);
         }
 
         private CoverSurface.Spot Spot(Vector3 near) =>

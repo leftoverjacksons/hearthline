@@ -16,20 +16,24 @@ Leave "In Place" unticked on walks. Any of the "8-way" packs gives every directi
 Search terms are given where the exact Mixamo name varies.
 
 ### Fix first
-- [ ] 🔴 **T-Pose** (search "T-Pose", same settings, save as `T-Pose.fbx`). Skeleton-only clips need it as
-  their shared body map, or poses come out bent (ADR 0019). Unity picks it up by itself when it lands.
+- [x] 🔴 **T-Pose**: arrived 2026-11-18 as `X Bot@T-Pose.fbx`. Every clip now uses it as its body map.
+  Mixamo's `Character@Clip.fbx` file names work as well as plain clip names.
 
 ### Movement and cover (next step)
 - [ ] 🟡 Crouch walk left, right and backwards (search "crouched walk", "crouched sneaking left/right")
 - [ ] 🟡 **Sticky cover set** (cover works now; these make it look right). Mixamo's cover clips vary in quality; grab whatever of these exists, and IK fills
   the gaps:
-  - standing with your back to a wall: idle, and sliding left and right (search "cover", "wall", "back against")
+  - [x] standing with your back to a wall: idle, and sliding left and right. Taking Cover Idle and Left/Right
+    Cover Sneak, wired into the player's animator on 2026-11-18. Check whether the feet match the slide:
+    **Player → PlayerCover** has `swapSlideClips` if they run backwards, and `backToHighCover` to face the
+    wall instead.
   - crouched behind low cover: idle, and sliding left and right (search "crouch cover", "crouched cover")
   - leaning out from the edge to aim, left and right (search "cover peek", "lean", "cover to aim")
   - rising over low cover to aim (search "crouch to aim", "pop up")
   - entering and leaving cover (search "to cover", "cover to stand")
-- [ ] 🟡 **Rifle aiming idle** and **pistol aiming idle** (search "rifle aiming idle", "pistol idle"): the
-  aim layer uses Rifle Idle and Pistol Aim as stand-ins, so the arms don't hold the shouldered gun yet
+- [x] 🟡 **Rifle aiming idle**: wired 2026-11-18. Shouldered while aiming, Rifle Idle and Walk With Rifle
+  lowered at the ready. Check that the gun lines up with the crosshair.
+- [ ] 🟡 **Pistol aiming idle** (search "pistol idle"): Pistol Aim is still a stand-in
 - [ ] 🟡 Rifle aimed walk in all directions (search "rifle strafe", or a rifle 8-way pack)
 - [ ] 🟡 Rifle run
 - [ ] ⚪ Vault over a low obstacle (search "vault", "jump over")
@@ -51,6 +55,10 @@ Search terms are given where the exact Mixamo name varies.
 - [x] Gathering Objects
 - [x] Rifle Idle, Walk With Rifle, Walk With Rifle lowered, Put Back Rifle Behind Shoulder
 - [x] Pistol Aim
+
+## Characters
+
+- [ ] 🟡 **The Tripo homesteader** (ADR 0031). Export as FBX: rigged with Tripo's humanoid skeleton if it offers one, otherwise unrigged. GLB is fine if FBX isn't offered. Textures embedded, or in a folder beside it. Put it in `ArtSource/Characters/<name>/`. I'll clean it up and put it on the player. Tell me which plan it was made on, so I know whether the repo may hold it.
 
 ---
 
