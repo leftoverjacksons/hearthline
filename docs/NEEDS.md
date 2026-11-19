@@ -106,7 +106,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
      seconds.
   4. Restart Blender (and its MCP add-on), then tell Claude.
 - [x] **.NET 8 SDK** (headless tests run: `tools/test.sh`)
-- [ ] 🟡 **Tripo DCC Bridge for Blender** (Tripo's add-on, which sends a model from your Tripo account straight into Blender). Install it from Tripo's site in Blender (Edit → Preferences → Add-ons → Install from disk) and sign in with your own account. Then the export script can start from what the bridge brings in, rather than an FBX download. Signing in is yours to do.
+- [ ] 🟡 **Tripo DCC Bridge for Unity** (Tripo's plugin that sends a model from Tripo Studio straight into the open Unity Editor; guide: tripo3d.ai/blog/tripo-dcc-bridge-for-unity). Install it in Unity and switch it on from Tripo Studio's DCC Bridge button with your own account. Tell me where it puts the plugin and the models: the repo is public, so both may need git-ignoring. Then I'll import her straight from the bridge without Blender, and compare her face.
 
 ---
 
