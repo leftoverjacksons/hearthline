@@ -276,5 +276,7 @@ namespace Hearthline.Sim
         public SortedDictionary<string, PlaceState> Places = new SortedDictionary<string, PlaceState>();
         /// <summary>The rumour being followed, or null.</summary>
         public FollowedRumour Rumour;
+        /// <summary>Desire paths worn into the ground, and the household's routes at home (docs/specs/trampled-grass.md).</summary>
+        public WearState Wear = new WearState();
     }
 }

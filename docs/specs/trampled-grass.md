@@ -1,6 +1,6 @@
 # Spec: trampled grass and desire paths
 
-Status: **proposal, needs Travis's approval.**
+Status: **approved 2026-11-18, with household paths in v1** ("Include household paths"). ADR 0034.
 
 ## Goal
 
@@ -30,14 +30,17 @@ The homestead ends up with its own paths from cabin to well to garden, and a tra
    - The Bridge writes the wear map into a texture whenever it changes, at most once per in-game hour.
    - **In the grass:** worn cells get shorter, sparser blades that lean along the path, and none on bare dirt.
    - **On the ground:** the region's ground blends to trodden dirt where wear is high. This means moving the ground from URP Lit to a small `RegionGround` shader with the same look plus the wear overlay.
-4. **Cheats (World tab):**
+4. **Household paths (in the simulation, saved).**
+   - The Bridge finds each job's route on the NavMesh, from the dwelling door to where the job is done (and an idle route for people without work). It registers the routes with a `SetHomeRoutes` command, and the world state keeps them.
+   - Each in-game day, every living household member at home walks their route there and back: two passes over every cell it crosses. The head, anyone away on a trip and anyone laid up don't walk.
+   - So the cabin grows paths to the woodpile, the hearth, the garden and the guard post, and a path fades when nobody does that work any more.
+5. **Cheats (World tab):**
    - show wear as an overlay;
    - add wear along the last 100 m walked;
    - clear all wear;
    - age wear by 30 days.
 
 **Out (later, if wanted):**
-- Household members and hired hands wearing paths along their daily routes between structures. The sim knows the jobs and structures, so this is a natural next step. It's your call whether it's in v1.
 - Game trails worn by deer herds.
 - Mud, footprints in snow or mud, and blood trails.
 - Paths affecting travel speed or stealth (for example, tall grass hiding you).

@@ -83,4 +83,6 @@ namespace Hearthline.Sim
     /// <summary>The head died and nobody can follow. The campaign ends with the chronicle.</summary>
     public sealed class LineEnded : DomainEvent { public int LastHeadId; }
     public sealed class CharacterDied : DomainEvent { public int CharacterId; public string Cause; public bool WasHeadOfHousehold; }
+    /// <summary>The ground's wear changed (treading, the household's walks, growing back). Redraw paths.</summary>
+    public sealed class WearChanged : DomainEvent { }
 }

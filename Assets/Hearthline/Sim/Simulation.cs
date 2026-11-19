@@ -58,6 +58,7 @@ namespace Hearthline.Sim
         public TripRules Trips { get; } = new TripRules();
         public GearRules Gear { get; } = new GearRules();
         public CombatRules Combat { get; } = new CombatRules();
+        public WearRules Wear { get; } = new WearRules();
         private readonly List<MarkDef> _ageMarks = new List<MarkDef>();
 
         /// <summary>Raised once per domain event, in order, after the command that caused it has fully applied.</summary>
@@ -74,7 +75,7 @@ namespace Hearthline.Sim
         }
 
         private SimContext NewContext() =>
-            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, Trips = Trips, Gear = Gear, Combat = Combat, AgeMarks = _ageMarks };
+            new SimContext { State = State, Content = Content, Rng = _rng, Treatment = Treatment, Life = Life, Storyteller = Storyteller, World = World, Home = Home, Trips = Trips, Gear = Gear, Combat = Combat, Wear = Wear, AgeMarks = _ageMarks };
 
         public static Simulation NewGame(ContentDatabase content, NewGameOptions options)
         {
@@ -161,6 +162,9 @@ namespace Hearthline.Sim
             State.Trip != null && State.Trip.Pack.TryGetValue(itemId, out int count) ? count : 0;
 
         public bool OnTrip => State.Trip != null;
+
+        /// <summary>How worn the ground is at a world position, 0..1.</summary>
+        public double WearAt(double x, double z) => State.Wear.At(x, z);
 
         /// <summary>Days until a gathering spot yields again; 0 when it can be gathered now.</summary>
         public int DaysUntilRegrown(string spotId, string itemId) => GatherSystem.DaysUntilRegrown(State, Content, spotId, itemId);

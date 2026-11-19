@@ -218,6 +218,7 @@ namespace Hearthline.Sim
                     LifeSystem.DailyTick(ctx, c);
                 }
                 TripSystem.DailyTick(ctx);
+                WearSystem.DailyTick(ctx);
                 var today = new GameDate(ctx.State.Day);
                 if (today.DayOfSeason != 1) continue;
                 // The season turns with the calendar, wherever the head happens to be.
