@@ -13,6 +13,11 @@ namespace Hearthline.EditorTools
     {
         public const string HomesteaderFolder = "Assets/Hearthline/Art/Characters/Homesteader";
         public const string HomesteaderModel = HomesteaderFolder + "/Homesteader.fbx";
+        public const string CharactersFolder = "Assets/Hearthline/Art/Characters";
+
+        /// <summary>A character exported by ArtSource/Characters/export_tripo_character.py: Name/Name.fbx with
+        /// Name_BaseColor, Name_Normal and Name_Mask (R metallic, A smoothness) beside it.</summary>
+        public static string TripoModel(string name) => CharactersFolder + "/" + name + "/" + name + ".fbx";
 
         // Unity human bone -> Mixamo bone name (without the "mixamorig:" prefix).
         private static readonly Dictionary<string, string> Map = new Dictionary<string, string>
@@ -51,10 +56,64 @@ namespace Hearthline.EditorTools
                 { "Homesteader.eyebrow002", ("Homesteader_Eyebrows", null, 0.2f, true) },
             };
 
-        public static GameObject SetUpHomesteader()
+        /// <summary>Imports a Tripo character as Humanoid with one URP Lit material from its textures. Null if it isn't there.</summary>
+        public static GameObject SetUpTripo(string name)
         {
-            var importer = (ModelImporter)AssetImporter.GetAtPath(HomesteaderModel);
-            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(HomesteaderModel);
+            string path = TripoModel(name);
+            if (AssetImporter.GetAtPath(path) as ModelImporter == null) return null;
+            // Textures and material first: reimporting them refreshes the asset database, so the model's
+            // importer is fetched after, or its settings are lost.
+            string folder = CharactersFolder + "/" + name;
+            string matPath = folder + "/" + name + "_Body.mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            if (m == null)
+            {
+                m = new Material(SceneBuildKit.DefaultLitMaterial());
+                AssetDatabase.CreateAsset(m, matPath);
+            }
+            m.SetTexture("_BaseMap", TripoTexture(folder + "/" + name + "_BaseColor.png", TextureKind.Colour));
+            m.SetColor("_BaseColor", Color.white);
+            Texture2D normal = TripoTexture(folder + "/" + name + "_Normal.png", TextureKind.Normal);
+            if (normal != null) { m.SetTexture("_BumpMap", normal); m.EnableKeyword("_NORMALMAP"); }
+            Texture2D mask = TripoTexture(folder + "/" + name + "_Mask.png", TextureKind.Data);
+            if (mask != null)
+            {
+                m.SetTexture("_MetallicGlossMap", mask);
+                m.EnableKeyword("_METALLICSPECGLOSSMAP");
+                m.SetFloat("_Smoothness", 1f); // scales the mask's smoothness
+                m.SetFloat("_SmoothnessTextureChannel", 0f);
+            }
+            else m.SetFloat("_Smoothness", 0.3f);
+            EditorUtility.SetDirty(m);
+            AssetDatabase.SaveAssets();
+
+            var importer = (ModelImporter)AssetImporter.GetAtPath(path);
+            Humanoid(importer, AssetDatabase.LoadAssetAtPath<GameObject>(path));
+            importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
+            foreach (Object o in AssetDatabase.LoadAllAssetRepresentationsAtPath(path))
+                if (o is Material embedded) importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), embedded.name), m);
+            importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), name + "_Body"), m);
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        private enum TextureKind { Colour, Normal, Data }
+
+        private static Texture2D TripoTexture(string path, TextureKind kind)
+        {
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) return null;
+            bool changed = false;
+            if (kind == TextureKind.Normal && importer.textureType != TextureImporterType.NormalMap) { importer.textureType = TextureImporterType.NormalMap; changed = true; }
+            if (kind == TextureKind.Data && importer.sRGBTexture) { importer.sRGBTexture = false; changed = true; }
+            if (importer.maxTextureSize != 4096) { importer.maxTextureSize = 4096; changed = true; }
+            if (changed) importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>Humanoid with an explicit Mixamo bone map, and the skeleton as it rests in the file (a T-pose).</summary>
+        private static void Humanoid(ModelImporter importer, GameObject model)
+        {
 
             // Humanoid with an explicit bone map, and the skeleton as it rests in the file.
             var human = new List<HumanBone>();
@@ -76,6 +135,12 @@ namespace Hearthline.EditorTools
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.importAnimation = false;
             importer.importBlendShapes = false;
+        }
+
+        public static GameObject SetUpHomesteader()
+        {
+            var importer = (ModelImporter)AssetImporter.GetAtPath(HomesteaderModel);
+            Humanoid(importer, AssetDatabase.LoadAssetAtPath<GameObject>(HomesteaderModel));
 
             // Materials: URP Lit from the baked textures, remapped by name.
             string matFolder = HomesteaderFolder + "/Materials";
@@ -89,11 +154,14 @@ namespace Hearthline.EditorTools
             return AssetDatabase.LoadAssetAtPath<GameObject>(HomesteaderModel);
         }
 
-        public static bool AvatarIsValid()
+        public static bool AvatarIsValid() => HumanAvatar(HomesteaderModel) != null;
+
+        /// <summary>The model's valid humanoid avatar, or null.</summary>
+        public static Avatar HumanAvatar(string modelPath)
         {
-            foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(HomesteaderModel))
-                if (o is Avatar a) return a.isValid && a.isHuman;
-            return false;
+            foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(modelPath))
+                if (o is Avatar a && a.isValid && a.isHuman) return a;
+            return null;
         }
 
         private static Texture2D Tex(string name, bool normal)

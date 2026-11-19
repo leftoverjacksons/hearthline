@@ -20,7 +20,7 @@ namespace Hearthline.Game
 
         [SerializeField] private PlayerLocation location;
         [SerializeField] private TravelClock clock;
-        [SerializeField] private Key campKey = Key.C;
+        [SerializeField] private Key campKey = Key.B; // C is crouch
 
         private readonly List<int> _companions = new List<int>();
         private readonly SortedDictionary<string, int> _pack = new SortedDictionary<string, int>();

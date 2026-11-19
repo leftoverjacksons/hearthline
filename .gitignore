@@ -77,3 +77,9 @@ Thumbs.db
 /Assets/_TerrainAutoUpgrade.meta
 /Assets/ThirdParty/UltimateNature/
 /Assets/ThirdParty/UltimateNature.meta
+
+# Tripo characters: kept out of the public repo until the licence is confirmed (docs/NEEDS.md)
+/ArtSource/Characters/femaleTest1/
+/Assets/Hearthline/Art/Characters/FemaleTest1/
+/Assets/Hearthline/Art/Characters/FemaleTest1.meta
+/Screenshots/

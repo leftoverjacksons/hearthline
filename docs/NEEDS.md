@@ -58,7 +58,9 @@ Search terms are given where the exact Mixamo name varies.
 
 ## Characters
 
-- [ ] 🟡 **The Tripo homesteader** (ADR 0031). Export as FBX: rigged with Tripo's humanoid skeleton if it offers one, otherwise unrigged. GLB is fine if FBX isn't offered. Textures embedded, or in a folder beside it. Put it in `ArtSource/Characters/<name>/`. I'll clean it up and put it on the player. Tell me which plan it was made on, so I know whether the repo may hold it.
+- [x] 🟡 **The Tripo character**: `femaleTest1` arrived 2026-11-18. She's now the player (ADR 0035). To bring in another one, run `ArtSource/Characters/export_tripo_character.py` (the command is at the top of the script), then set `SceneBuildKit.PlayerCharacter`.
+- [ ] 🔴 **Tripo licence**: which plan was she made on? Her files are git-ignored until we know whether the public repo may hold them.
+- [ ] ⚪ **Modular character pieces** (later): the backpack is part of her mesh. Separate meshes for the pack, hat and coat would let gear show on the body.
 
 ---
 

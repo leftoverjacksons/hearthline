@@ -73,7 +73,8 @@ namespace Hearthline.EditorTools
 
             GameObject player = Spawn("PlayerArmature");
             player.name = "Player";
-            if (PlayerWearsHomesteader) UseHomesteader(player);
+            if (PlayerCharacter != null) UseCharacter(player, PlayerCharacter);
+            else if (PlayerWearsHomesteader) UseHomesteader(player);
             player.transform.position = Vector3.zero; // anchors and zones are placed facing +Z at the origin
             rig.Player = player;
             rig.InputRelease = player.AddComponent<PlayerInputRelease>();
@@ -339,6 +340,25 @@ namespace Hearthline.EditorTools
         public static bool PlayerWearsHomesteader = false;
 
         /// <summary>
+        /// The Tripo character the player wears (ADR 0035): a folder under Art/Characters made by
+        /// ArtSource/Characters/export_tripo_character.py. Null, or a model that isn't there (a fresh checkout:
+        /// the files are git-ignored), leaves the robot.
+        /// </summary>
+        public static string PlayerCharacter = "FemaleTest1";
+
+        private static void UseCharacter(GameObject player, string name)
+        {
+            GameObject model = CharacterKit.SetUpTripo(name);
+            Avatar avatar = model != null ? CharacterKit.HumanAvatar(CharacterKit.TripoModel(name)) : null;
+            if (model == null || avatar == null)
+            {
+                Debug.LogWarning("Character '" + name + "' not found or not humanoid; the player stays the robot (docs/NEEDS.md).");
+                return;
+            }
+            WearModel(player, model, avatar);
+        }
+
+        /// <summary>
         /// The player wears the homesteader (ADR 0031) instead of the Starter Assets robot: his meshes and rig
         /// replace the robot's Geometry and Skeleton under the same Animator, which takes his humanoid avatar, so
         /// every animation, hit zone and Mark anchor (found by humanoid bone) carries over. Skipped, leaving the
@@ -352,6 +372,12 @@ namespace Hearthline.EditorTools
             foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(CharacterKit.HomesteaderModel))
                 if (o is Avatar a && a.isHuman) avatar = a;
             if (model == null || avatar == null) return;
+            WearModel(player, model, avatar);
+        }
+
+        // The model's meshes and rig replace the robot's Geometry and Skeleton under the same Animator.
+        private static void WearModel(GameObject player, GameObject model, Avatar avatar)
+        {
             if (PrefabUtility.IsPartOfPrefabInstance(player))
                 PrefabUtility.UnpackPrefabInstance(player, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
             foreach (string robot in new[] { "Geometry", "Skeleton" })
