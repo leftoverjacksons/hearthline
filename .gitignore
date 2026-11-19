@@ -75,3 +75,5 @@ Thumbs.db
 # Unity regenerates this when it upgrades the rocks pack terrain; derived from git-ignored files.
 /Assets/_TerrainAutoUpgrade/
 /Assets/_TerrainAutoUpgrade.meta
+/Assets/ThirdParty/UltimateNature/
+/Assets/ThirdParty/UltimateNature.meta

@@ -31,6 +31,8 @@ namespace Hearthline.EditorTools
         private const string Generated = SceneBuildKit.GeneratedFolder;
         private const string GroundPath = Generated + "/M2_Region_Ground.asset";
         private const string GroundMapPath = Generated + "/M2_Region_GroundMap.png";
+        private const string GrassMapPath = Generated + "/M2_Region_GrassMap.png";
+        private const string HeightMapPath = Generated + "/M2_Region_Heights.asset";
         private const string WaterPath = Generated + "/M2_Region_Water.asset";
 
         /// <summary>The world's seed. Change it for a different land.</summary>
@@ -79,8 +81,6 @@ namespace Hearthline.EditorTools
             SetScatter(trees, drawDistance: 650f, shadows: true);
             var cover = new GameObject("Ground Cover").AddComponent<InstancedScatter>();
             SetScatter(cover, drawDistance: 130f, shadows: false);
-            var grass = new GameObject("Grass").AddComponent<InstancedScatter>();
-            SetScatter(grass, drawDistance: 85f, shadows: false);
             var props = new GameObject("Props").transform;
 
             _overpass = PickOverpass();
@@ -88,7 +88,7 @@ namespace Hearthline.EditorTools
             BuildCrossings(props);
             BuildRuins(props);
             ScatterNature(trees, cover, props);
-            ScatterGrass(grass);
+            GrassField grass = BuildGrass();
             BuildGathering(props);
             BuildStores(props);
             Transform home = BuildAreas(out int areaCount);
@@ -97,6 +97,7 @@ namespace Hearthline.EditorTools
             AddHauling(rig);
             var location = rig.Player.AddComponent<PlayerLocation>();
             SceneBuildKit.SetRef(location, "home", home);
+            grass.SetPusher(rig.Player.transform);
             SceneBuildKit.SetFloat(location, "regionRadius", RegionRadius);
 
             var clock = new GameObject("Clock").AddComponent<TravelClock>();
@@ -125,6 +126,7 @@ namespace Hearthline.EditorTools
             life.SetSounds(Clip("Birds_And_Wind.ogg"), Clip("Crickets.mp3"));
             new GameObject("Place Discovery").AddComponent<PlaceDiscovery>().Configure(location);
             BuildHomeLights(clock);
+            new GameObject("Ground Map").AddComponent<GroundMapGlobals>().Configure(AssetDatabase.LoadAssetAtPath<Texture2D>(GroundMapPath), -WorldSize / 2f, -WorldSize / 2f, WorldSize);
             new GameObject("Thin Aura").AddComponent<ThinAura>().Configure(location, weatherView, Clip("Hum_Elder.wav"));
             int covers = SceneBuildKit.AddCoverSurfaces(HeightAt);
             CombatSceneKit.BuildEnemyPrefab();
@@ -643,13 +645,43 @@ namespace Hearthline.EditorTools
         // Grass (ADR 0030): dense card clumps wherever the ground is open, lush where it's damp and gold where it's
         // dry or high, thinning into the forest's edge; a little under the trees. Not on the road, the track, the
         // water or the trampled middle of the yard.
-        private static void ScatterGrass(InstancedScatter grass)
+        // ---- Grass (ADR 0033) --------------------------------------------------------------------------
+        // Grass is made on the GPU around the camera (GrassField). The builder bakes what it needs: the ground's
+        // vertex heights, and a grass map saying where grass grows (r), how tall (g) and how dry (b).
+
+        private const float GrassMapSize = Size + 120f;
+        private const int GrassMapRes = 2048;
+
+        private static GrassField BuildGrass()
         {
-            var rnd = new Random(2207);
-            float R(double a, double b) => (float)(a + rnd.NextDouble() * (b - a));
-            Mesh tall = GreyboxKit.MeshOf("Grass_Card_Tall"), shortGrass = GreyboxKit.MeshOf("Grass_Card_Short"), dry = GreyboxKit.MeshOf("Grass_Card_Dry");
-            Material[] tallM = GreyboxKit.MaterialsOf("Grass_Card_Tall"), shortM = GreyboxKit.MaterialsOf("Grass_Card_Short"), dryM = GreyboxKit.MaterialsOf("Grass_Card_Dry");
-            const float step = 1.0f;
+            Texture2D heights = BakeHeights();
+            Texture2D grassMap = BakeGrassMap();
+            var field = new GameObject("Grass").AddComponent<GrassField>();
+            field.Configure(grassMap, new Vector3(-GrassMapSize / 2f, -GrassMapSize / 2f, GrassMapSize),
+                heights, new Vector3(-WorldSize / 2f, -WorldSize / 2f, WorldSize / Mathf.RoundToInt(WorldSize / (float)Map.Cell)),
+                AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/Hearthline/Art/Shaders/GrassBlades.compute"),
+                Shader.Find("Hearthline/GrassBlade"), null);
+            return field;
+        }
+
+        // The ground mesh's vertex heights, one texel per vertex (SceneBuildKit.BuildGround's grid).
+        private static Texture2D BakeHeights()
+        {
+            int cells = Mathf.RoundToInt(WorldSize / (float)Map.Cell), res = cells + 1;
+            var tex = new Texture2D(res, res, TextureFormat.RFloat, false, true) { name = "M2_Region_Heights", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var data = new float[res * res];
+            for (int z = 0; z < res; z++)
+            for (int x = 0; x < res; x++)
+                data[z * res + x] = HeightAt((x / (float)cells - 0.5f) * WorldSize, (z / (float)cells - 0.5f) * WorldSize);
+            tex.SetPixelData(data, 0);
+            tex.Apply(false, false);
+            AssetDatabase.DeleteAsset(HeightMapPath);
+            AssetDatabase.CreateAsset(tex, HeightMapPath);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(HeightMapPath);
+        }
+
+        private static Texture2D BakeGrassMap()
+        {
             // Nothing grows through what's built or fallen (walls, roofs, stones, trunks, thickets), and search
             // spots stay clear so you can see them (ADR 0032).
             Physics.SyncTransforms();
@@ -659,30 +691,47 @@ namespace Hearthline.EditorTools
             bool Blocked(float x, float z)
             {
                 foreach (Vector2 sp in spots) if ((sp - new Vector2(x, z)).sqrMagnitude < 1.4f * 1.4f) return true;
-                return Physics.CheckSphere(new Vector3(x, HeightAt(x, z) + 0.45f, z), 0.3f, ~0, QueryTriggerInteraction.Ignore);
+                return Physics.CheckSphere(new Vector3(x, HeightAt(x, z) + 0.45f, z), 0.25f, ~0, QueryTriggerInteraction.Ignore);
             }
-            for (float gx = -Size / 2f - 15f; gx < Size / 2f + 15f; gx += step)
-            for (float gz = -Size / 2f - 15f; gz < Size / 2f + 15f; gz += step)
+
+            const int res = GrassMapRes;
+            var pixels = new Color32[res * res];
+            for (int j = 0; j < res; j++)
+            for (int i = 0; i < res; i++)
             {
-                float x = gx + R(0, step), z = gz + R(0, step);
+                float x = ((i + 0.5f) / res - 0.5f) * GrassMapSize, z = ((j + 0.5f) / res - 0.5f) * GrassMapSize;
                 float forest = (float)Map.ForestAt(x, z), moist = (float)Map.MoistureAt(x, z);
-                if (Map.SlopeAt(x, z) > 0.8 || F.Water(x, z) < 1.6f || F.Road(x, z) < 4.2f || F.Track(x, z) < 1.3f) continue;
                 float d = Mathf.Sqrt(x * x + z * z);
-                if (d < 9f) continue;
-                float open = 1f - Smooth(0.3f, 0.7f, forest);
-                double chance = open * 0.9 + 0.05;
-                if (rnd.NextDouble() > chance || Blocked(x, z)) continue;
+                // Meadows full, a few blades on the forest floor; none on roads, tracks, water, rock or the hearth.
+                // Ragged meadow edges: grass runs in tongues under the first trees and gives out in patches.
+                float ragged = (Mathf.PerlinNoise(x * 0.09f + 41f, z * 0.09f + 7f) - 0.5f) * 0.3f + (Mathf.PerlinNoise(x * 0.35f, z * 0.35f + 19f) - 0.5f) * 0.12f;
+                float density = Mathf.Lerp(0.06f, 1f, 1f - Smooth(0.28f, 0.72f, forest + ragged));
+                density *= Smooth(0.9f, 0.75f, (float)Map.SlopeAt(x, z)) * Smooth(1.3f, 2.2f, F.Water(x, z))
+                    * Smooth(4.0f, 5.2f, F.Road(x, z)) * Smooth(1.1f, 1.8f, F.Track(x, z)) * Smooth(5f, 12f, d + ragged * 12f);
+                if (density > 0.01f && Blocked(x, z)) density = 0f;
+                // Short in the yard and under trees; meadows vary between knee-high and ankle-high in patches.
+                float patch = Mathf.PerlinNoise(x * 0.045f + 3f, z * 0.045f + 11f);
+                float height = Mathf.Lerp(0.35f, 1f, patch) * (1f - 0.55f * Mathf.Max(Smooth(0.35f, 0.55f, forest), Smooth(HomeRadius + 6f, HomeRadius - 4f, d)));
                 float high = HeightAt(x, z) - (float)Map.HomeHeight;
-                bool isDry = moist < 0.28f + (float)(rnd.NextDouble() * 0.12) || high > 130f;
-                bool yard = d < HomeRadius;
-                Mesh mesh; Material[] mats;
-                if (isDry) { mesh = dry; mats = dryM; }
-                else if (yard || forest > 0.45f) { mesh = shortGrass; mats = shortM; }
-                else { mesh = tall; mats = tallM; }
-                float y = HeightAt(x, z) - 0.02f;
-                float scale = R(1.1, 1.6) * (yard ? 0.75f : 1f);
-                grass.Add(mesh, mats, Matrix4x4.TRS(new Vector3(x, y, z), Quaternion.Euler(0f, R(0, 360), 0f), new Vector3(scale, R(0.55, 0.85) * scale, scale)), 25f);
+                float dry = Mathf.Max(Smooth(0.42f, 0.24f, moist + (Mathf.PerlinNoise(x * 0.08f, z * 0.08f) - 0.5f) * 0.12f), Smooth(115f, 140f, high));
+                pixels[j * res + i] = new Color32((byte)(density * 255f), (byte)(Mathf.Clamp01(height) * 255f), (byte)(dry * 255f), 255);
             }
+            var tex = new Texture2D(res, res, TextureFormat.RGBA32, false, true);
+            tex.SetPixels32(pixels);
+            tex.Apply();
+            System.IO.File.WriteAllBytes(GrassMapPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(GrassMapPath);
+            var importer = (TextureImporter)AssetImporter.GetAtPath(GrassMapPath);
+            importer.sRGBTexture = false;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.mipmapEnabled = false;
+            importer.isReadable = true; // tests read it (GrassField.DensityAt)
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.maxTextureSize = GrassMapRes;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(GrassMapPath);
         }
 
         private static void ScatterNature(InstancedScatter trees, InstancedScatter cover, Transform props)

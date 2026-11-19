@@ -126,6 +126,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
   - the quick-draw slowdown (Fight Director);
   - the gun stats in `Content/items/*.yaml`.
 - [ ] ⚪ Tune the look values in ADR 0018 by eye (they are starting points)
+- [ ] ⚪ **Walk the new grass and tune it** (ADR 0033). Select **Grass** in the M2_Region scene: density, reach, blade size, colours, wind and how far the player pushes it are all on `GrassField`. Changes there are live in Play Mode, but they reset when Play Mode ends; to keep a value, change it outside Play Mode. Rebuilding the scene resets them all to the code defaults, so tell me the values you like and I will make them the defaults.
 
 ---
 
