@@ -129,7 +129,9 @@ namespace Hearthline.EditorTools
 
         private static AnimationClip Mixamo(string name)
         {
-            foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(MixamoImport.Folder + name + ".fbx"))
+            string file = MixamoImport.FileFor(name);
+            if (file == null) return null;
+            foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(file))
                 if (o is AnimationClip clip && !clip.name.StartsWith("__preview")) return clip;
             return null;
         }
