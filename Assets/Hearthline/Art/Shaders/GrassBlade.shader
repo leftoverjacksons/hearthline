@@ -166,7 +166,8 @@ Shader "Hearthline/GrassBlade"
 
                 // Light: the blade's own normal (facing the viewer), bent toward the ground's.
                 float3 n = normalize(i.normalWS) * (front ? 1.0 : -1.0);
-                float groundWeight = lerp(_GroundNormalNear, 1.0, saturate(dist / max(_GroundNormalFar, 0.01)));
+                // The lower half is lit exactly like the ground it grows from, so roots and earth meet without a seam.
+                float groundWeight = lerp(lerp(1.0, _GroundNormalNear, saturate(t * 2.0 - 0.3)), 1.0, saturate(dist / max(_GroundNormalFar, 0.01)));
                 n = normalize(lerp(n, normalize(i.groundNormalWS), groundWeight));
 
                 InputData input = (InputData)0;

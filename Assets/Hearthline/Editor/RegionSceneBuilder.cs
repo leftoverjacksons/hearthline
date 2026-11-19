@@ -709,9 +709,15 @@ namespace Hearthline.EditorTools
                 density *= Smooth(0.9f, 0.75f, (float)Map.SlopeAt(x, z)) * Smooth(1.3f, 2.2f, F.Water(x, z))
                     * Smooth(4.0f, 5.2f, F.Road(x, z)) * Smooth(1.1f, 1.8f, F.Track(x, z)) * Smooth(5f, 12f, d + ragged * 12f);
                 if (density > 0.01f && Blocked(x, z)) density = 0f;
-                // Short in the yard and under trees; meadows vary between knee-high and ankle-high in patches.
-                float patch = Mathf.PerlinNoise(x * 0.045f + 3f, z * 0.045f + 11f);
-                float height = Mathf.Lerp(0.35f, 1f, patch) * (1f - 0.55f * Mathf.Max(Smooth(0.35f, 0.55f, forest), Smooth(HomeRadius + 6f, HomeRadius - 4f, d)));
+                // Long and short grass: broad stretches of old field gone to thigh-high grass (more often on wet
+                // ground) between short, grazed-looking turf, each patchy within; low under trees, mown in the
+                // yard; and short fuzz where a meadow gives out, so no wall of grass stands at its edge.
+                float stretch = Mathf.PerlinNoise(x * 0.011f + 23f, z * 0.011f + 5f) * 0.75f + moist * 0.45f;
+                float patch = Mathf.PerlinNoise(x * 0.06f + 3f, z * 0.06f + 11f);
+                float height = Mathf.Lerp(0.28f, 1f, Smooth(0.5f, 0.62f, stretch)) * Mathf.Lerp(0.8f, 1.1f, patch);
+                height = Mathf.Lerp(height, 0.35f, Smooth(0.35f, 0.55f, forest));
+                height = Mathf.Lerp(height, 0.12f, Smooth(HomeRadius + 6f, HomeRadius - 4f, d));
+                height *= Mathf.Lerp(0.25f, 1f, Smooth(0.05f, 0.7f, density));
                 float high = HeightAt(x, z) - (float)Map.HomeHeight;
                 float dry = Mathf.Max(Smooth(0.42f, 0.24f, moist + (Mathf.PerlinNoise(x * 0.08f, z * 0.08f) - 0.5f) * 0.12f), Smooth(115f, 140f, high));
                 pixels[j * res + i] = new Color32((byte)(density * 255f), (byte)(Mathf.Clamp01(height) * 255f), (byte)(dry * 255f), 255);

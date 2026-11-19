@@ -43,8 +43,8 @@ namespace Hearthline.Game
         [SerializeField] private bool castShadows;
 
         [Header("Blades")]
-        [SerializeField] private float minHeight = 0.15f;
-        [SerializeField] private float maxHeight = 0.55f;
+        [SerializeField] private float minHeight = 0.12f;
+        [SerializeField] private float maxHeight = 0.95f;
         [SerializeField] private float bladeWidth = 0.035f;
         [Tooltip("Size of the patches that share height, lean and colour (metres).")]
         [SerializeField] private float clumpSize = 1.3f;
@@ -63,7 +63,7 @@ namespace Hearthline.Game
         [SerializeField, Range(0f, 1f)] private float bladeVariation = 0.12f;
         [SerializeField, Range(0f, 2f)] private float translucency = 0.5f;
         [Tooltip("Shade at the root, up close.")]
-        [SerializeField, Range(0f, 1f)] private float rootAO = 0.75f;
+        [SerializeField, Range(0f, 1f)] private float rootAO = 0.9f;
         [Tooltip("Root shade fades out by this distance (metres).")]
         [SerializeField] private float aoFadeDistance = 25f;
 
