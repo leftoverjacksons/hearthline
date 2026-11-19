@@ -85,6 +85,7 @@ A change is done when:
 - Hand off narrow tasks to subagents in `.claude/agents/` (content writing, review, test triage) instead of doing everything in the main context.
 - Record significant decisions as a short ADR in `docs/adr/NNNN-title.md`.
 - Anything only Travis can provide (animations, reference images, installs, decisions) goes in `docs/NEEDS.md`, with where to put it. Tick items off when they arrive.
+- Known problems (things that look or work wrong now) go in `docs/ISSUES.md`.
 - Don't tune feel values (camera, recoil, animation blending, lighting) by guesswork. Expose them as serialized fields or ScriptableObjects and leave the tuning to Travis.
 
 ## Debug tools

@@ -106,6 +106,7 @@ Generated images are fine; prompts are in `docs/art/reference-prompts.md`.
      seconds.
   4. Restart Blender (and its MCP add-on), then tell Claude.
 - [x] **.NET 8 SDK** (headless tests run: `tools/test.sh`)
+- [ ] 🟡 **Tripo DCC Bridge for Blender** (Tripo's add-on, which sends a model from your Tripo account straight into Blender). Install it from Tripo's site in Blender (Edit → Preferences → Add-ons → Install from disk) and sign in with your own account. Then the export script can start from what the bridge brings in, rather than an FBX download. Signing in is yours to do.
 
 ---
 
